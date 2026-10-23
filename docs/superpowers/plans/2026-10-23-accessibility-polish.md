@@ -45,7 +45,7 @@
 - [x] Inspect keyboard labels/focus, mismatch and Point branches, responsive speech calculations, and unchanged persistence behavior.
 - [x] Run `git diff --check` and `node --check` on the extracted inline script; do not run automated tests.
 - [x] Commit `d805efa`; scoped source review of `5f275db..d805efa` approved it with no Critical, Important, or Minor findings.
-- [ ] Publish after the clean review and verify the Pages workflow and live response.
+- [x] Published as `d805efa`; Pages workflow [39930540705](https://github.com/TateParker/creatures-albia-prototype/actions/runs/39930540705) succeeded and a cache-busted HTTP 200 response contained both keyboard targets and responsive speech sizing.
 
 **Check:** Static source review; `git diff --check`; inline script syntax check; successful Pages workflow and cache-busted response containing the target controls and responsive speech sizing.
 
