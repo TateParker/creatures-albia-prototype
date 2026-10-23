@@ -1098,6 +1098,40 @@
         }
       }
 
+      function shareFeedbackObservation(actor, object, feedback, feedbackEvent) {
+        const change = feedback === "praise" ? 0.12 : -0.12;
+        const outcome = feedback === "praise" ? "praised" : "scolded";
+        const action = object.kind === "food" ? "eating" : "playing with";
+        const feedbackEffect = feedback === "praise" ? "stronger" : "weaker";
+        const limitEffect = feedback === "praise" ? "already as strong as it could be" : "already as weak as it could be";
+        const observation = `${actor.name} was ${outcome} after ${action} the ${object.label.toLowerCase()}`;
+
+        for (const observer of state.norns) {
+          if (observer.id === actor.id || distance(observer, actor) > 330) continue;
+          if (state.rng() >= observer.traits.sociability) continue;
+
+          const previousAssociation = observer.learned[object.id];
+          const nextAssociation = clamp(previousAssociation + change, 0, 1);
+          const changed = nextAssociation !== previousAssociation;
+          observer.learned[object.id] = nextAssociation;
+          observer.action = `watching ${actor.name}`;
+          const effectText = changed ? `the association grew ${feedbackEffect}` : `the association was ${limitEffect}`;
+          const memoryEffect = changed
+            ? `my association grew ${feedbackEffect}`
+            : `my association was ${limitEffect}`;
+          observer.reason = `Saw ${observation}; ${effectText}`;
+          const observed = recordEvent({
+            nornId: observer.id,
+            type: "observe-feedback",
+            icon: feedback === "praise" ? "♡" : "!",
+            text: `${observer.name} watched ${observation}; ${effectText}.`,
+            memory: `I saw ${observation}; ${memoryEffect}.`,
+            relatedEventId: feedbackEvent.id
+          });
+          observer.observedEventIds.add(observed.id);
+        }
+      }
+
       function updateNorn(norn, dt) {
         norn.hunger = clamp(norn.hunger + dt * 1.55, 0, 100);
         norn.curiosity = clamp(norn.curiosity + dt * (0.68 + norn.traits.curiosity * 0.34), 0, 100);
@@ -1815,13 +1849,14 @@
         const object = OBJECTS[success.objectId];
         norn.learned[object.id] = clamp(norn.learned[object.id] + 0.2, 0, 1);
         norn.reason = `Your praise strengthened the ${object.label.toLowerCase()} association`;
-        recordEvent({
+        const feedbackEvent = recordEvent({
           nornId: norn.id,
           type: "praise",
           icon: "♡",
           text: `You praised ${norn.name} after ${success.kind === "food" ? "eating" : "playing"}; the association grew stronger.`,
           memory: `You praised me after I used the ${object.label.toLowerCase()}; I may remember it as helpful.`
         });
+        shareFeedbackObservation(norn, object, "praise", feedbackEvent);
         showToast(`${norn.name} noticed your praise. The association grew stronger.`);
         renderUI();
       }
@@ -1836,13 +1871,14 @@
         norn.learned[object.id] = clamp(norn.learned[object.id] - 0.2, 0, 1);
         norn.action = "noticing your disapproval";
         norn.reason = `Your scolding weakened the ${object.label.toLowerCase()} association`;
-        recordEvent({
+        const feedbackEvent = recordEvent({
           nornId: norn.id,
           type: "scold",
           icon: "!",
           text: `You scolded ${norn.name} after ${actionForJournal} the ${object.label.toLowerCase()}; the association weakened.`,
           memory: `You scolded me after I ${action} the ${object.label.toLowerCase()}; I may be less likely to choose it.`
         });
+        shareFeedbackObservation(norn, object, "scold", feedbackEvent);
         showToast(`${norn.name} noticed your scolding. The association weakened.`);
         renderUI();
       }
