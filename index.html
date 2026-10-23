@@ -157,6 +157,17 @@
       pointer-events: none;
     }
 
+    .object-targets {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 9px;
+    }
+    .object-targets-label { color: #405c53; font-size: 11px; font-weight: 800; }
+    .object-targets .button { min-height: 40px; }
+    .object-target-help { flex: 1 1 200px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 13px; }
     .control-group { flex-wrap: wrap; gap: 7px; }
     .button {
@@ -270,6 +281,8 @@
       .field-note { display: inline-block; margin-top: 12px; }
       .habitat-card, .inspector-card { padding: 11px; }
       .canvas-frame { margin: 0 -1px; }
+      .object-targets-label, .object-target-help { flex-basis: 100%; }
+      .object-targets .button { flex: 1 1 0; padding-right: 8px; padding-left: 8px; }
       canvas { aspect-ratio: 960 / 560; }
       .toolbar { align-items: flex-start; }
       .toolbar-note { width: 100%; text-align: left; }
@@ -324,6 +337,12 @@
           <canvas id="habitat" width="960" height="500" aria-label="Side view of Softwood Grove with two Norns, a fruit dish, and a spinning toy"></canvas>
           <div class="canvas-tag">Softwood Grove</div>
           <div class="canvas-hint" id="canvasHint">Choose a Norn, then point them toward something interesting.</div>
+        </div>
+        <div class="object-targets" role="group" aria-labelledby="objectTargetsLabel" aria-describedby="objectTargetsHelp">
+          <span class="object-targets-label" id="objectTargetsLabel">Habitat objects</span>
+          <button class="button object-target" type="button" data-object-target="fruit">Honey fruit</button>
+          <button class="button object-target" type="button" data-object-target="spinner">Wind-up spinner</button>
+          <span class="object-target-help" id="objectTargetsHelp">Choose an object to point the selected Norn toward it. Choose Teach word first to teach a matching word.</span>
         </div>
         <div class="toolbar" aria-label="Habitat controls">
           <div class="control-group">
@@ -440,6 +459,8 @@
         clock: document.getElementById("worldClock"),
         saveStatus: document.getElementById("saveStatus"),
         hint: document.getElementById("canvasHint"),
+        objectHelp: document.getElementById("objectTargetsHelp"),
+        objectTargets: [...document.querySelectorAll("[data-object-target]")],
         toolbarNote: document.getElementById("toolbarNote"),
         point: document.getElementById("pointButton"),
         wordSelect: document.getElementById("wordSelect"),
@@ -1144,7 +1165,7 @@
         context.fillText("WIND-UP SPINNER", x, y + 39);
       }
 
-      function drawNorn(context, norn, selected, time) {
+      function drawNorn(context, norn, selected, time, screenScaleX, screenScaleY, speechStackOffsetY) {
         const bob = Math.sin(time * 4 + norn.wiggle) * 2.2;
         const x = norn.x, y = norn.y + bob;
         const colors = norn.color;
@@ -1208,27 +1229,32 @@
         }
 
         if (norn.speech && time < norn.speech.until) {
-          const bubbleX = clamp(x, 45, WORLD_WIDTH - 45);
-          const bubbleY = y - 105;
+          const bubbleWidth = 76 / screenScaleX;
+          const bubbleHeight = 32 / screenScaleY;
+          const bubbleX = clamp(x, bubbleWidth / 2 + 8 / screenScaleX, WORLD_WIDTH - bubbleWidth / 2 - 8 / screenScaleX);
+          const bubbleY = y - 105 - speechStackOffsetY;
+          const radius = 7 / Math.min(screenScaleX, screenScaleY);
           context.fillStyle = "#fffdf4";
           context.strokeStyle = "#91aa91";
-          context.lineWidth = 1.5;
-          roundedRect(context, bubbleX - 35, bubbleY - 15, 70, 28, 9);
+          context.lineWidth = 1 / Math.min(screenScaleX, screenScaleY);
+          roundedRect(context, bubbleX - bubbleWidth / 2, bubbleY - bubbleHeight / 2, bubbleWidth, bubbleHeight, radius);
           context.fill(); context.stroke();
           context.beginPath();
-          context.moveTo(bubbleX - 5, bubbleY + 12);
-          context.lineTo(bubbleX, bubbleY + 19);
-          context.lineTo(bubbleX + 5, bubbleY + 12);
+          context.moveTo(bubbleX - 5 / screenScaleX, bubbleY + bubbleHeight / 2 - 1 / screenScaleY);
+          context.lineTo(bubbleX, bubbleY + bubbleHeight / 2 + 7 / screenScaleY);
+          context.lineTo(bubbleX + 5 / screenScaleX, bubbleY + bubbleHeight / 2 - 1 / screenScaleY);
           context.closePath(); context.fill();
           context.fillStyle = "#315748";
-          context.font = "750 12px system-ui, sans-serif";
+          context.font = `750 ${14 / screenScaleY}px system-ui, sans-serif`;
           context.textAlign = "center";
-          context.fillText(`“${norn.speech.text}”`, bubbleX, bubbleY + 4);
+          context.fillText(`“${norn.speech.text}”`, bubbleX, bubbleY + 4 / screenScaleY);
         }
       }
 
       function renderWorld(context, simState) {
         const rect = canvas.getBoundingClientRect();
+        const screenScaleX = rect.width > 0 ? rect.width / WORLD_WIDTH : 1;
+        const screenScaleY = rect.height > 0 ? rect.height / WORLD_HEIGHT : 1;
         const ratio = window.devicePixelRatio || 1;
         const pixelWidth = Math.max(1, Math.round(rect.width * ratio));
         const pixelHeight = Math.max(1, Math.round(rect.height * ratio));
@@ -1241,7 +1267,13 @@
         drawBackdrop(context);
         drawFruit(context, OBJECTS.fruit);
         drawSpinner(context, OBJECTS.spinner, simState.time);
-        for (const norn of simState.norns) drawNorn(context, norn, norn.id === simState.selectedId, simState.time);
+        const activeSpeakers = simState.norns.filter(norn => norn.speech && simState.time < norn.speech.until);
+        const speechStacked = activeSpeakers.length > 1
+          && Math.abs(activeSpeakers[0].x - activeSpeakers[1].x) * screenScaleX < 76;
+        for (const norn of simState.norns) {
+          const speechStackOffsetY = speechStacked && norn.id === "moss" ? 42 / screenScaleY : 0;
+          drawNorn(context, norn, norn.id === simState.selectedId, simState.time, screenScaleX, screenScaleY, speechStackOffsetY);
+        }
 
         if (simState.teachingWord) {
           context.fillStyle = "rgba(52, 100, 76, .93)";
@@ -1443,20 +1475,34 @@
         ui.teach.classList.toggle("active", Boolean(state.teachingWord));
         ui.teach.setAttribute("aria-pressed", String(Boolean(state.teachingWord)));
         canvas.classList.toggle("pointing", state.pointMode || Boolean(state.teachingWord));
+        const selectedNorn = getNorn(state.selectedId);
+        for (const target of ui.objectTargets) {
+          const object = OBJECTS[target.dataset.objectTarget];
+          const label = state.teachingWord
+            ? `Use the ${object.label.toLowerCase()} for the word ${VOCABULARY[state.teachingWord].label}`
+            : `Point ${selectedNorn.name} toward the ${object.label.toLowerCase()}`;
+          if (target.getAttribute("aria-label") !== label) target.setAttribute("aria-label", label);
+        }
+        let objectHelp = "";
         if (state.teachingWord) {
           const objectName = OBJECTS[VOCABULARY[state.teachingWord].objectId].label.toLowerCase();
-          ui.hint.textContent = `Click the ${objectName} to teach ${getNorn(state.selectedId).name} the word “${state.teachingWord}”.`;
-          ui.toolbarNote.textContent = `Show “${state.teachingWord}” to ${getNorn(state.selectedId).name}.`;
+          ui.hint.textContent = `Choose the ${objectName} to teach ${selectedNorn.name} the word “${state.teachingWord}”.`;
+          ui.toolbarNote.textContent = `Show “${state.teachingWord}” to ${selectedNorn.name}.`;
+          objectHelp = `Choose the ${objectName} to teach ${selectedNorn.name} the word “${state.teachingWord}”.`;
         } else if (state.pointMode) {
-          ui.hint.textContent = `Click an object to point it out to ${getNorn(state.selectedId).name}.`;
+          ui.hint.textContent = `Choose an object to point it out to ${selectedNorn.name}.`;
           ui.toolbarNote.textContent = "Choose the fruit or spinner in the habitat.";
+          objectHelp = `Choose the fruit dish or spinner to point it out to ${selectedNorn.name}.`;
         } else if (state.guidance && state.guidance.remaining > 0) {
           ui.hint.textContent = `${getNorn(state.guidance.nornId).name} is following your point.`;
           ui.toolbarNote.textContent = "They’ll try it, then decide what they think.";
+          objectHelp = `Choose another object to point ${selectedNorn.name} toward it. Select Teach word first to teach a matching word.`;
         } else {
           ui.hint.textContent = "Choose a Norn, then point them toward something interesting.";
           ui.toolbarNote.textContent = "Select an object to point it out.";
+          objectHelp = `Choose an object to point ${selectedNorn.name} toward it. Select Teach word first to teach a matching word.`;
         }
+        if (ui.objectHelp.textContent !== objectHelp) ui.objectHelp.textContent = objectHelp;
         renderInspector();
         renderJournal();
       }
@@ -1496,6 +1542,39 @@
         state.teachingWord = null;
         showToast(`${norn.name} heard “${definition.label}”.`);
         renderUI();
+      }
+
+      function pointNornToObject(object) {
+        const norn = getNorn(state.selectedId);
+        state.guidance = { nornId: norn.id, objectId: object.id, remaining: 7 };
+        state.pointMode = false;
+        norn.targetId = object.id;
+        norn.thinkIn = 0;
+        recordEvent({
+          nornId: norn.id,
+          type: "point",
+          icon: "⌖",
+          text: `You pointed ${norn.name} toward ${object.label.toLowerCase()}.`,
+          memory: `You pointed out the ${object.label.toLowerCase()}; I went to take a closer look.`
+        });
+        showToast(`${norn.name} noticed your point. They’ll decide what to do next.`);
+        renderUI();
+      }
+
+      function activateObjectTarget(objectId) {
+        const object = OBJECTS[objectId];
+        if (!object) return;
+        if (state.teachingWord) {
+          const definition = VOCABULARY[state.teachingWord];
+          if (object.id !== definition.objectId) {
+            const expectedObject = OBJECTS[definition.objectId];
+            showToast(`Show “${definition.label}” with the ${expectedObject.label.toLowerCase()}.`);
+            return;
+          }
+          teachWord(getNorn(state.selectedId), state.teachingWord, object);
+          return;
+        }
+        pointNornToObject(object);
       }
 
       function getRecentActionForFeedback(norn, feedback) {
@@ -1567,42 +1646,18 @@
 
       function handleCanvasClick(event) {
         const point = canvasPosition(event);
-        if (state.teachingWord) {
-          const object = objectAt(point.x, point.y);
-          const definition = VOCABULARY[state.teachingWord];
-          if (!object) {
-            const expectedObject = OBJECTS[definition.objectId];
-            showToast(`Click the ${expectedObject.label.toLowerCase()} to show that word.`);
-            return;
-          }
-          if (object.id !== definition.objectId) {
-            const expectedObject = OBJECTS[definition.objectId];
-            showToast(`Show “${definition.label}” with the ${expectedObject.label.toLowerCase()}.`);
-            return;
-          }
-          teachWord(getNorn(state.selectedId), state.teachingWord, object);
-          return;
-        }
-        if (state.pointMode) {
+        if (state.teachingWord || state.pointMode) {
           const object = objectAt(point.x, point.y);
           if (!object) {
-            showToast("Point to the fruit dish or wind-up spinner in the habitat.");
+            if (state.teachingWord) {
+              const expectedObject = OBJECTS[VOCABULARY[state.teachingWord].objectId];
+              showToast(`Click the ${expectedObject.label.toLowerCase()} to show that word.`);
+            } else {
+              showToast("Point to the fruit dish or wind-up spinner in the habitat.");
+            }
             return;
           }
-          const norn = getNorn(state.selectedId);
-          state.guidance = { nornId: norn.id, objectId: object.id, remaining: 7 };
-          state.pointMode = false;
-          norn.targetId = object.id;
-          norn.thinkIn = 0;
-          recordEvent({
-            nornId: norn.id,
-            type: "point",
-            icon: "⌖",
-            text: `You pointed ${norn.name} toward ${object.label.toLowerCase()}.`,
-            memory: `You pointed out the ${object.label.toLowerCase()}; I went to take a closer look.`
-          });
-          showToast(`${norn.name} noticed your point. They’ll decide what to do next.`);
-          renderUI();
+          activateObjectTarget(object.id);
           return;
         }
 
@@ -1660,6 +1715,9 @@
         if (state.pointMode) showToast(`Point to something for ${getNorn(state.selectedId).name} to explore.`);
         renderUI();
       });
+      for (const target of ui.objectTargets) {
+        target.addEventListener("click", () => activateObjectTarget(target.dataset.objectTarget));
+      }
       ui.teach.addEventListener("click", beginWordTeaching);
       ui.wordSelect.addEventListener("change", () => {
         if (state.teachingWord) {

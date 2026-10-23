@@ -7,8 +7,8 @@ A small, self-contained browser prototype inspired by the artificial-life and cr
 Open [`index.html`](index.html) in a modern browser. There is no build step, server, account, or network connection required.
 
 - Select Mallow or Moss to inspect their needs, tendencies, learned associations, and event-based memories.
-- Choose **Point**, then click food or the spinner to guide the selected Norn.
-- Choose **fruit** or **spinner** in the word menu, click **Teach word**, then click the matching object. Teaching twice is enough to start using the word.
+- Choose **Point** and click an object, or use the **Honey fruit** and **Wind-up spinner** buttons below the scene to point the selected Norn toward one.
+- Choose **fruit** or **spinner** in the word menu, click **Teach word**, then click or activate the matching object. Teaching twice is enough to start using the word.
 - Select a Norn and use **Praise** soon after they eat or play to reinforce that action.
 - Use **Scold** after a recent action to weaken that action’s learned association. Each action accepts one response, either Praise or Scold.
 - Pause the habitat or change its simulation speed. **Reset** starts a fresh run and replaces the saved run when saving is available.
