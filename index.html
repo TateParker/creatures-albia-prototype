@@ -483,6 +483,7 @@
       const SAVE_KEY = "new-albia-save-v1";
       const SAVE_LOCK = `${SAVE_KEY}-writer`;
       const SAVE_SCHEMA_VERSION = 1;
+      const SPEED_OPTIONS = [1, 2, 0.5];
       const SAVE_INTERVAL = 4;
       const TAB_ID = globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
         ? globalThis.crypto.randomUUID()
@@ -687,7 +688,7 @@
           || !Number.isInteger(simulation.rngState) || simulation.rngState < 0 || simulation.rngState > 0xffffffff
           || !isFiniteBetween(simulation.time, 0, Number.MAX_SAFE_INTEGER)
           || typeof simulation.paused !== "boolean"
-          || ![1, 2].includes(simulation.speed)
+          || !SPEED_OPTIONS.includes(simulation.speed)
           || !["mallow", "moss"].includes(simulation.selectedId)
           || !Number.isInteger(simulation.nextEventId) || simulation.nextEventId < 1
           || !Array.isArray(simulation.events) || simulation.events.length > 12
@@ -2044,7 +2045,8 @@
         renderUI();
       });
       ui.speed.addEventListener("click", () => {
-        state.speed = state.speed === 1 ? 2 : 1;
+        const currentSpeedIndex = SPEED_OPTIONS.indexOf(state.speed);
+        state.speed = SPEED_OPTIONS[(currentSpeedIndex + 1) % SPEED_OPTIONS.length];
         saveSoon();
         renderUI();
       });
