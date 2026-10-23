@@ -115,6 +115,7 @@
     .habitat-status { display: grid; justify-items: end; gap: 4px; }
     .save-status { min-height: 12px; color: var(--muted); font-size: 9px; text-align: right; }
     .save-status[data-state="unavailable"], .save-status[data-state="blocked"], .save-status[data-state="conflict"] { color: #96564a; }
+    .save-export { min-height: 30px; padding: 6px 9px; font-size: 10px; }
 
     .canvas-frame {
       position: relative;
@@ -362,6 +363,7 @@
           <div class="habitat-status">
             <div class="time-chip" id="worldClock" aria-live="off">DAY 1 · 06:00</div>
             <div class="save-status" id="saveStatus" data-state="saving" role="status" aria-live="polite" title="Your grove is saved only in this browser">New grove · saving in this browser</div>
+            <button class="button save-export" id="exportSaveButton" type="button">Download this run</button>
           </div>
         </div>
         <div class="canvas-frame">
@@ -516,6 +518,7 @@
         pause: document.getElementById("pauseButton"),
         speed: document.getElementById("speedButton"),
         feedbackHelp: document.getElementById("feedbackControlsHelp"),
+        exportSave: document.getElementById("exportSaveButton"),
         reset: document.getElementById("resetButton"),
         options: document.getElementById("nornOptions"),
         name: document.getElementById("nornName"),
@@ -898,6 +901,38 @@
           return await writeSave();
         } finally {
           saveInFlight = false;
+        }
+      }
+
+      function exportCurrentRun() {
+        let objectUrl = null;
+        let downloadLink = null;
+        let downloadStarted = false;
+        try {
+          const snapshot = getSaveSnapshot(observedSaveRevision);
+          if (!isValidSaveRecord(snapshot)) {
+            showToast("This grove could not be exported because its save data is invalid.");
+            return;
+          }
+
+          const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+          objectUrl = URL.createObjectURL(blob);
+          downloadLink = document.createElement("a");
+          downloadLink.href = objectUrl;
+          downloadLink.download = `new-albia-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+          downloadLink.hidden = true;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          downloadStarted = true;
+          showToast("Started a JSON download of this tab's run.");
+        } catch {
+          showToast("This browser could not prepare the grove download.");
+        } finally {
+          if (downloadLink) downloadLink.remove();
+          if (objectUrl) {
+            if (downloadStarted) window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+            else URL.revokeObjectURL(objectUrl);
+          }
         }
       }
 
@@ -1994,6 +2029,7 @@
         target.addEventListener("click", () => activateObjectTarget(target.dataset.objectTarget));
       }
       ui.teach.addEventListener("click", beginWordTeaching);
+      ui.exportSave.addEventListener("click", exportCurrentRun);
       ui.wordSelect.addEventListener("change", () => {
         if (state.teachingWord) {
           state.teachingWord = ui.wordSelect.value;
