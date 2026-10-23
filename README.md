@@ -10,7 +10,7 @@ Open [`index.html`](index.html) in a modern browser. There is no build step, ser
 - Check **Choice signals** in the notebook to see how hunger, curiosity, and learned preferences contribute to the current fruit-versus-spinner decision.
 - Choose **Point** and click an object, or use the **Honey fruit** and **Wind-up spinner** buttons below the scene to point the selected Norn toward one. Guidance lasts up to seven in-game seconds; **Choice signals** shows the remaining time and what the Norn would choose alone.
 - Choose **fruit** or **spinner** in the word menu, click **Teach word**, then click or activate the matching object. Teaching twice is enough to start using the word.
-- Use **Praise** or **Scold** within 12 in-game seconds after a Norn eats or plays; each action accepts one response to strengthen or weaken that learned association.
+- Use **Praise** or **Scold** within 12 in-game seconds after a Norn eats or plays; each action accepts one response, and the immediate message names the fruit or spinner association and whether it changed or reached its limit.
 - Choose **Download this run** to save a timestamped JSON snapshot of this tab's current grove, including progress that has not been autosaved yet.
 - Choose **Show all moments** below the recent journal to reveal up to 12 retained observations; the newest three are visible by default.
 - In a Norn's recent memories, choose **Find in journal** to reveal and focus a memory's source moment while it remains in the retained journal.

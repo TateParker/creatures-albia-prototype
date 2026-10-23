@@ -1926,7 +1926,7 @@
             : `You praised me after I used the ${objectLabel}; my association was already as strong as it could be.`
         });
         shareFeedbackObservation(norn, object, "praise", feedbackEvent);
-        showToast(`${norn.name} noticed your praise. ${changed ? "The association grew stronger." : "The association was already at its strongest."}`);
+        showToast(`${norn.name} noticed your praise. The ${objectLabel} association ${changed ? "grew stronger." : "was already at its strongest."}`);
         renderUI();
       }
 
@@ -1959,7 +1959,7 @@
             : `You scolded me after I ${action} the ${objectLabel}; my association was already as weak as it could be.`
         });
         shareFeedbackObservation(norn, object, "scold", feedbackEvent);
-        showToast(`${norn.name} noticed your scolding. ${changed ? "The association weakened." : "The association was already at its weakest."}`);
+        showToast(`${norn.name} noticed your scolding. The ${objectLabel} association ${changed ? "weakened." : "was already at its weakest."}`);
         renderUI();
       }
 
