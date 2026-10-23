@@ -43,6 +43,9 @@
 - [x] Avoid recreating unchanged memory buttons during routine inspector refreshes; include source-retention state in the render key.
 - [x] Update README and inspect both source-present and source-expired paths, collapsed and already-expanded navigation, and focus stability.
 - [x] Run `git diff --check` and `node --check` against the extracted inline script. Do not add or run automated tests.
-- [ ] Commit implementation/docs, obtain fresh scoped review, then publish and verify the Pages response.
+- [x] Commit implementation/docs as `6876fca`. Fresh scoped review of `d17d747a077c55369a082fdc4d11e13bd08ea5e3..6876fcacf3e56eb5d30ed571282ae351ef86b00b` found one P2: the button's accessible name did not include its visible action label.
+- [x] Fixed the P2 in `4a62112` by prefixing the accessible name with the visible text “Find in journal”; focused source inspection and diff/script syntax checks passed.
+- [x] Published through `4a62112`; Pages workflow [39939467629](https://github.com/TateParker/creatures-albia-prototype/actions/runs/39939467629) succeeded.
+- [x] Cache-busted HTTP 200 at `?v=4a6211296d9a` verified the matching accessible name, deterministic event IDs, source navigation handler, and memoized memory rendering.
 
-**Check:** Static source review, `git diff --check`, inline-script syntax validation, a fresh scoped code review, successful Pages workflow, and cache-busted HTTP verification.
+**Check:** Static source review, `git diff --check`, inline-script syntax validation, fresh scoped review with its P2 fixed, successful Pages workflow, and cache-busted HTTP verification all passed. No automated tests were added or run.
