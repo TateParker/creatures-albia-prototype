@@ -270,6 +270,7 @@
     .memory-list { display: grid; gap: 7px; padding: 0; margin: 0; list-style: none; }
     .memory-item { position: relative; padding: 8px 9px 8px 25px; border-radius: 9px; background: #f2f4eb; color: #51675e; font-size: 10px; line-height: 1.4; }
     .memory-item::before { position: absolute; top: 8px; left: 9px; content: "✦"; color: #8b9c65; font-size: 10px; }
+    .memory-find { display: flex; width: max-content; min-height: 32px; margin-top: 7px; padding: 6px 9px; font-size: 10px; }
     .empty-memory { padding: 10px; border: 1px dashed #d6ddcf; border-radius: 9px; color: #809087; font-size: 10px; line-height: 1.45; }
 
     .journal-card { grid-column: 1 / -1; padding: 15px 16px; }
@@ -277,6 +278,7 @@
     .log-caption { color: var(--muted); font-size: 10px; }
     .event-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 0; list-style: none; }
     .event-item { display: flex; min-width: 0; gap: 9px; padding: 9px 10px; border: 1px solid #e2e6dc; border-radius: 10px; background: #f9f8f1; color: #52685f; font-size: 10px; line-height: 1.4; }
+    .event-item:focus { outline: 3px solid rgba(83, 145, 118, .5); outline-offset: 2px; background: #f1f5e9; }
     .event-icon { flex: 0 0 auto; color: #739576; font-size: 13px; }
     .event-copy { min-width: 0; }
     .event-time { display: block; margin-bottom: 2px; color: #849187; font-size: 9px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
@@ -536,6 +538,7 @@
       let toastTimeout = 0;
       let journalExpanded = false;
       let lastJournalRenderKey = null;
+      let lastMemoryRenderKey = null;
       let saveElapsed = 0;
       let saveTimeout = 0;
       let saveBlocked = false;
@@ -1485,6 +1488,60 @@
         );
       }
 
+      function renderMemories(norn) {
+        const memoryKey = JSON.stringify([
+          norn.id,
+          norn.memories.map(memory => [
+            memory.eventId,
+            memory.text,
+            state.events.some(event => event.id === memory.eventId)
+          ])
+        ]);
+        if (memoryKey === lastMemoryRenderKey) return;
+
+        const focusedButton = document.activeElement instanceof HTMLButtonElement
+          && document.activeElement.classList.contains("memory-find")
+          && ui.memories.contains(document.activeElement)
+          ? document.activeElement
+          : null;
+        const focusedEventId = focusedButton ? focusedButton.dataset.eventId : null;
+        lastMemoryRenderKey = memoryKey;
+        ui.memories.replaceChildren();
+        if (norn.memories.length === 0) {
+          const empty = document.createElement("li");
+          empty.className = "empty-memory";
+          empty.textContent = "No memories yet. Watch what catches their attention.";
+          ui.memories.appendChild(empty);
+          return;
+        }
+
+        for (const memory of norn.memories) {
+          const item = document.createElement("li");
+          item.className = "memory-item";
+          const text = document.createElement("span");
+          text.textContent = memory.text;
+          item.appendChild(text);
+          const sourceEvent = state.events.find(event => event.id === memory.eventId);
+          if (sourceEvent) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "button memory-find";
+            button.dataset.eventId = String(memory.eventId);
+            button.textContent = "Find in journal";
+            button.setAttribute("aria-label", `Find journal moment for memory: ${memory.text}`);
+            button.addEventListener("click", () => showMemoryEvent(memory.eventId));
+            item.appendChild(button);
+          }
+          ui.memories.appendChild(item);
+        }
+
+        if (focusedEventId) {
+          const button = [...ui.memories.querySelectorAll(".memory-find")]
+            .find(candidate => candidate.dataset.eventId === focusedEventId);
+          button?.focus();
+        }
+      }
+
       function renderDecisionRow(label, needLabel, needScore, habitScore, totalScore) {
         const row = document.createElement("div");
         row.className = "decision-row";
@@ -1559,20 +1616,7 @@
         );
         renderVocabulary(ui.vocabulary, norn);
 
-        ui.memories.textContent = "";
-        if (norn.memories.length === 0) {
-          const empty = document.createElement("li");
-          empty.className = "empty-memory";
-          empty.textContent = "No memories yet. Watch what catches their attention.";
-          ui.memories.appendChild(empty);
-        } else {
-          for (const memory of norn.memories) {
-            const item = document.createElement("li");
-            item.className = "memory-item";
-            item.textContent = memory.text;
-            ui.memories.appendChild(item);
-          }
-        }
+        renderMemories(norn);
 
         for (const option of ui.options.querySelectorAll(".norn-option")) {
           const selected = option.getAttribute("aria-pressed") === "true";
@@ -1586,6 +1630,10 @@
         const renderKey = `${eventKey}::${journalExpanded}`;
         if (renderKey === lastJournalRenderKey) return;
         lastJournalRenderKey = renderKey;
+        const focusedItemId = ui.eventList.contains(document.activeElement)
+          && document.activeElement.id.startsWith("journal-event-")
+          ? document.activeElement.id
+          : null;
         ui.eventList.textContent = "";
         if (state.events.length === 0) {
           const empty = document.createElement("li");
@@ -1597,6 +1645,8 @@
           for (const event of visibleEvents) {
             const item = document.createElement("li");
             item.className = "event-item";
+            item.id = `journal-event-${event.id}`;
+            item.tabIndex = -1;
             const icon = document.createElement("span");
             icon.className = "event-icon";
             icon.setAttribute("aria-hidden", "true");
@@ -1618,6 +1668,17 @@
         ui.journalToggle.hidden = state.events.length <= 3;
         ui.journalToggle.setAttribute("aria-expanded", String(journalExpanded));
         ui.journalToggle.textContent = journalExpanded ? "Show fewer moments" : `Show all ${state.events.length} moments`;
+        if (focusedItemId) document.getElementById(focusedItemId)?.focus({ preventScroll: true });
+      }
+
+      function showMemoryEvent(eventId) {
+        if (!state.events.some(event => event.id === eventId)) return;
+        journalExpanded = true;
+        renderJournal();
+        const item = document.getElementById(`journal-event-${eventId}`);
+        if (!item) return;
+        item.scrollIntoView({ block: "center" });
+        item.focus({ preventScroll: true });
       }
 
       function renderUI() {
