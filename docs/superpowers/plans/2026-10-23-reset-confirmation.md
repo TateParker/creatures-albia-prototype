@@ -34,10 +34,10 @@
 - Consumes: the existing `resetSimulation()` function and Reset button.
 - Produces: a confirmed path to existing reset behavior and a cancel path with no mutation.
 
-- [ ] Add `window.confirm` to the Reset button handler; call `resetSimulation()` only when it returns true.
-- [ ] Clarify in README that Reset asks before replacing the current/saved grove.
-- [ ] Inspect confirm and cancel paths. Run `git diff --check` and `node --check` on the extracted inline script; do not add or run automated tests.
-- [ ] Commit the verified implementation.
+- [x] Add `window.confirm` to the Reset button handler; call `resetSimulation()` only when it returns true.
+- [x] Clarify in README that Reset asks before replacing the current/saved grove.
+- [x] Inspect confirm and cancel paths. Run `git diff --check` and `node --check` on the extracted inline script; do not add or run automated tests.
+- [x] Commit the verified implementation.
 
 ### Task 2: Review and publish
 
@@ -48,7 +48,7 @@
 - Consumes: Task 1 implementation commit and static-check evidence.
 - Produces: a fresh scoped review, successful Pages deployment, and live-response verification.
 
-- [ ] Obtain a fresh read-only review; resolve any Critical or Important finding before publishing.
-- [ ] Push the reviewed implementation and confirm the Pages workflow succeeds.
-- [ ] Verify the published response includes the confirmation guard before the reset call.
-- [ ] Record completion in the plan ledger and local handoff.
+- [x] Obtain a fresh read-only review; resolve any Critical or Important finding before publishing.
+- [x] Push the reviewed implementation and confirm the Pages workflow succeeds.
+- [x] Verify the published response includes the confirmation guard before the reset call.
+- [x] Record completion in the plan ledger and local handoff.
