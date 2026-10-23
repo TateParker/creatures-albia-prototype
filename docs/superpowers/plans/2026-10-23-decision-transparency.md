@@ -40,5 +40,5 @@
 - [x] Add a compact notebook card showing current preference/guidance and both score breakdowns with accessible meter labels and values.
 - [x] Document the new choice-signal display in README.
 - [x] Inspect selector/display parity, guidance, thresholds, responsive styles, and unchanged persistence fields; run `git diff --check` and `node --check` on the extracted inline script. Do not run automated tests.
-- [ ] Commit the implementation and static-verification notes.
+- [x] Commit the implementation as `957be11`; inline-script syntax validation and staged diff whitespace checks passed.
 - [ ] Request scoped review; publish only after a clear review, then verify the Pages workflow and a cache-busted live response.
