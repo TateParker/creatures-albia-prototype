@@ -71,7 +71,7 @@
 - [x] Make Reset replace the saved run and begin the canonical initial grove; provide clear accessible status copy.
 - [x] Explain that progress saves only in this browser and that clearing site data removes it.
 - [x] Review corrupted/newer save handling, failure paths, learning preservation, and reset behavior.
-- [ ] Commit the feature, push `main`, and confirm the Pages workflow and served page include the persistence status.
+- [x] Publish commits through `4a55660` to `main`; Pages workflow `39929149393` succeeded, and the cache-busted page returned HTTP 200 with the save status and lock-based writer.
 
 **Check:** `git diff --check`, `node --check` on the extracted inline script, GitHub Actions Pages result, and a cache-busted HTTP response containing the persistence status element.
 
@@ -86,6 +86,6 @@
 - [x] Update README and spec for memory-only fallback, Reset behavior, and best-effort lifecycle saves.
 - [x] Parent source inspection; `git diff --check` and inline JavaScript `node --check` passed.
 - [x] Fix commit `289f125` and scoped re-review against `6774ea7`; review is ready to publish with no Critical, Important, or Minor findings.
-- [ ] Publish only after scoped review is clear and verify deployment.
+- [x] Publish only after scoped review is clear and verify deployment; workflow `39929149393` succeeded and the served page includes the persistence status and exclusive writer.
 
-The fix implementer and parent performed source inspection. Static diff and syntax checks passed. No automated tests, commits, or pushes have been performed; the parent owns the fix commit, scoped re-review, and publication.
+The fix implementer and parent performed source inspection; static diff and inline JavaScript syntax checks passed, and no automated tests were run. Scoped review of `6774ea7..289f125` found no Critical, Important, or Minor issues. Publication through `4a55660` succeeded; GitHub Actions deployed the Pages site and a cache-busted HTTP response verified the save status, lock-based writer, and revision field.
