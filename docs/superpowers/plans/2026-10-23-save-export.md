@@ -43,6 +43,13 @@
 - [x] Document the portable snapshot and the difference between browser autosave and a downloaded copy.
 - [x] Inspect the save serializer and locking path to confirm export does not write storage, mutate revision, or alter simulation state.
 - [x] Run `git diff --check` and `node --check` against the extracted inline script. Do not add or run automated tests.
-- [ ] Commit implementation/docs, obtain a fresh scoped review, then publish and verify the Pages response.
+- [x] Commit implementation/docs, obtain a fresh scoped review, then publish and verify the Pages response.
 
 **Check:** Static source inspection, `git diff --check`, inline-script syntax validation, fresh scoped review, successful Pages workflow, and cache-busted HTTP verification.
+
+## Publication record
+
+- Implementation commit: `0068ebb34f4c438a6284965a473feb0f70707413`.
+- Read-only scoped review of `2dcf35369ad305ad85b18bcfbed0d5d7096b24df..0068ebb34f4c438a6284965a473feb0f70707413`: no Critical, Important, or Minor findings; approved to publish.
+- Static checks: `git diff --cached --check` and `node --check` on the extracted inline script passed. No automated tests were added or run.
+- Pages workflow `39969190090` succeeded. Cache-busted response `?v=0068ebb34f4c438a` returned HTTP 200 and contained the button, current snapshot call, success toast, and timestamped JSON filename logic.
