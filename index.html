@@ -2074,7 +2074,10 @@
         saveSoon();
         renderUI();
       });
-      ui.reset.addEventListener("click", () => resetSimulation());
+      ui.reset.addEventListener("click", () => {
+        const confirmed = window.confirm("Start a fresh grove? This will discard progress in this tab and replace the saved run in this browser if it can be safely updated.");
+        if (confirmed) resetSimulation();
+      });
       ui.journalToggle.addEventListener("click", () => {
         journalExpanded = !journalExpanded;
         renderJournal();
