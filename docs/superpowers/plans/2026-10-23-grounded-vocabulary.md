@@ -71,4 +71,4 @@
 - [x] Record each utterance and the observer's word-learning event with the speaker, word, and object grounded in simulation state.
 - [x] Update the README controls and explain the local vocabulary loop.
 - [x] Review mode transitions, confidence thresholds, event/memory grounding, and reset behavior.
-- [ ] Commit the feature, push `main`, and confirm the Pages workflow and served page include vocabulary teaching.
+- [x] Commit the feature, push `main`, and confirm the Pages workflow and served page include vocabulary teaching.
