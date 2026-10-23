@@ -44,7 +44,8 @@
 - [x] Scale speech text and bubble geometry to CSS-pixel minimums while preserving the animated world position; stagger simultaneous bubbles.
 - [x] Inspect keyboard labels/focus, mismatch and Point branches, responsive speech calculations, and unchanged persistence behavior.
 - [x] Run `git diff --check` and `node --check` on the extracted inline script; do not run automated tests.
-- [ ] Commit the slice, request a scoped code review, publish after a clean review, and verify the Pages workflow and live response.
+- [x] Commit `d805efa`; scoped source review of `5f275db..d805efa` approved it with no Critical, Important, or Minor findings.
+- [ ] Publish after the clean review and verify the Pages workflow and live response.
 
 **Check:** Static source review; `git diff --check`; inline script syntax check; successful Pages workflow and cache-busted response containing the target controls and responsive speech sizing.
 
