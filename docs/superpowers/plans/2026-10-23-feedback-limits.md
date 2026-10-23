@@ -10,4 +10,4 @@
 
 - [x] Make Praise and Scold explanations conditional on whether the clamped value changed.
 - [x] Document the bounded association feedback and inspect all resulting text; run static diff/syntax checks only.
-- [ ] Commit, obtain a fresh scoped review, publish, and verify the live response.
+- [x] Commit, obtain a fresh scoped review, publish, and verify the live response.
