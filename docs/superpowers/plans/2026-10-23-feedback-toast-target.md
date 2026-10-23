@@ -34,10 +34,10 @@
 - Consumes: existing `objectLabel` and `changed` values from both feedback handlers.
 - Produces: immediate feedback text naming the object and its changed or capped outcome.
 
-- [ ] Update Praise/Scold toast strings to include `objectLabel` in both outcome branches; keep their existing changed/capped meaning.
-- [ ] Update README’s feedback instruction to mention that the immediate confirmation names the affected object association.
-- [ ] Inspect all four toast outcomes. Run `git diff --check` and `node --check` on the extracted inline script; do not add or run automated tests.
-- [ ] Commit the verified implementation.
+- [x] Update Praise/Scold toast strings to include `objectLabel` in both outcome branches; keep their existing changed/capped meaning.
+- [x] Update README’s feedback instruction to mention that the immediate confirmation names the affected object association.
+- [x] Inspect all four toast outcomes. Run `git diff --check` and `node --check` on the extracted inline script; do not add or run automated tests.
+- [x] Commit the verified implementation.
 
 ### Task 2: Review and publish
 
@@ -48,7 +48,7 @@
 - Consumes: Task 1 implementation commit and its verification.
 - Produces: a scoped review record, successful Pages deployment, and cache-busted live response verification.
 
-- [ ] Obtain a fresh read-only review of the base-to-head change; resolve any Critical or Important finding before publishing.
-- [ ] Push the reviewed implementation and confirm the Pages workflow succeeds.
-- [ ] Verify the live response includes all four object-labelled toast outcomes and the existing observer call.
-- [ ] Record completion and deployment evidence in the local handoff and plan ledger.
+- [x] Obtain a fresh read-only review of the base-to-head change; resolve any Critical or Important finding before publishing.
+- [x] Push the reviewed implementation and confirm the Pages workflow succeeds.
+- [x] Verify the live response includes all four object-labelled toast outcomes and the existing observer call.
+- [x] Record completion and deployment evidence in the local handoff and plan ledger.
