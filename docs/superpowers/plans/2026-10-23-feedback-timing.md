@@ -39,4 +39,4 @@
 - [x] **Step 1: Label the controls.** Wrap the existing Praise and Scold buttons in a `role="group"` named “Learning feedback”; link a visible timing description through `aria-describedby`. Add wrapping styles that fit the current toolbar and narrow layout.
 - [x] **Step 2: Align play guidance.** Update README to say one response may be given within 12 in-game seconds after eating or playing.
 - [x] **Step 3: Verify the source.** Run `git diff --check` and `node --check` on the extracted inline script. Inspect the exact diff for unchanged handler wiring and responsive wrapping. Do not add or run automated tests.
-- [ ] **Step 4: Commit, request a scoped read-only review, publish only if clear, and verify Pages plus a cache-busted live response.**
+- [x] **Step 4: Commit, request a scoped read-only review, publish only if clear, and verify Pages plus a cache-busted live response.** Published as `a918f60`; review of `9907358..a918f60` found no Critical or Important issues (one minor README clarification deferred). Pages workflow `39937709425` succeeded; cache-busted HTTP 200 confirmed the named group, help text, and both buttons.
