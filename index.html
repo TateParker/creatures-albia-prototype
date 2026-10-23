@@ -384,10 +384,10 @@
               <option value="spinner">spinner</option>
             </select>
             <button class="button" id="teachButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Aa</span>Teach word</button>
-            <div class="feedback-controls" role="group" aria-labelledby="feedbackControlsLabel" aria-describedby="feedbackControlsHelp">
+            <div class="feedback-controls" role="group" aria-labelledby="feedbackControlsLabel">
               <span class="feedback-controls-label" id="feedbackControlsLabel">Learning feedback</span>
-              <button class="button primary" id="praiseButton" type="button"><span class="icon" aria-hidden="true">♡</span>Praise</button>
-              <button class="button reprimand" id="scoldButton" type="button"><span class="icon" aria-hidden="true">!</span>Scold</button>
+              <button class="button primary" id="praiseButton" type="button" aria-describedby="feedbackControlsHelp"><span class="icon" aria-hidden="true">♡</span>Praise</button>
+              <button class="button reprimand" id="scoldButton" type="button" aria-describedby="feedbackControlsHelp"><span class="icon" aria-hidden="true">!</span>Scold</button>
               <span class="feedback-controls-help" id="feedbackControlsHelp">Choose one within 12 in-game seconds after a meal or play.</span>
             </div>
             <button class="button" id="pauseButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Ⅱ</span>Pause</button>
@@ -515,6 +515,7 @@
         scold: document.getElementById("scoldButton"),
         pause: document.getElementById("pauseButton"),
         speed: document.getElementById("speedButton"),
+        feedbackHelp: document.getElementById("feedbackControlsHelp"),
         reset: document.getElementById("resetButton"),
         options: document.getElementById("nornOptions"),
         name: document.getElementById("nornName"),
@@ -1729,6 +1730,8 @@
         ui.teach.setAttribute("aria-pressed", String(Boolean(state.teachingWord)));
         canvas.classList.toggle("pointing", state.pointMode || Boolean(state.teachingWord));
         const selectedNorn = getNorn(state.selectedId);
+        const feedbackCopy = feedbackWindowText(selectedNorn);
+        if (ui.feedbackHelp.textContent !== feedbackCopy) ui.feedbackHelp.textContent = feedbackCopy;
         for (const target of ui.objectTargets) {
           const object = OBJECTS[target.dataset.objectTarget];
           const label = state.teachingWord
@@ -1758,6 +1761,23 @@
         if (ui.objectHelp.textContent !== objectHelp) ui.objectHelp.textContent = objectHelp;
         renderInspector();
         renderJournal();
+      }
+
+      function feedbackWindowText(norn) {
+        const success = norn.lastSuccess;
+        if (!success) return `Waiting for ${norn.name} to eat or play.`;
+        if (success.feedback) return `Feedback was already given for ${norn.name}'s last action. Wait for another meal or play.`;
+
+        const object = OBJECTS[success.objectId];
+        const action = success.kind === "food"
+          ? `ate the ${object.label.toLowerCase()}`
+          : `played with the ${object.label.toLowerCase()}`;
+        const elapsed = state.time - success.time;
+        if (elapsed > 12) return `The feedback window after ${norn.name} ${action} has ended. Wait for another meal or play.`;
+
+        const seconds = Math.max(1, Math.ceil(12 - elapsed));
+        const unit = seconds === 1 ? "second" : "seconds";
+        return `${norn.name} just ${action}. ${seconds} in-game ${unit} left to respond with Praise or Scold.`;
       }
 
       function selectNorn(id) {
