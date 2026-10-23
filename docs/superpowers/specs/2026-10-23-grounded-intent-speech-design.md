@@ -29,7 +29,7 @@ The user authorized continued prototype improvements; target-transition speech i
 
 ## Constraints and implementation notes
 
-- `updateNorn` selects targets on its existing think timer. Compare the prior and newly chosen target; speak only for a changed non-null target that is still beyond its existing arrival distance (52 world units for fruit, 48 for the spinner).
+- `updateNorn` selects targets on its existing think timer. Compare the prior and newly chosen target; speak only for a changed non-null target that is still beyond its existing arrival distance (52 world units for fruit, 48 for the spinner). Player guidance should wake this same selection path without preassigning `targetId`, so guided switches retain the previous target for comparison.
 - Reuse the existing 0.6 confidence threshold, `norn.speech` bubble expiry, `recordEvent`, and `sociability` probability.
 - `speakKnownWord` should default to the existing successful-use event wording, while accepting a seeking context for intent speech.
 - Extract the common word-hearing update/event into one helper. Successful events retain one per-observer attention gate shared with imitation. A standalone seeking utterance gets one sociability gate for word hearing and no imitation.

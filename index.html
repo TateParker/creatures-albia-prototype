@@ -1670,7 +1670,6 @@
         const norn = getNorn(state.selectedId);
         state.guidance = { nornId: norn.id, objectId: object.id, remaining: 7 };
         state.pointMode = false;
-        norn.targetId = object.id;
         norn.thinkIn = 0;
         recordEvent({
           nornId: norn.id,
