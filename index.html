@@ -245,6 +245,7 @@
     .decision-meter { height: 6px; overflow: hidden; border-radius: 99px; background: #e5e9dd; }
     .decision-meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a2c5a0, #538571); }
     .traits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .trait-help { margin: -2px 0 8px; color: #51675e; font-size: 11px; line-height: 1.4; }
     .trait-box { padding: 9px; border: 1px solid #e1e5d9; border-radius: 10px; background: #f8f7ef; }
     .trait-box .trait-name { color: #536a5f; font-size: 10px; font-weight: 700; }
     .trait-box .trait-value { color: #3b6554; font-size: 11px; font-weight: 850; }
@@ -406,6 +407,7 @@
         <div class="inspector-details">
           <div class="divider"></div>
           <h4 class="subhead">Inherited tendencies</h4>
+          <p class="trait-help" id="sociabilityHelp">Sociability is the chance to notice a nearby Norn's success.</p>
           <div class="traits-grid" id="traits"></div>
 
           <div class="divider"></div>
@@ -1369,7 +1371,7 @@
         return row;
       }
 
-      function renderTrait(label, value) {
+      function renderTrait(label, value, descriptionId = null) {
         const box = document.createElement("div");
         box.className = "trait-box";
         const heading = document.createElement("div");
@@ -1379,12 +1381,20 @@
         name.textContent = label;
         const amount = document.createElement("span");
         amount.className = "trait-value";
-        amount.textContent = `${Math.round(value * 100)}%`;
+        const percentage = Math.round(value * 100);
+        amount.textContent = `${percentage}%`;
         heading.append(name, amount);
         const meter = document.createElement("div");
         meter.className = "tiny-meter";
+        meter.setAttribute("role", "meter");
+        meter.setAttribute("aria-label", label);
+        meter.setAttribute("aria-valuemin", "0");
+        meter.setAttribute("aria-valuemax", "100");
+        meter.setAttribute("aria-valuenow", String(percentage));
+        meter.setAttribute("aria-valuetext", `${percentage}%`);
+        if (descriptionId) meter.setAttribute("aria-describedby", descriptionId);
         const fill = document.createElement("span");
-        fill.style.width = `${Math.round(value * 100)}%`;
+        fill.style.width = `${percentage}%`;
         meter.appendChild(fill);
         box.append(heading, meter);
         return box;
@@ -1485,7 +1495,7 @@
         renderDecisionSignals(norn);
         ui.traits.replaceChildren(
           renderTrait("Curiosity", norn.traits.curiosity),
-          renderTrait("Sociability", norn.traits.sociability)
+          renderTrait("Sociability", norn.traits.sociability, "sociabilityHelp")
         );
         ui.associations.replaceChildren(
           renderAssociation("Fruit eases hunger", norn.learned.fruit),
