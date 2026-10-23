@@ -43,4 +43,6 @@
 - [x] **Step 2: Replace the threshold condition in `index.html`.** For each eligible observer, continue when `state.rng() >= observer.traits.sociability`; do not change learning math, cooldown, or event text.
 - [x] **Step 3: Update `README.md`.** State that nearby observation and learning chance depends on the observing Norn's sociability.
 - [x] **Step 4: Run static verification.** Run `git diff --check` and extract the inline script from `index.html` to a temporary file under `.superpowers/sdd/2026-10-23-social-attention/`; run `node --check` on that script. Expected: both exit successfully with no whitespace or JavaScript syntax errors. Do not add or run automated tests.
-- [ ] **Step 5: Commit the implementation and documentation.** Commit message: `Make social observation trait weighted`.
+- [x] **Step 5: Commit the implementation and documentation.** Commit `e7a6746` (`Make social observation trait weighted`).
+- [x] Obtain a read-only scoped review of `f2b20c9..e7a6746`. It found no Critical, Important, or Minor issues and approved publication; the reviewer confirmed the probability boundaries, shared gate, unchanged save shape, and preserved learning behavior.
+- [ ] Publish the reviewed commit to `origin/main`, wait for GitHub Pages deployment, then verify the cache-busted live page contains the direct sociability probability gate and updated explanation.
