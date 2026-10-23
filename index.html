@@ -1652,7 +1652,9 @@
         if (hasGuidance) {
           const guidedObject = OBJECTS[state.guidance.objectId].label.toLowerCase();
           const independentChoice = scores.targetId ? OBJECTS[scores.targetId].label.toLowerCase() : "neither";
-          ui.decisionSummary.textContent = `Following your point to the ${guidedObject}. Choosing alone: ${independentChoice}.`;
+          const remainingSeconds = Math.max(1, Math.ceil(state.guidance.remaining));
+          const timeUnit = remainingSeconds === 1 ? "second" : "seconds";
+          ui.decisionSummary.textContent = `Following your point to the ${guidedObject} for ${remainingSeconds} more in-game ${timeUnit}. Choosing alone: ${independentChoice}.`;
         } else if (scores.targetId) {
           ui.decisionSummary.textContent = `Current preference: ${OBJECTS[scores.targetId].label.toLowerCase()}.`;
         } else {
