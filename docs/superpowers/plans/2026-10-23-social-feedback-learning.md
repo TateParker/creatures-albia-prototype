@@ -43,6 +43,6 @@
 - [x] Update README to explain that nearby Norns can learn from observed Praise and Scold.
 - [x] Inspect distance, random boundary, duplicate-response, feedback direction/limits, linked-event, and unchanged-save paths.
 - [x] Run `git diff --check` and `node --check` against the extracted inline script. Do not add or run automated tests.
-- [ ] Commit implementation/docs, obtain fresh scoped review, then publish and verify the Pages response.
+- [x] Commit implementation/docs, obtain fresh scoped review, then publish and verify the Pages response.
 
 **Check:** Static source review, `git diff --check`, inline-script syntax validation, a fresh scoped code review, successful Pages workflow, and cache-busted HTTP verification.
