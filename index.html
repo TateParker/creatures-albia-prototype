@@ -1008,7 +1008,7 @@
       function shareObservation(actor, object, actionEvent, spokenWord) {
         for (const observer of state.norns) {
           if (observer.id === actor.id || distance(observer, actor) > 330) continue;
-          if (observer.traits.sociability < 0.45 && state.rng() > observer.traits.sociability) continue;
+          if (state.rng() >= observer.traits.sociability) continue;
 
           if (spokenWord && spokenWord.wordId === object.id && observer.words[spokenWord.wordId] < 1) {
             const definition = VOCABULARY[spokenWord.wordId];
