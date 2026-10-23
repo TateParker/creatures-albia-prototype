@@ -177,6 +177,8 @@
     .button:focus-visible, .norn-option:focus-visible { outline: 3px solid rgba(83, 145, 118, .42); outline-offset: 2px; }
     .button.primary { border-color: var(--green); background: var(--green); color: white; }
     .button.primary:hover { border-color: var(--green-dark); background: var(--green-dark); }
+    .button.reprimand { border-color: #d8aaa0; background: #fbefeb; color: #864c43; }
+    .button.reprimand:hover { border-color: #bd7d71; background: #f7e3de; }
     .button.active { border-color: #bb8752; background: #f6e6cd; color: #795126; }
     .button:disabled { cursor: not-allowed; opacity: .52; transform: none; }
     .button .icon { font-size: 15px; line-height: 1; }
@@ -318,6 +320,7 @@
           <div class="control-group">
             <button class="button" id="pointButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">⌖</span>Point</button>
             <button class="button primary" id="praiseButton" type="button"><span class="icon" aria-hidden="true">♡</span>Praise</button>
+            <button class="button reprimand" id="scoldButton" type="button"><span class="icon" aria-hidden="true">!</span>Scold</button>
             <button class="button" id="pauseButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Ⅱ</span>Pause</button>
             <button class="button" id="speedButton" type="button" aria-label="Change simulation speed">1×</button>
             <button class="button" id="resetButton" type="button"><span class="icon" aria-hidden="true">↻</span>Reset</button>
@@ -408,6 +411,7 @@
         toolbarNote: document.getElementById("toolbarNote"),
         point: document.getElementById("pointButton"),
         praise: document.getElementById("praiseButton"),
+        scold: document.getElementById("scoldButton"),
         pause: document.getElementById("pauseButton"),
         speed: document.getElementById("speedButton"),
         reset: document.getElementById("resetButton"),
@@ -545,7 +549,7 @@
         const object = OBJECTS[objectId];
         const increase = kind === "food" ? 0.12 : 0.14;
         norn.learned[objectId] = clamp(norn.learned[objectId] + increase, 0, 1);
-        norn.lastSuccess = { time: state.time, objectId, kind };
+        norn.lastSuccess = { time: state.time, objectId, kind, feedback: null };
         norn.action = kind === "food" ? "tasting honey fruit" : "spinning the little toy";
         norn.reason = kind === "food" ? "Eating helped with hunger" : "Play satisfied curiosity";
 
@@ -1023,23 +1027,55 @@
         renderUI();
       }
 
+      function getRecentActionForFeedback(norn, feedback) {
+        if (!norn.lastSuccess || state.time - norn.lastSuccess.time > 12) {
+          showToast(`Wait for ${norn.name} to eat or play before giving feedback.`);
+          return null;
+        }
+        if (norn.lastSuccess.feedback) {
+          showToast(`${norn.name} has already received feedback for that action.`);
+          return null;
+        }
+        norn.lastSuccess.feedback = feedback;
+        return norn.lastSuccess;
+      }
+
       function applyPraise() {
         const norn = getNorn(state.selectedId);
-        if (!norn.lastSuccess || state.time - norn.lastSuccess.time > 12) {
-          showToast(`Wait for ${norn.name} to eat or play, then praise that useful action.`);
-          return;
-        }
-        const object = OBJECTS[norn.lastSuccess.objectId];
+        const success = getRecentActionForFeedback(norn, "praise");
+        if (!success) return;
+        const object = OBJECTS[success.objectId];
         norn.learned[object.id] = clamp(norn.learned[object.id] + 0.2, 0, 1);
         norn.reason = `Your praise strengthened the ${object.label.toLowerCase()} association`;
         recordEvent({
           nornId: norn.id,
           type: "praise",
           icon: "♡",
-          text: `You praised ${norn.name} after ${norn.lastSuccess.kind === "food" ? "eating" : "playing"}; the association grew stronger.`,
+          text: `You praised ${norn.name} after ${success.kind === "food" ? "eating" : "playing"}; the association grew stronger.`,
           memory: `You praised me after I used the ${object.label.toLowerCase()}; I may remember it as helpful.`
         });
         showToast(`${norn.name} noticed your praise. The association grew stronger.`);
+        renderUI();
+      }
+
+      function applyScold() {
+        const norn = getNorn(state.selectedId);
+        const success = getRecentActionForFeedback(norn, "scold");
+        if (!success) return;
+        const object = OBJECTS[success.objectId];
+        const action = success.kind === "food" ? "ate" : "played with";
+        const actionForJournal = success.kind === "food" ? "eating" : "playing with";
+        norn.learned[object.id] = clamp(norn.learned[object.id] - 0.2, 0, 1);
+        norn.action = "noticing your disapproval";
+        norn.reason = `Your scolding weakened the ${object.label.toLowerCase()} association`;
+        recordEvent({
+          nornId: norn.id,
+          type: "scold",
+          icon: "!",
+          text: `You scolded ${norn.name} after ${actionForJournal} the ${object.label.toLowerCase()}; the association weakened.`,
+          memory: `You scolded me after I ${action} the ${object.label.toLowerCase()}; I may be less likely to choose it.`
+        });
+        showToast(`${norn.name} noticed your scolding. The association weakened.`);
         renderUI();
       }
 
@@ -1115,6 +1151,7 @@
         renderUI();
       });
       ui.praise.addEventListener("click", applyPraise);
+      ui.scold.addEventListener("click", applyScold);
       ui.pause.addEventListener("click", () => {
         state.paused = !state.paused;
         renderUI();

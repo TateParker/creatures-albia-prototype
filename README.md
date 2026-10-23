@@ -9,9 +9,10 @@ Open [`index.html`](index.html) in a modern browser. There is no build step, ser
 - Select Mallow or Moss to inspect their needs, tendencies, learned associations, and event-based memories.
 - Choose **Point**, then click food or the spinner to guide the selected Norn.
 - Select a Norn and use **Praise** soon after they eat or play to reinforce that action.
+- Use **Scold** after a recent action to weaken that action’s learned association. Each action accepts one response, either Praise or Scold.
 - Pause the habitat or change its simulation speed. **Reset** starts a fresh run.
 
-The prototype models hunger, curiosity, movement, food, a spinner toy, player guidance, reinforcement, and nearby social observation. Its Norns learn through small local association weights and a short event history. The journal and inspector show the events behind those memories.
+The prototype models hunger, curiosity, movement, food, a spinner toy, player guidance, positive and negative feedback, and nearby social observation. Its Norns learn through small local association weights and a short event history. The journal and inspector show the events behind those memories.
 
 ## Scope
 
