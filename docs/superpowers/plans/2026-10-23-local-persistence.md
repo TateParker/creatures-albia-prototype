@@ -85,7 +85,7 @@
 - [x] Route Reset through the guarded writer, invalidate queued earlier autosaves, and replace the record atomically; fail closed without locking and retain storage-event notifications.
 - [x] Update README and spec for memory-only fallback, Reset behavior, and best-effort lifecycle saves.
 - [x] Parent source inspection; `git diff --check` and inline JavaScript `node --check` passed.
-- [ ] Fix commit and scoped re-review against `6774ea7`.
+- [x] Fix commit `289f125` and scoped re-review against `6774ea7`; review is ready to publish with no Critical, Important, or Minor findings.
 - [ ] Publish only after scoped review is clear and verify deployment.
 
 The fix implementer and parent performed source inspection. Static diff and syntax checks passed. No automated tests, commits, or pushes have been performed; the parent owns the fix commit, scoped re-review, and publication.
