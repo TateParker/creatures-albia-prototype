@@ -11,9 +11,9 @@ Open [`index.html`](index.html) in a modern browser. There is no build step, ser
 - Choose **fruit** or **spinner** in the word menu, click **Teach word**, then click the matching object. Teaching twice is enough to start using the word.
 - Select a Norn and use **Praise** soon after they eat or play to reinforce that action.
 - Use **Scold** after a recent action to weaken that action’s learned association. Each action accepts one response, either Praise or Scold.
-- Pause the habitat or change its simulation speed. **Reset** starts a fresh run.
+- Pause the habitat or change its simulation speed. **Reset** starts a fresh run and clears the saved run in this browser.
 
-The prototype models hunger, curiosity, movement, food, a spinner toy, player guidance, positive and negative feedback, nearby social observation, and grounded vocabulary. Norns can say a learned object word after using that object, while a nearby observer can learn the word by hearing it. Their notebook shows word confidence, and the journal and memories show the events behind it.
+The prototype models hunger, curiosity, movement, food, a spinner toy, player guidance, positive and negative feedback, nearby social observation, and grounded vocabulary. Norns can say a learned object word after using that object, while a nearby observer can learn the word by hearing it. Their notebook shows word confidence, and the journal and memories show the events behind it. The grove saves automatically in this browser, including each Norn's needs, learning, words, memories, and recent journal. The save does not sync to other browsers or devices; clearing this site's browser data removes it. If another open tab changes the grove, reload the older tab before continuing there.
 
 ## Scope
 

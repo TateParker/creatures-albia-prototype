@@ -112,6 +112,9 @@
     .section-title { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: .02em; }
     .section-kicker { margin-top: 3px; color: var(--muted); font-size: 11px; }
     .time-chip { padding: 7px 10px; border-radius: 999px; background: #edf2e8; color: #426957; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .habitat-status { display: grid; justify-items: end; gap: 4px; }
+    .save-status { min-height: 12px; color: var(--muted); font-size: 9px; text-align: right; }
+    .save-status[data-state="unavailable"], .save-status[data-state="blocked"], .save-status[data-state="conflict"] { color: #96564a; }
 
     .canvas-frame {
       position: relative;
@@ -312,7 +315,10 @@
             <h2 class="section-title" id="habitat-title">Softwood Grove</h2>
             <div class="section-kicker">A small habitat with room to explore</div>
           </div>
-          <div class="time-chip" id="worldClock" aria-live="off">DAY 1 · 06:00</div>
+          <div class="habitat-status">
+            <div class="time-chip" id="worldClock" aria-live="off">DAY 1 · 06:00</div>
+            <div class="save-status" id="saveStatus" data-state="saving" role="status" aria-live="polite" title="Your grove is saved only in this browser">New grove · saving in this browser</div>
+          </div>
         </div>
         <div class="canvas-frame">
           <canvas id="habitat" width="960" height="500" aria-label="Side view of Softwood Grove with two Norns, a fruit dish, and a spinning toy"></canvas>
@@ -332,7 +338,7 @@
             <button class="button reprimand" id="scoldButton" type="button"><span class="icon" aria-hidden="true">!</span>Scold</button>
             <button class="button" id="pauseButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Ⅱ</span>Pause</button>
             <button class="button" id="speedButton" type="button" aria-label="Change simulation speed">1×</button>
-            <button class="button" id="resetButton" type="button"><span class="icon" aria-hidden="true">↻</span>Reset</button>
+            <button class="button" id="resetButton" type="button" title="Start a new grove and clear this browser's saved run"><span class="icon" aria-hidden="true">↻</span>Reset</button>
           </div>
           <div class="toolbar-note" id="toolbarNote" aria-live="polite">Select an object to point it out.</div>
         </div>
@@ -407,6 +413,12 @@
       const WORLD_WIDTH = 960;
       const WORLD_HEIGHT = 500;
       const FLOOR_Y = 420;
+      const SAVE_KEY = "new-albia-save-v1";
+      const SAVE_SCHEMA_VERSION = 1;
+      const SAVE_INTERVAL = 4;
+      const TAB_ID = globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
+        ? globalThis.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const OBJECTS = {
         fruit: { id: "fruit", kind: "food", label: "Honey fruit", x: 724, y: 389, radius: 49 },
         spinner: { id: "spinner", kind: "toy", label: "Wind-up spinner", x: 480, y: 390, radius: 48 }
@@ -425,6 +437,7 @@
       const state = createInitialState(4181996);
       const ui = {
         clock: document.getElementById("worldClock"),
+        saveStatus: document.getElementById("saveStatus"),
         hint: document.getElementById("canvasHint"),
         toolbarNote: document.getElementById("toolbarNote"),
         point: document.getElementById("pointButton"),
@@ -452,13 +465,19 @@
       let previousFrame = 0;
       let uiRefresh = 0;
       let toastTimeout = 0;
+      let saveElapsed = 0;
+      let saveTimeout = 0;
+      let saveBlocked = false;
 
       function makeRandom(seed) {
         let value = seed >>> 0;
-        return () => {
+        const random = () => {
           value = (value * 1664525 + 1013904223) >>> 0;
           return value / 4294967296;
         };
+        random.getState = () => value;
+        random.setState = nextValue => { value = nextValue >>> 0; };
+        return random;
       }
 
       function createInitialState(seed) {
@@ -503,6 +522,260 @@
         };
       }
 
+      function isObject(value) {
+        return typeof value === "object" && value !== null && !Array.isArray(value);
+      }
+
+      function isFiniteBetween(value, min, max) {
+        return Number.isFinite(value) && value >= min && value <= max;
+      }
+
+      function isKnownObjectId(value) {
+        return Object.prototype.hasOwnProperty.call(OBJECTS, value);
+      }
+
+      function isValidSavedEvent(event, simulation) {
+        return isObject(event)
+          && Number.isInteger(event.id) && event.id > 0 && event.id < simulation.nextEventId
+          && isFiniteBetween(event.time, 0, simulation.time)
+          && typeof event.type === "string" && event.type.length <= 40
+          && typeof event.icon === "string" && event.icon.length <= 8
+          && typeof event.text === "string" && event.text.length <= 500
+          && (event.nornId === undefined || event.nornId === null || ["mallow", "moss"].includes(event.nornId))
+          && (event.memory === undefined || typeof event.memory === "string" && event.memory.length <= 500)
+          && (event.relatedEventId === undefined || Number.isInteger(event.relatedEventId));
+      }
+
+      function isValidSavedSuccess(success, simulation) {
+        if (success === null) return true;
+        return isObject(success)
+          && isFiniteBetween(success.time, 0, simulation.time)
+          && isKnownObjectId(success.objectId)
+          && ["food", "toy"].includes(success.kind)
+          && (success.feedback === null || ["praise", "scold"].includes(success.feedback));
+      }
+
+      function isValidSavedNorn(norn, simulation) {
+        return isObject(norn)
+          && ["mallow", "moss"].includes(norn.id)
+          && isFiniteBetween(norn.x, 90, 865)
+          && isFiniteBetween(norn.y, FLOOR_Y - 1, FLOOR_Y + 1)
+          && [-1, 1].includes(norn.facing)
+          && isFiniteBetween(norn.hunger, 0, 100)
+          && isFiniteBetween(norn.curiosity, 0, 100)
+          && isObject(norn.traits)
+          && isFiniteBetween(norn.traits.curiosity, 0, 1)
+          && isFiniteBetween(norn.traits.sociability, 0, 1)
+          && isObject(norn.words)
+          && isFiniteBetween(norn.words.fruit, 0, 1)
+          && isFiniteBetween(norn.words.spinner, 0, 1)
+          && (norn.speech === null || isObject(norn.speech)
+            && typeof norn.speech.text === "string" && norn.speech.text.length <= 40
+            && isKnownObjectId(norn.speech.objectId)
+            && Number.isFinite(norn.speech.until))
+          && isObject(norn.learned)
+          && isFiniteBetween(norn.learned.fruit, 0, 1)
+          && isFiniteBetween(norn.learned.spinner, 0, 1)
+          && Array.isArray(norn.memories) && norn.memories.length <= 4
+          && norn.memories.every(memory => isObject(memory)
+            && Number.isInteger(memory.eventId) && memory.eventId > 0
+            && typeof memory.text === "string" && memory.text.length <= 500)
+          && (norn.targetId === null || isKnownObjectId(norn.targetId))
+          && typeof norn.action === "string" && norn.action.length <= 160
+          && typeof norn.reason === "string" && norn.reason.length <= 240
+          && isFiniteBetween(norn.thinkIn, -1, 2)
+          && isFiniteBetween(norn.actionCooldown, 0, 5)
+          && isValidSavedSuccess(norn.lastSuccess, simulation)
+          && isObject(norn.lastImitated)
+          && isFiniteBetween(norn.lastImitated.fruit, -100, simulation.time + 1)
+          && isFiniteBetween(norn.lastImitated.spinner, -100, simulation.time + 1)
+          && Number.isFinite(norn.wiggle)
+          && Array.isArray(norn.observedEventIds) && norn.observedEventIds.length <= 200
+          && norn.observedEventIds.every(id => Number.isInteger(id) && id > 0);
+      }
+
+      function isValidSaveRecord(record) {
+        if (!isObject(record) || record.schemaVersion !== SAVE_SCHEMA_VERSION
+          || typeof record.writerId !== "string" || record.writerId.length < 1 || record.writerId.length > 100
+          || !isObject(record.simulation)) return false;
+        const simulation = record.simulation;
+        if (!Number.isInteger(simulation.seed) || simulation.seed < 0 || simulation.seed > 0xffffffff
+          || !Number.isInteger(simulation.rngState) || simulation.rngState < 0 || simulation.rngState > 0xffffffff
+          || !isFiniteBetween(simulation.time, 0, Number.MAX_SAFE_INTEGER)
+          || typeof simulation.paused !== "boolean"
+          || ![1, 2].includes(simulation.speed)
+          || !["mallow", "moss"].includes(simulation.selectedId)
+          || !Number.isInteger(simulation.nextEventId) || simulation.nextEventId < 1
+          || !Array.isArray(simulation.events) || simulation.events.length > 12
+          || !Array.isArray(simulation.norns) || simulation.norns.length !== 2) return false;
+
+        if (simulation.guidance !== null && (!isObject(simulation.guidance)
+          || !["mallow", "moss"].includes(simulation.guidance.nornId)
+          || !isKnownObjectId(simulation.guidance.objectId)
+          || !isFiniteBetween(simulation.guidance.remaining, 0, 7))) return false;
+        if (!simulation.events.every(event => isValidSavedEvent(event, simulation))) return false;
+        const nornIds = new Set(simulation.norns.map(norn => norn && norn.id));
+        return nornIds.size === 2 && nornIds.has("mallow") && nornIds.has("moss")
+          && simulation.norns.every(norn => isValidSavedNorn(norn, simulation));
+      }
+
+      function setSaveStatus(status, message) {
+        if (ui.saveStatus.dataset.state === status && ui.saveStatus.textContent === message) return;
+        ui.saveStatus.dataset.state = status;
+        ui.saveStatus.textContent = message;
+      }
+
+      function getSaveSnapshot() {
+        return {
+          schemaVersion: SAVE_SCHEMA_VERSION,
+          writerId: TAB_ID,
+          savedAt: Date.now(),
+          simulation: {
+            seed: state.seed,
+            rngState: state.rng.getState(),
+            time: state.time,
+            paused: state.paused,
+            speed: state.speed,
+            selectedId: state.selectedId,
+            guidance: state.guidance ? { ...state.guidance } : null,
+            events: state.events.map(event => ({ ...event })),
+            nextEventId: state.nextEventId,
+            norns: state.norns.map(norn => ({
+              id: norn.id,
+              x: norn.x,
+              y: norn.y,
+              facing: norn.facing,
+              hunger: norn.hunger,
+              curiosity: norn.curiosity,
+              traits: { ...norn.traits },
+              words: { ...norn.words },
+              speech: norn.speech ? { ...norn.speech } : null,
+              learned: { ...norn.learned },
+              memories: norn.memories.map(memory => ({ ...memory })),
+              targetId: norn.targetId,
+              action: norn.action,
+              reason: norn.reason,
+              thinkIn: norn.thinkIn,
+              actionCooldown: norn.actionCooldown,
+              lastSuccess: norn.lastSuccess ? { ...norn.lastSuccess } : null,
+              lastImitated: { ...norn.lastImitated },
+              wiggle: norn.wiggle,
+              observedEventIds: [...norn.observedEventIds].slice(-200)
+            }))
+          }
+        };
+      }
+
+      function restoreSaveRecord(record) {
+        const saved = record.simulation;
+        const replacement = createInitialState(saved.seed);
+        replacement.rng.setState(saved.rngState);
+        replacement.time = saved.time;
+        replacement.paused = saved.paused;
+        replacement.speed = saved.speed;
+        replacement.selectedId = saved.selectedId;
+        replacement.pointMode = false;
+        replacement.teachingWord = null;
+        replacement.guidance = saved.guidance ? { ...saved.guidance } : null;
+        replacement.events = saved.events.map(event => ({ ...event }));
+        replacement.nextEventId = saved.nextEventId;
+        replacement.norns = replacement.norns.map(baseNorn => {
+          const savedNorn = saved.norns.find(norn => norn.id === baseNorn.id);
+          return {
+            ...baseNorn,
+            ...savedNorn,
+            color: baseNorn.color,
+            traits: { ...savedNorn.traits },
+            words: { ...savedNorn.words },
+            speech: savedNorn.speech ? { ...savedNorn.speech } : null,
+            learned: { ...savedNorn.learned },
+            memories: savedNorn.memories.map(memory => ({ ...memory })),
+            lastSuccess: savedNorn.lastSuccess ? { ...savedNorn.lastSuccess } : null,
+            lastImitated: { ...savedNorn.lastImitated },
+            observedEventIds: new Set(savedNorn.observedEventIds)
+          };
+        });
+        Object.assign(state, replacement);
+      }
+
+      function restoreSavedState() {
+        let raw;
+        try {
+          raw = window.localStorage.getItem(SAVE_KEY);
+        } catch {
+          saveBlocked = true;
+          setSaveStatus("unavailable", "Saving unavailable in this browser");
+          return false;
+        }
+        if (raw === null) {
+          setSaveStatus("saving", "New grove · saving in this browser");
+          return false;
+        }
+
+        let record;
+        try {
+          record = JSON.parse(raw);
+        } catch {
+          saveBlocked = true;
+          setSaveStatus("blocked", "Saved grove is unreadable · Reset to start fresh");
+          return false;
+        }
+        if (!isObject(record) || record.schemaVersion !== SAVE_SCHEMA_VERSION || !isValidSaveRecord(record)) {
+          saveBlocked = true;
+          setSaveStatus("blocked", "Saved grove version or data is unsupported · Reset to start fresh");
+          return false;
+        }
+
+        restoreSaveRecord(record);
+        setSaveStatus("saved", "Restored from this browser");
+        return true;
+      }
+
+      function saveNow() {
+        if (saveBlocked) return false;
+        try {
+          window.localStorage.setItem(SAVE_KEY, JSON.stringify(getSaveSnapshot()));
+          setSaveStatus("saved", "Saved in this browser");
+          return true;
+        } catch {
+          setSaveStatus("unavailable", "Saving unavailable · progress stays in this tab");
+          return false;
+        }
+      }
+
+      function saveSoon() {
+        if (saveBlocked || saveTimeout) return;
+        saveTimeout = window.setTimeout(() => {
+          saveTimeout = 0;
+          saveNow();
+        }, 150);
+      }
+
+      function handleStorageChange(event) {
+        if (event.key !== SAVE_KEY) return;
+        if (event.newValue === null) {
+          saveBlocked = true;
+          if (saveTimeout) window.clearTimeout(saveTimeout);
+          saveTimeout = 0;
+          setSaveStatus("conflict", "Grove reset in another tab · reload to continue");
+          return;
+        }
+        try {
+          const record = JSON.parse(event.newValue);
+          if (!isObject(record) || record.writerId !== TAB_ID) {
+            saveBlocked = true;
+            if (saveTimeout) window.clearTimeout(saveTimeout);
+            saveTimeout = 0;
+            setSaveStatus("conflict", "Grove updated in another tab · reload to continue");
+          }
+        } catch {
+          saveBlocked = true;
+          if (saveTimeout) window.clearTimeout(saveTimeout);
+          saveTimeout = 0;
+          setSaveStatus("conflict", "Grove changed in another tab · reload to continue");
+        }
+      }
+
       function getNorn(id) {
         return state.norns.find(norn => norn.id === id);
       }
@@ -534,6 +807,7 @@
           owner.memories.unshift({ eventId: entry.id, text: entry.memory });
           owner.memories = owner.memories.slice(0, 4);
         }
+        saveSoon();
         return entry;
       }
 
@@ -1120,6 +1394,7 @@
         state.selectedId = id;
         state.pointMode = false;
         state.teachingWord = null;
+        saveSoon();
         renderNornOptions();
         renderUI();
       }
@@ -1265,11 +1540,18 @@
       }
 
       function resetSimulation(seed = 4181996) {
+        try {
+          window.localStorage.removeItem(SAVE_KEY);
+        } catch {
+          setSaveStatus("unavailable", "Storage unavailable · fresh grove stays in this tab");
+        }
+        saveBlocked = false;
         const next = createInitialState(seed);
         Object.assign(state, next);
+        saveNow();
         renderNornOptions();
         renderUI();
-        showToast("The grove is ready for a new observation.");
+        showToast("A fresh grove is ready.");
       }
 
       function frame(now) {
@@ -1278,6 +1560,13 @@
         previousFrame = now;
         stepSimulation(state, elapsed * state.speed);
         renderWorld(ctx, state);
+        if (!state.paused) {
+          saveElapsed += elapsed;
+          if (saveElapsed >= SAVE_INTERVAL) {
+            saveElapsed = 0;
+            saveNow();
+          }
+        }
         uiRefresh += elapsed;
         if (uiRefresh > .24) {
           renderUI();
@@ -1303,18 +1592,31 @@
       ui.scold.addEventListener("click", applyScold);
       ui.pause.addEventListener("click", () => {
         state.paused = !state.paused;
+        saveSoon();
         renderUI();
       });
       ui.speed.addEventListener("click", () => {
         state.speed = state.speed === 1 ? 2 : 1;
+        saveSoon();
         renderUI();
       });
       ui.reset.addEventListener("click", () => resetSimulation());
       canvas.addEventListener("click", handleCanvasClick);
       window.addEventListener("resize", () => renderWorld(ctx, state));
+      window.addEventListener("pagehide", () => {
+        if (saveTimeout) window.clearTimeout(saveTimeout);
+        saveTimeout = 0;
+        saveNow();
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") saveNow();
+      });
+      window.addEventListener("storage", handleStorageChange);
 
+      const restored = restoreSavedState();
       renderNornOptions();
       renderUI();
+      if (!restored && !saveBlocked) saveNow();
       window.requestAnimationFrame(frame);
     })();
   </script>
