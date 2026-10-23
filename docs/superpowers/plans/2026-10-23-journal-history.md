@@ -42,6 +42,9 @@
 - [x] Skip DOM reconstruction when the event-ID sequence and expanded state are unchanged.
 - [x] Update README to describe revealing the retained journal, then inspect empty, collapsed, expanded, and changing-event paths in source.
 - [x] Run `git diff --check` and `node --check` against the extracted inline script. Do not add or run automated tests.
-- [ ] Commit the implementation, README, plan, and spec; retain the SDD ledger in the ignored plan workspace.
+- [x] Commit the implementation, README, plan, and spec as `4e38495`; retain the SDD ledger in the ignored plan workspace.
+- [x] Fresh scoped review of `1d84ab3946f1baf4bb9c01d9509cb4a2cc9b88e3..4e384951072dde1fc040ac5ecf885cf288cc89a2` found no Critical, Important, or Minor issues.
+- [x] Published implementation commit `4e38495`; Pages workflow [39938786545](https://github.com/TateParker/creatures-albia-prototype/actions/runs/39938786545) succeeded.
+- [x] Cache-busted HTTP 200 at `?v=4e384951072d` verified the native toggle, expanded label, chronological slice, and unchanged-render guard.
 
-**Check:** Static source review, `git diff --check`, inline-script syntax validation, a fresh scoped code review, successful Pages workflow, and cache-busted HTTP verification.
+**Check:** Static source review, `git diff --check`, inline-script syntax validation, a fresh scoped code review, successful Pages workflow, and cache-busted HTTP verification all passed. No automated tests were added or run.
