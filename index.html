@@ -282,6 +282,9 @@
     .event-time { display: block; margin-bottom: 2px; color: #849187; font-size: 9px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
     .event-text { display: block; }
     .empty-event { grid-column: 1 / -1; padding: 12px; color: #7a8b80; font-size: 11px; }
+    .journal-actions { display: flex; justify-content: flex-end; margin-top: 9px; }
+    .journal-toggle { min-height: 32px; font-size: 11px; }
+    .journal-toggle[hidden] { display: none; }
 
     .footer { display: flex; justify-content: space-between; gap: 20px; padding: 15px 2px 0; color: #7a887e; font-size: 10px; }
     .footer strong { color: #566d60; font-weight: 800; }
@@ -453,6 +456,9 @@
           <span class="log-caption" id="eventCount">No observations yet</span>
         </div>
         <ol class="event-list" id="eventList" aria-live="polite"></ol>
+        <div class="journal-actions">
+          <button class="button journal-toggle" id="journalToggle" type="button" aria-controls="eventList" aria-expanded="false" hidden>Show all moments</button>
+        </div>
       </section>
     </main>
 
@@ -521,12 +527,15 @@
         memories: document.getElementById("memories"),
         eventList: document.getElementById("eventList"),
         eventCount: document.getElementById("eventCount"),
+        journalToggle: document.getElementById("journalToggle"),
         toast: document.getElementById("toast")
       };
 
       let previousFrame = 0;
       let uiRefresh = 0;
       let toastTimeout = 0;
+      let journalExpanded = false;
+      let lastJournalRenderKey = null;
       let saveElapsed = 0;
       let saveTimeout = 0;
       let saveBlocked = false;
@@ -1573,6 +1582,10 @@
       }
 
       function renderJournal() {
+        const eventKey = JSON.stringify(state.events.map(event => [event.id, event.time, event.type, event.icon, event.text]));
+        const renderKey = `${eventKey}::${journalExpanded}`;
+        if (renderKey === lastJournalRenderKey) return;
+        lastJournalRenderKey = renderKey;
         ui.eventList.textContent = "";
         if (state.events.length === 0) {
           const empty = document.createElement("li");
@@ -1580,7 +1593,8 @@
           empty.textContent = "The grove is quiet. Their first discoveries will be noted here.";
           ui.eventList.appendChild(empty);
         } else {
-          for (const event of state.events.slice(0, 3).reverse()) {
+          const visibleEvents = state.events.slice(0, journalExpanded ? state.events.length : 3).reverse();
+          for (const event of visibleEvents) {
             const item = document.createElement("li");
             item.className = "event-item";
             const icon = document.createElement("span");
@@ -1601,6 +1615,9 @@
           }
         }
         ui.eventCount.textContent = state.events.length ? `${state.events.length} recent observations` : "No observations yet";
+        ui.journalToggle.hidden = state.events.length <= 3;
+        ui.journalToggle.setAttribute("aria-expanded", String(journalExpanded));
+        ui.journalToggle.textContent = journalExpanded ? "Show fewer moments" : `Show all ${state.events.length} moments`;
       }
 
       function renderUI() {
@@ -1809,6 +1826,7 @@
         if (resetPending) return;
         resetPending = true;
         ui.reset.disabled = true;
+        journalExpanded = false;
         // Invalidate any queued autosave before replacing the in-memory grove.
         writeEpoch += 1;
         if (saveTimeout) window.clearTimeout(saveTimeout);
@@ -1878,6 +1896,10 @@
         renderUI();
       });
       ui.reset.addEventListener("click", () => resetSimulation());
+      ui.journalToggle.addEventListener("click", () => {
+        journalExpanded = !journalExpanded;
+        renderJournal();
+      });
       canvas.addEventListener("click", handleCanvasClick);
       window.addEventListener("resize", () => renderWorld(ctx, state));
       window.addEventListener("pagehide", () => {
