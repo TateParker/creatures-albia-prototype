@@ -1528,7 +1528,7 @@
             button.className = "button memory-find";
             button.dataset.eventId = String(memory.eventId);
             button.textContent = "Find in journal";
-            button.setAttribute("aria-label", `Find journal moment for memory: ${memory.text}`);
+            button.setAttribute("aria-label", `Find in journal for memory: ${memory.text}`);
             button.addEventListener("click", () => showMemoryEvent(memory.eventId));
             item.appendChild(button);
           }
