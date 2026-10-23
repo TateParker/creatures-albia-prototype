@@ -170,6 +170,20 @@
 
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 13px; }
     .control-group { flex-wrap: wrap; gap: 7px; }
+    .feedback-controls {
+      display: flex;
+      max-width: 100%;
+      min-width: 0;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border: 1px solid #e2e6dc;
+      border-radius: 10px;
+      background: #f9f8f1;
+    }
+    .feedback-controls-label { flex: 1 0 100%; color: #586f64; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .feedback-controls-help { flex: 1 1 140px; max-width: 190px; color: var(--muted); font-size: 10px; line-height: 1.35; }
     .button {
       display: inline-flex;
       min-height: 37px;
@@ -297,6 +311,7 @@
       canvas { aspect-ratio: 960 / 560; }
       .toolbar { align-items: flex-start; }
       .toolbar-note { width: 100%; text-align: left; }
+      .feedback-controls-help { flex-basis: 100%; max-width: none; }
       .inspector-card { display: flex; }
       .event-list { grid-template-columns: 1fr; }
       .footer { flex-direction: column; gap: 6px; }
@@ -364,8 +379,12 @@
               <option value="spinner">spinner</option>
             </select>
             <button class="button" id="teachButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Aa</span>Teach word</button>
-            <button class="button primary" id="praiseButton" type="button"><span class="icon" aria-hidden="true">♡</span>Praise</button>
-            <button class="button reprimand" id="scoldButton" type="button"><span class="icon" aria-hidden="true">!</span>Scold</button>
+            <div class="feedback-controls" role="group" aria-labelledby="feedbackControlsLabel" aria-describedby="feedbackControlsHelp">
+              <span class="feedback-controls-label" id="feedbackControlsLabel">Learning feedback</span>
+              <button class="button primary" id="praiseButton" type="button"><span class="icon" aria-hidden="true">♡</span>Praise</button>
+              <button class="button reprimand" id="scoldButton" type="button"><span class="icon" aria-hidden="true">!</span>Scold</button>
+              <span class="feedback-controls-help" id="feedbackControlsHelp">Choose one within 12 in-game seconds after a meal or play.</span>
+            </div>
             <button class="button" id="pauseButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Ⅱ</span>Pause</button>
             <button class="button" id="speedButton" type="button" aria-label="Change simulation speed">1×</button>
             <button class="button" id="resetButton" type="button" title="Start a new grove and replace this browser's saved run when saving is available"><span class="icon" aria-hidden="true">↻</span>Reset</button>

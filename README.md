@@ -10,8 +10,7 @@ Open [`index.html`](index.html) in a modern browser. There is no build step, ser
 - Check **Choice signals** in the notebook to see how hunger, curiosity, and learned preferences contribute to the current fruit-versus-spinner decision.
 - Choose **Point** and click an object, or use the **Honey fruit** and **Wind-up spinner** buttons below the scene to point the selected Norn toward one.
 - Choose **fruit** or **spinner** in the word menu, click **Teach word**, then click or activate the matching object. Teaching twice is enough to start using the word.
-- Select a Norn and use **Praise** soon after they eat or play to reinforce that action.
-- Use **Scold** after a recent action to weaken that action’s learned association. Each action accepts one response, either Praise or Scold.
+- Use **Praise** or **Scold** within 12 in-game seconds after a Norn eats or plays; each action accepts one response to strengthen or weaken that learned association.
 - Pause the habitat or change its simulation speed. **Reset** starts a fresh run and replaces the saved run when saving is available.
 
 The prototype models hunger, curiosity, movement, food, a spinner toy, player guidance, positive and negative feedback, nearby social observation, and grounded vocabulary. A nearby Norn's sociability sets its chance of noticing each successful event; after observing, it can learn the demonstrated behavior and a word it hears. Norns may say a known object word when switching to that target and after using it, and a nearby listener may learn the word based on its sociability. Their notebook shows word confidence, and the journal and memories show the events behind it. When browser storage and Web Locks are available, the grove saves automatically in this browser, including each Norn's needs, learning, words, memories, and recent journal. The save does not sync to other browsers or devices; clearing this site's browser data removes it.
