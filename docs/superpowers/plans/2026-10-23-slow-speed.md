@@ -10,4 +10,11 @@
 
 - [x] Update the speed options, current cycle, accessibility label, and README.
 - [x] Inspect save validation and frame integration; run static diff/syntax checks only.
-- [ ] Commit, obtain a fresh scoped review, publish, and verify the live response.
+- [x] Commit, obtain a fresh scoped review, publish, and verify the live response.
+
+## Publication record
+
+- Implementation commit: `a444e197294885af3a2d15d9c95b3036ce3c28db`.
+- Fresh read-only review of `a6a6adfc2a7266d7e811a59d76130845c99345e9..a444e197294885af3a2d15d9c95b3036ce3c28db`: no Critical, Important, or Minor issues; approved to publish.
+- Static checks: staged `git diff --cached --check` and `node --check` on the extracted inline script passed. No automated tests were added or run.
+- Pages workflow `39970673560` succeeded. Cache-busted response `?v=a444e1972948` returned HTTP 200 with the 0.5× option, three-speed cycle, save validation, and dynamic accessible label.
