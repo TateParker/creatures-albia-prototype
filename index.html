@@ -234,6 +234,16 @@
     .meter-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #8ab58e, #457b68); transition: width .3s ease; }
     .meter-fill.hunger { background: linear-gradient(90deg, #edc078, #cf785a); }
     .meter-fill.learn { background: linear-gradient(90deg, #a2c5a0, #538571); }
+    .decision-signals { display: grid; gap: 8px; }
+    .decision-summary { margin: -3px 0 1px; color: #51675e; font-size: 11px; line-height: 1.4; }
+    .decision-rows { display: grid; gap: 7px; }
+    .decision-row { padding: 8px 9px; border: 1px solid #e1e5d9; border-radius: 9px; background: #f8f7ef; }
+    .decision-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .decision-name, .decision-score { color: #405c53; font-size: 11px; font-weight: 800; }
+    .decision-score { color: #3b6554; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .decision-components { margin-bottom: 6px; color: var(--muted); font-size: 11px; line-height: 1.35; font-variant-numeric: tabular-nums; }
+    .decision-meter { height: 6px; overflow: hidden; border-radius: 99px; background: #e5e9dd; }
+    .decision-meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a2c5a0, #538571); }
     .traits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .trait-box { padding: 9px; border: 1px solid #e1e5d9; border-radius: 10px; background: #f8f7ef; }
     .trait-box .trait-name { color: #536a5f; font-size: 10px; font-weight: 700; }
@@ -384,6 +394,13 @@
           <div class="divider"></div>
           <h4 class="subhead">Needs right now</h4>
           <div id="needs"></div>
+
+          <div class="divider"></div>
+          <h4 class="subhead">Choice signals</h4>
+          <div class="decision-signals" id="decisionSignals">
+            <p class="decision-summary" id="decisionSummary"></p>
+            <div class="decision-rows" id="decisionRows"></div>
+          </div>
         </div>
 
         <div class="inspector-details">
@@ -475,6 +492,8 @@
         mood: document.getElementById("nornMood"),
         summary: document.getElementById("nornSummary"),
         needs: document.getElementById("needs"),
+        decisionSummary: document.getElementById("decisionSummary"),
+        decisionRows: document.getElementById("decisionRows"),
         traits: document.getElementById("traits"),
         associations: document.getElementById("associations"),
         vocabulary: document.getElementById("vocabulary"),
@@ -917,13 +936,12 @@
           return state.guidance.objectId;
         }
 
-        const foodScore = Math.max(0, norn.hunger - 17) * 1.05 + norn.learned.fruit * 35;
-        const toyScore = Math.max(0, norn.curiosity - 16) * (0.58 + norn.traits.curiosity * 0.46) + norn.learned.spinner * 32;
-        if (foodScore < 11 && toyScore < 14) {
+        const scores = getDecisionScores(norn);
+        if (scores.targetId === null) {
           norn.reason = "Resting between discoveries";
           return null;
         }
-        if (foodScore > toyScore) {
+        if (scores.targetId === "fruit") {
           norn.reason = norn.learned.fruit > 0.23
             ? "Remembering that fruit eases hunger"
             : "Hunger is drawing attention to the fruit";
@@ -933,6 +951,19 @@
           ? "Remembering the fun of the spinner"
           : "Curiosity is pulling toward the spinner";
         return "spinner";
+      }
+
+      function getDecisionScores(norn) {
+        const fruitNeed = Math.max(0, norn.hunger - 17) * 1.05;
+        const fruitHabit = norn.learned.fruit * 35;
+        const fruitScore = fruitNeed + fruitHabit;
+        const spinnerNeed = Math.max(0, norn.curiosity - 16) * (0.58 + norn.traits.curiosity * 0.46);
+        const spinnerHabit = norn.learned.spinner * 32;
+        const spinnerScore = spinnerNeed + spinnerHabit;
+        const targetId = fruitScore < 11 && spinnerScore < 14
+          ? null
+          : fruitScore > spinnerScore ? "fruit" : "spinner";
+        return { fruitNeed, fruitHabit, fruitScore, spinnerNeed, spinnerHabit, spinnerScore, targetId };
       }
 
       function recordSuccess(norn, objectId, kind) {
@@ -1388,6 +1419,58 @@
         );
       }
 
+      function renderDecisionRow(label, needLabel, needScore, habitScore, totalScore) {
+        const row = document.createElement("div");
+        row.className = "decision-row";
+
+        const heading = document.createElement("div");
+        heading.className = "decision-heading";
+        const name = document.createElement("span");
+        name.className = "decision-name";
+        name.textContent = `${label} pull`;
+        const score = document.createElement("span");
+        score.className = "decision-score";
+        score.textContent = `${Math.round(totalScore)} / 125 points`;
+        heading.append(name, score);
+
+        const components = document.createElement("div");
+        components.className = "decision-components";
+        components.textContent = `${needLabel} ${Math.round(needScore)} + learned preference ${Math.round(habitScore)}`;
+
+        const meter = document.createElement("div");
+        meter.className = "decision-meter";
+        meter.setAttribute("role", "meter");
+        meter.setAttribute("aria-label", `${label} pull`);
+        meter.setAttribute("aria-valuemin", "0");
+        meter.setAttribute("aria-valuemax", "125");
+        meter.setAttribute("aria-valuenow", String(Math.round(totalScore)));
+        meter.setAttribute("aria-valuetext", `${Math.round(totalScore)} points: ${needLabel.toLowerCase()} ${Math.round(needScore)} plus learned preference ${Math.round(habitScore)}`);
+        const fill = document.createElement("span");
+        fill.style.width = `${clamp(totalScore / 125 * 100, 0, 100)}%`;
+        meter.appendChild(fill);
+        row.append(heading, components, meter);
+        return row;
+      }
+
+      function renderDecisionSignals(norn) {
+        const scores = getDecisionScores(norn);
+        const hasGuidance = state.guidance && state.guidance.nornId === norn.id && state.guidance.remaining > 0;
+        if (hasGuidance) {
+          const guidedObject = OBJECTS[state.guidance.objectId].label.toLowerCase();
+          const independentChoice = scores.targetId ? OBJECTS[scores.targetId].label.toLowerCase() : "neither";
+          ui.decisionSummary.textContent = `Following your point to the ${guidedObject}. Choosing alone: ${independentChoice}.`;
+        } else if (scores.targetId) {
+          ui.decisionSummary.textContent = `Current preference: ${OBJECTS[scores.targetId].label.toLowerCase()}.`;
+        } else {
+          ui.decisionSummary.textContent = "Their drives are settled; neither need crosses its choice threshold.";
+        }
+
+        ui.decisionRows.replaceChildren(
+          renderDecisionRow("Fruit", "Hunger", scores.fruitNeed, scores.fruitHabit, scores.fruitScore),
+          renderDecisionRow("Spinner", "Curiosity", scores.spinnerNeed, scores.spinnerHabit, scores.spinnerScore)
+        );
+      }
+
       function renderInspector() {
         const norn = getNorn(state.selectedId);
         if (!norn) return;
@@ -1399,6 +1482,7 @@
           renderMeter("Hunger", norn.hunger, "hunger"),
           renderMeter("Curiosity", norn.curiosity)
         );
+        renderDecisionSignals(norn);
         ui.traits.replaceChildren(
           renderTrait("Curiosity", norn.traits.curiosity),
           renderTrait("Sociability", norn.traits.sociability)

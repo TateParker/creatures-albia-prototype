@@ -7,6 +7,7 @@ A small, self-contained browser prototype inspired by the artificial-life and cr
 Open [`index.html`](index.html) in a modern browser. There is no build step, server, account, or network connection required.
 
 - Select Mallow or Moss to inspect their needs, tendencies, learned associations, and event-based memories.
+- Check **Choice signals** in the notebook to see how hunger, curiosity, and learned preferences contribute to the current fruit-versus-spinner decision.
 - Choose **Point** and click an object, or use the **Honey fruit** and **Wind-up spinner** buttons below the scene to point the selected Norn toward one.
 - Choose **fruit** or **spinner** in the word menu, click **Teach word**, then click or activate the matching object. Teaching twice is enough to start using the word.
 - Select a Norn and use **Praise** soon after they eat or play to reinforce that action.
