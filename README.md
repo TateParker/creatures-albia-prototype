@@ -8,11 +8,12 @@ Open [`index.html`](index.html) in a modern browser. There is no build step, ser
 
 - Select Mallow or Moss to inspect their needs, tendencies, learned associations, and event-based memories.
 - Choose **Point**, then click food or the spinner to guide the selected Norn.
+- Choose **fruit** or **spinner** in the word menu, click **Teach word**, then click the matching object. Teaching twice is enough to start using the word.
 - Select a Norn and use **Praise** soon after they eat or play to reinforce that action.
 - Use **Scold** after a recent action to weaken that action’s learned association. Each action accepts one response, either Praise or Scold.
 - Pause the habitat or change its simulation speed. **Reset** starts a fresh run.
 
-The prototype models hunger, curiosity, movement, food, a spinner toy, player guidance, positive and negative feedback, and nearby social observation. Its Norns learn through small local association weights and a short event history. The journal and inspector show the events behind those memories.
+The prototype models hunger, curiosity, movement, food, a spinner toy, player guidance, positive and negative feedback, nearby social observation, and grounded vocabulary. Norns can say a learned object word after using that object, while a nearby observer can learn the word by hearing it. Their notebook shows word confidence, and the journal and memories show the events behind it.
 
 ## Scope
 

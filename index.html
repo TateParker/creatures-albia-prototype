@@ -183,6 +183,9 @@
     .button:disabled { cursor: not-allowed; opacity: .52; transform: none; }
     .button .icon { font-size: 15px; line-height: 1; }
     .toolbar-note { min-height: 17px; color: var(--muted); font-size: 11px; text-align: right; }
+    .word-select { min-height: 37px; padding: 8px 27px 8px 10px; border: 1px solid #cdd6ca; border-radius: 10px; background: #fffdf8; color: #38564d; font: inherit; font-size: 12px; font-weight: 750; }
+    .word-select:focus-visible { outline: 3px solid rgba(83, 145, 118, .42); outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
     .inspector-card { display: flex; flex-direction: column; padding: 16px; }
     .norn-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 14px; }
@@ -319,6 +322,12 @@
         <div class="toolbar" aria-label="Habitat controls">
           <div class="control-group">
             <button class="button" id="pointButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">⌖</span>Point</button>
+            <label class="sr-only" for="wordSelect">Word to teach</label>
+            <select class="word-select" id="wordSelect">
+              <option value="fruit">fruit</option>
+              <option value="spinner">spinner</option>
+            </select>
+            <button class="button" id="teachButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Aa</span>Teach word</button>
             <button class="button primary" id="praiseButton" type="button"><span class="icon" aria-hidden="true">♡</span>Praise</button>
             <button class="button reprimand" id="scoldButton" type="button"><span class="icon" aria-hidden="true">!</span>Scold</button>
             <button class="button" id="pauseButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Ⅱ</span>Pause</button>
@@ -362,6 +371,11 @@
           <div id="associations"></div>
 
           <div class="divider"></div>
+          <h4 class="subhead">Words learned</h4>
+          <div class="section-kicker">They can say a word after learning 60%.</div>
+          <div id="vocabulary"></div>
+
+          <div class="divider"></div>
           <h4 class="subhead">Recent memories</h4>
           <ul class="memory-list" id="memories" aria-live="polite"></ul>
         </div>
@@ -397,6 +411,10 @@
         fruit: { id: "fruit", kind: "food", label: "Honey fruit", x: 724, y: 389, radius: 49 },
         spinner: { id: "spinner", kind: "toy", label: "Wind-up spinner", x: 480, y: 390, radius: 48 }
       };
+      const VOCABULARY = {
+        fruit: { label: "fruit", objectId: "fruit" },
+        spinner: { label: "spinner", objectId: "spinner" }
+      };
       const PALETTE = {
         mallow: { coat: "#c88155", light: "#e1a678", ear: "#b7644f", scarf: "#738e68", cheek: "#e9a29a" },
         moss: { coat: "#738b72", light: "#a3b28a", ear: "#5d7762", scarf: "#d5a463", cheek: "#dc9b8f" }
@@ -410,6 +428,8 @@
         hint: document.getElementById("canvasHint"),
         toolbarNote: document.getElementById("toolbarNote"),
         point: document.getElementById("pointButton"),
+        wordSelect: document.getElementById("wordSelect"),
+        teach: document.getElementById("teachButton"),
         praise: document.getElementById("praiseButton"),
         scold: document.getElementById("scoldButton"),
         pause: document.getElementById("pauseButton"),
@@ -422,6 +442,7 @@
         needs: document.getElementById("needs"),
         traits: document.getElementById("traits"),
         associations: document.getElementById("associations"),
+        vocabulary: document.getElementById("vocabulary"),
         memories: document.getElementById("memories"),
         eventList: document.getElementById("eventList"),
         eventCount: document.getElementById("eventCount"),
@@ -450,6 +471,7 @@
           speed: 1,
           selectedId: "mallow",
           pointMode: false,
+          teachingWord: null,
           guidance: null,
           events: [],
           nextEventId: 1,
@@ -459,6 +481,7 @@
               id: "mallow", name: "Mallow", x: 228, y: FLOOR_Y, facing: 1,
               color: PALETTE.mallow, hunger: 76, curiosity: 39,
               traits: { curiosity: 0.47, sociability: 0.82 },
+              words: { fruit: 0, spinner: 0 }, speech: null,
               learned: { fruit: 0.06, spinner: 0.04 }, memories: [],
               targetId: null, action: "taking in the grove", reason: "Noticing the habitat",
               thinkIn: 0.2, actionCooldown: 1.1, lastSuccess: null,
@@ -469,6 +492,7 @@
               id: "moss", name: "Moss", x: 329, y: FLOOR_Y, facing: 1,
               color: PALETTE.moss, hunger: 53, curiosity: 81,
               traits: { curiosity: 0.88, sociability: 0.66 },
+              words: { fruit: 0, spinner: 0 }, speech: null,
               learned: { fruit: 0.03, spinner: 0.08 }, memories: [],
               targetId: null, action: "listening for a tiny rattle", reason: "Curiosity is pulling toward the spinner",
               thinkIn: 0.45, actionCooldown: 1.0, lastSuccess: null,
@@ -564,15 +588,49 @@
             ? `Honey fruit eased hunger after ${norn.name} ate it.`
             : `The wind-up spinner was enjoyable to play with.`
         });
-        shareObservation(norn, object, actionEvent);
+        const spokenWord = speakKnownWord(norn, objectId);
+        shareObservation(norn, object, actionEvent, spokenWord);
       }
 
-      function shareObservation(actor, object, actionEvent) {
+      function speakKnownWord(norn, objectId) {
+        if (norn.words[objectId] < 0.6) return null;
+        const definition = VOCABULARY[objectId];
+        const object = OBJECTS[objectId];
+        const action = object.kind === "food" ? "eating" : "playing with";
+        norn.speech = { text: definition.label, objectId, until: state.time + 3.2 };
+        const utterance = recordEvent({
+          nornId: norn.id,
+          type: "speak",
+          icon: "Aa",
+          text: `${norn.name} said “${definition.label}” while ${action} the ${object.label.toLowerCase()}.`,
+          memory: `I said “${definition.label}” while ${action} the ${object.label.toLowerCase()}.`
+        });
+        return { wordId: objectId, eventId: utterance.id };
+      }
+
+      function shareObservation(actor, object, actionEvent, spokenWord) {
         for (const observer of state.norns) {
           if (observer.id === actor.id || distance(observer, actor) > 330) continue;
-          if (state.time - observer.lastImitated[object.id] < 12) continue;
           if (observer.traits.sociability < 0.45 && state.rng() > observer.traits.sociability) continue;
 
+          if (spokenWord && spokenWord.wordId === object.id && observer.words[spokenWord.wordId] < 1) {
+            const definition = VOCABULARY[spokenWord.wordId];
+            const action = object.kind === "food" ? "eating" : "playing with";
+            observer.words[spokenWord.wordId] = clamp(observer.words[spokenWord.wordId] + 0.14, 0, 1);
+            observer.reason = `Heard ${actor.name} say “${definition.label}” while ${action} the ${object.label.toLowerCase()}`;
+            observer.action = `listening to ${actor.name}`;
+            const heard = recordEvent({
+              nornId: observer.id,
+              type: "hear",
+              icon: "Aa",
+              text: `${observer.name} heard ${actor.name} say “${definition.label}” while ${action} the ${object.label.toLowerCase()}.`,
+              memory: `I heard ${actor.name} say “${definition.label}” while ${action} the ${object.label.toLowerCase()}.`,
+              relatedEventId: spokenWord.eventId
+            });
+            observer.observedEventIds.add(heard.id);
+          }
+
+          if (state.time - observer.lastImitated[object.id] < 12) continue;
           observer.lastImitated[object.id] = state.time;
           observer.learned[object.id] = clamp(observer.learned[object.id] + 0.16 + observer.traits.sociability * 0.07, 0, 1);
           observer.reason = `Watched ${actor.name} succeed with ${object.label.toLowerCase()}`;
@@ -803,6 +861,25 @@
           context.beginPath(); context.arc(x + 31, y - 42, 11, 0, Math.PI * 2); context.fill();
           context.fillStyle = "#cc8c4c"; context.font = "700 13px system-ui, sans-serif"; context.fillText("✦", x + 31, y - 37);
         }
+
+        if (norn.speech && time < norn.speech.until) {
+          const bubbleX = clamp(x, 45, WORLD_WIDTH - 45);
+          const bubbleY = y - 105;
+          context.fillStyle = "#fffdf4";
+          context.strokeStyle = "#91aa91";
+          context.lineWidth = 1.5;
+          roundedRect(context, bubbleX - 35, bubbleY - 15, 70, 28, 9);
+          context.fill(); context.stroke();
+          context.beginPath();
+          context.moveTo(bubbleX - 5, bubbleY + 12);
+          context.lineTo(bubbleX, bubbleY + 19);
+          context.lineTo(bubbleX + 5, bubbleY + 12);
+          context.closePath(); context.fill();
+          context.fillStyle = "#315748";
+          context.font = "750 12px system-ui, sans-serif";
+          context.textAlign = "center";
+          context.fillText(`“${norn.speech.text}”`, bubbleX, bubbleY + 4);
+        }
       }
 
       function renderWorld(context, simState) {
@@ -821,7 +898,12 @@
         drawSpinner(context, OBJECTS.spinner, simState.time);
         for (const norn of simState.norns) drawNorn(context, norn, norn.id === simState.selectedId, simState.time);
 
-        if (simState.pointMode) {
+        if (simState.teachingWord) {
+          context.fillStyle = "rgba(52, 100, 76, .93)";
+          context.font = "800 12px system-ui, sans-serif";
+          context.textAlign = "center";
+          context.fillText(`SHOW “${simState.teachingWord.toUpperCase()}” TO ${getNorn(simState.selectedId).name.toUpperCase()}`, WORLD_WIDTH / 2, 44);
+        } else if (simState.pointMode) {
           context.fillStyle = "rgba(52, 100, 76, .93)";
           context.font = "800 12px system-ui, sans-serif";
           context.textAlign = "center";
@@ -922,6 +1004,13 @@
         return wrapper;
       }
 
+      function renderVocabulary(container, norn) {
+        container.replaceChildren(
+          renderAssociation('“fruit”', norn.words.fruit),
+          renderAssociation('“spinner”', norn.words.spinner)
+        );
+      }
+
       function renderInspector() {
         const norn = getNorn(state.selectedId);
         if (!norn) return;
@@ -941,6 +1030,7 @@
           renderAssociation("Fruit eases hunger", norn.learned.fruit),
           renderAssociation("Spinner is enjoyable", norn.learned.spinner)
         );
+        renderVocabulary(ui.vocabulary, norn);
 
         ui.memories.textContent = "";
         if (norn.memories.length === 0) {
@@ -1005,8 +1095,14 @@
         ui.speed.setAttribute("aria-label", `Simulation speed ${state.speed} times; activate to change`);
         ui.point.classList.toggle("active", state.pointMode);
         ui.point.setAttribute("aria-pressed", String(state.pointMode));
-        canvas.classList.toggle("pointing", state.pointMode);
-        if (state.pointMode) {
+        ui.teach.classList.toggle("active", Boolean(state.teachingWord));
+        ui.teach.setAttribute("aria-pressed", String(Boolean(state.teachingWord)));
+        canvas.classList.toggle("pointing", state.pointMode || Boolean(state.teachingWord));
+        if (state.teachingWord) {
+          const objectName = OBJECTS[VOCABULARY[state.teachingWord].objectId].label.toLowerCase();
+          ui.hint.textContent = `Click the ${objectName} to teach ${getNorn(state.selectedId).name} the word “${state.teachingWord}”.`;
+          ui.toolbarNote.textContent = `Show “${state.teachingWord}” to ${getNorn(state.selectedId).name}.`;
+        } else if (state.pointMode) {
           ui.hint.textContent = `Click an object to point it out to ${getNorn(state.selectedId).name}.`;
           ui.toolbarNote.textContent = "Choose the fruit or spinner in the habitat.";
         } else if (state.guidance && state.guidance.remaining > 0) {
@@ -1023,7 +1119,36 @@
       function selectNorn(id) {
         state.selectedId = id;
         state.pointMode = false;
+        state.teachingWord = null;
         renderNornOptions();
+        renderUI();
+      }
+
+      function beginWordTeaching() {
+        if (state.teachingWord) {
+          state.teachingWord = null;
+        } else {
+          state.pointMode = false;
+          state.teachingWord = ui.wordSelect.value;
+          showToast(`Show ${getNorn(state.selectedId).name} the object for “${state.teachingWord}”.`);
+        }
+        renderUI();
+      }
+
+      function teachWord(norn, wordId, object) {
+        const definition = VOCABULARY[wordId];
+        norn.words[wordId] = clamp(norn.words[wordId] + 0.38, 0, 1);
+        norn.action = `learning the word “${definition.label}”`;
+        norn.reason = `You paired “${definition.label}” with ${object.label.toLowerCase()}`;
+        recordEvent({
+          nornId: norn.id,
+          type: "teach",
+          icon: "Aa",
+          text: `You showed ${norn.name} the ${object.label.toLowerCase()} and said “${definition.label}”.`,
+          memory: `You said “${definition.label}” while showing me the ${object.label.toLowerCase()}.`
+        });
+        state.teachingWord = null;
+        showToast(`${norn.name} heard “${definition.label}”.`);
         renderUI();
       }
 
@@ -1096,6 +1221,22 @@
 
       function handleCanvasClick(event) {
         const point = canvasPosition(event);
+        if (state.teachingWord) {
+          const object = objectAt(point.x, point.y);
+          const definition = VOCABULARY[state.teachingWord];
+          if (!object) {
+            const expectedObject = OBJECTS[definition.objectId];
+            showToast(`Click the ${expectedObject.label.toLowerCase()} to show that word.`);
+            return;
+          }
+          if (object.id !== definition.objectId) {
+            const expectedObject = OBJECTS[definition.objectId];
+            showToast(`Show “${definition.label}” with the ${expectedObject.label.toLowerCase()}.`);
+            return;
+          }
+          teachWord(getNorn(state.selectedId), state.teachingWord, object);
+          return;
+        }
         if (state.pointMode) {
           const object = objectAt(point.x, point.y);
           if (!object) {
@@ -1147,8 +1288,16 @@
 
       ui.point.addEventListener("click", () => {
         state.pointMode = !state.pointMode;
+        if (state.pointMode) state.teachingWord = null;
         if (state.pointMode) showToast(`Point to something for ${getNorn(state.selectedId).name} to explore.`);
         renderUI();
+      });
+      ui.teach.addEventListener("click", beginWordTeaching);
+      ui.wordSelect.addEventListener("change", () => {
+        if (state.teachingWord) {
+          state.teachingWord = ui.wordSelect.value;
+          renderUI();
+        }
       });
       ui.praise.addEventListener("click", applyPraise);
       ui.scold.addEventListener("click", applyScold);
