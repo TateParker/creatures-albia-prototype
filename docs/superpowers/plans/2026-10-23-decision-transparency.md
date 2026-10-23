@@ -41,4 +41,5 @@
 - [x] Document the new choice-signal display in README.
 - [x] Inspect selector/display parity, guidance, thresholds, responsive styles, and unchanged persistence fields; run `git diff --check` and `node --check` on the extracted inline script. Do not run automated tests.
 - [x] Commit the implementation as `957be11`; inline-script syntax validation and staged diff whitespace checks passed.
-- [ ] Request scoped review; publish only after a clear review, then verify the Pages workflow and a cache-busted live response.
+- [x] Scoped review of `4ed0dc0..0e9e9ae` found no Critical, Important, or Minor issues and approved publication.
+- [ ] Publish and verify the Pages workflow and a cache-busted live response.
