@@ -1905,17 +1905,28 @@
         const success = getRecentActionForFeedback(norn, "praise");
         if (!success) return;
         const object = OBJECTS[success.objectId];
-        norn.learned[object.id] = clamp(norn.learned[object.id] + 0.2, 0, 1);
-        norn.reason = `Your praise strengthened the ${object.label.toLowerCase()} association`;
+        const objectLabel = object.label.toLowerCase();
+        const previousAssociation = norn.learned[object.id];
+        const nextAssociation = clamp(previousAssociation + 0.2, 0, 1);
+        const changed = nextAssociation !== previousAssociation;
+        norn.learned[object.id] = nextAssociation;
+        const effectText = changed
+          ? "the association grew stronger"
+          : "the association was already as strong as it could be";
+        norn.reason = changed
+          ? `Your praise strengthened the ${objectLabel} association`
+          : `The ${objectLabel} association was already as strong as it could be`;
         const feedbackEvent = recordEvent({
           nornId: norn.id,
           type: "praise",
           icon: "♡",
-          text: `You praised ${norn.name} after ${success.kind === "food" ? "eating" : "playing"}; the association grew stronger.`,
-          memory: `You praised me after I used the ${object.label.toLowerCase()}; I may remember it as helpful.`
+          text: `You praised ${norn.name} after ${success.kind === "food" ? "eating" : "playing"}; ${effectText}.`,
+          memory: changed
+            ? `You praised me after I used the ${objectLabel}; I may remember it as helpful.`
+            : `You praised me after I used the ${objectLabel}; my association was already as strong as it could be.`
         });
         shareFeedbackObservation(norn, object, "praise", feedbackEvent);
-        showToast(`${norn.name} noticed your praise. The association grew stronger.`);
+        showToast(`${norn.name} noticed your praise. ${changed ? "The association grew stronger." : "The association was already at its strongest."}`);
         renderUI();
       }
 
@@ -1924,20 +1935,31 @@
         const success = getRecentActionForFeedback(norn, "scold");
         if (!success) return;
         const object = OBJECTS[success.objectId];
+        const objectLabel = object.label.toLowerCase();
         const action = success.kind === "food" ? "ate" : "played with";
         const actionForJournal = success.kind === "food" ? "eating" : "playing with";
-        norn.learned[object.id] = clamp(norn.learned[object.id] - 0.2, 0, 1);
+        const previousAssociation = norn.learned[object.id];
+        const nextAssociation = clamp(previousAssociation - 0.2, 0, 1);
+        const changed = nextAssociation !== previousAssociation;
+        norn.learned[object.id] = nextAssociation;
         norn.action = "noticing your disapproval";
-        norn.reason = `Your scolding weakened the ${object.label.toLowerCase()} association`;
+        const effectText = changed
+          ? "the association weakened"
+          : "the association was already as weak as it could be";
+        norn.reason = changed
+          ? `Your scolding weakened the ${objectLabel} association`
+          : `The ${objectLabel} association was already as weak as it could be`;
         const feedbackEvent = recordEvent({
           nornId: norn.id,
           type: "scold",
           icon: "!",
-          text: `You scolded ${norn.name} after ${actionForJournal} the ${object.label.toLowerCase()}; the association weakened.`,
-          memory: `You scolded me after I ${action} the ${object.label.toLowerCase()}; I may be less likely to choose it.`
+          text: `You scolded ${norn.name} after ${actionForJournal} the ${objectLabel}; ${effectText}.`,
+          memory: changed
+            ? `You scolded me after I ${action} the ${objectLabel}; I may be less likely to choose it.`
+            : `You scolded me after I ${action} the ${objectLabel}; my association was already as weak as it could be.`
         });
         shareFeedbackObservation(norn, object, "scold", feedbackEvent);
-        showToast(`${norn.name} noticed your scolding. The association weakened.`);
+        showToast(`${norn.name} noticed your scolding. ${changed ? "The association weakened." : "The association was already at its weakest."}`);
         renderUI();
       }
 
