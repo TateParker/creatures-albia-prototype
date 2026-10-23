@@ -991,20 +991,53 @@
         shareObservation(norn, object, actionEvent, spokenWord);
       }
 
-      function speakKnownWord(norn, objectId) {
+      function speakKnownWord(norn, objectId, context = "using") {
         if (norn.words[objectId] < 0.6) return null;
         const definition = VOCABULARY[objectId];
         const object = OBJECTS[objectId];
         const action = object.kind === "food" ? "eating" : "playing with";
+        const contextText = context === "seeking"
+          ? `while looking for the ${object.label.toLowerCase()}`
+          : `while ${action} the ${object.label.toLowerCase()}`;
         norn.speech = { text: definition.label, objectId, until: state.time + 3.2 };
         const utterance = recordEvent({
           nornId: norn.id,
           type: "speak",
           icon: "Aa",
-          text: `${norn.name} said “${definition.label}” while ${action} the ${object.label.toLowerCase()}.`,
-          memory: `I said “${definition.label}” while ${action} the ${object.label.toLowerCase()}.`
+          text: `${norn.name} said “${definition.label}” ${contextText}.`,
+          memory: `I said “${definition.label}” ${contextText}.`
         });
-        return { wordId: objectId, eventId: utterance.id };
+        return { wordId: objectId, eventId: utterance.id, context };
+      }
+
+      function recordWordHearing(observer, actor, object, spokenWord) {
+        if (!spokenWord || spokenWord.wordId !== object.id || observer.words[spokenWord.wordId] >= 1) return;
+        const definition = VOCABULARY[spokenWord.wordId];
+        const action = object.kind === "food" ? "eating" : "playing with";
+        const contextText = spokenWord.context === "seeking"
+          ? `while looking for the ${object.label.toLowerCase()}`
+          : `while ${action} the ${object.label.toLowerCase()}`;
+        observer.words[spokenWord.wordId] = clamp(observer.words[spokenWord.wordId] + 0.14, 0, 1);
+        observer.reason = `Heard ${actor.name} say “${definition.label}” ${contextText}`;
+        observer.action = `listening to ${actor.name}`;
+        const heard = recordEvent({
+          nornId: observer.id,
+          type: "hear",
+          icon: "Aa",
+          text: `${observer.name} heard ${actor.name} say “${definition.label}” ${contextText}.`,
+          memory: `I heard ${actor.name} say “${definition.label}” ${contextText}.`,
+          relatedEventId: spokenWord.eventId
+        });
+        observer.observedEventIds.add(heard.id);
+      }
+
+      function shareSpokenWord(actor, object, spokenWord) {
+        if (!spokenWord) return;
+        for (const observer of state.norns) {
+          if (observer.id === actor.id || distance(observer, actor) > 330) continue;
+          if (state.rng() >= observer.traits.sociability) continue;
+          recordWordHearing(observer, actor, object, spokenWord);
+        }
       }
 
       function shareObservation(actor, object, actionEvent, spokenWord) {
@@ -1012,22 +1045,7 @@
           if (observer.id === actor.id || distance(observer, actor) > 330) continue;
           if (state.rng() >= observer.traits.sociability) continue;
 
-          if (spokenWord && spokenWord.wordId === object.id && observer.words[spokenWord.wordId] < 1) {
-            const definition = VOCABULARY[spokenWord.wordId];
-            const action = object.kind === "food" ? "eating" : "playing with";
-            observer.words[spokenWord.wordId] = clamp(observer.words[spokenWord.wordId] + 0.14, 0, 1);
-            observer.reason = `Heard ${actor.name} say “${definition.label}” while ${action} the ${object.label.toLowerCase()}`;
-            observer.action = `listening to ${actor.name}`;
-            const heard = recordEvent({
-              nornId: observer.id,
-              type: "hear",
-              icon: "Aa",
-              text: `${observer.name} heard ${actor.name} say “${definition.label}” while ${action} the ${object.label.toLowerCase()}.`,
-              memory: `I heard ${actor.name} say “${definition.label}” while ${action} the ${object.label.toLowerCase()}.`,
-              relatedEventId: spokenWord.eventId
-            });
-            observer.observedEventIds.add(heard.id);
-          }
+          recordWordHearing(observer, actor, object, spokenWord);
 
           if (state.time - observer.lastImitated[object.id] < 12) continue;
           observer.lastImitated[object.id] = state.time;
@@ -1056,7 +1074,17 @@
         norn.thinkIn -= dt;
 
         if (norn.thinkIn <= 0) {
+          const previousTargetId = norn.targetId;
           norn.targetId = chooseTarget(norn);
+          if (norn.targetId && norn.targetId !== previousTargetId) {
+            const selectedTarget = OBJECTS[norn.targetId];
+            const selectedArrivalRange = selectedTarget.id === "fruit" ? 52 : 48;
+            if (Math.abs(selectedTarget.x - norn.x) > selectedArrivalRange
+              && (!norn.speech || norn.speech.until <= state.time)) {
+              const spokenWord = speakKnownWord(norn, norn.targetId, "seeking");
+              if (spokenWord) shareSpokenWord(norn, selectedTarget, spokenWord);
+            }
+          }
           norn.thinkIn = 0.9 + state.rng() * 0.55;
         }
 
