@@ -338,7 +338,7 @@
             <button class="button reprimand" id="scoldButton" type="button"><span class="icon" aria-hidden="true">!</span>Scold</button>
             <button class="button" id="pauseButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Ⅱ</span>Pause</button>
             <button class="button" id="speedButton" type="button" aria-label="Change simulation speed">1×</button>
-            <button class="button" id="resetButton" type="button" title="Start a new grove and clear this browser's saved run"><span class="icon" aria-hidden="true">↻</span>Reset</button>
+            <button class="button" id="resetButton" type="button" title="Start a new grove and replace this browser's saved run when saving is available"><span class="icon" aria-hidden="true">↻</span>Reset</button>
           </div>
           <div class="toolbar-note" id="toolbarNote" aria-live="polite">Select an object to point it out.</div>
         </div>
@@ -414,6 +414,7 @@
       const WORLD_HEIGHT = 500;
       const FLOOR_Y = 420;
       const SAVE_KEY = "new-albia-save-v1";
+      const SAVE_LOCK = `${SAVE_KEY}-writer`;
       const SAVE_SCHEMA_VERSION = 1;
       const SAVE_INTERVAL = 4;
       const TAB_ID = globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
@@ -468,6 +469,11 @@
       let saveElapsed = 0;
       let saveTimeout = 0;
       let saveBlocked = false;
+      let observedSaveRaw;
+      let observedSaveRevision = 0;
+      let saveInFlight = false;
+      let writeEpoch = 0;
+      let resetPending = false;
 
       function makeRandom(seed) {
         let value = seed >>> 0;
@@ -531,7 +537,7 @@
       }
 
       function isKnownObjectId(value) {
-        return Object.prototype.hasOwnProperty.call(OBJECTS, value);
+        return typeof value === "string" && Object.prototype.hasOwnProperty.call(OBJECTS, value);
       }
 
       function isValidSavedEvent(event, simulation) {
@@ -596,6 +602,7 @@
 
       function isValidSaveRecord(record) {
         if (!isObject(record) || record.schemaVersion !== SAVE_SCHEMA_VERSION
+          || (record.revision !== undefined && (!Number.isSafeInteger(record.revision) || record.revision < 0))
           || typeof record.writerId !== "string" || record.writerId.length < 1 || record.writerId.length > 100
           || !isObject(record.simulation)) return false;
         const simulation = record.simulation;
@@ -625,9 +632,10 @@
         ui.saveStatus.textContent = message;
       }
 
-      function getSaveSnapshot() {
+      function getSaveSnapshot(revision) {
         return {
           schemaVersion: SAVE_SCHEMA_VERSION,
+          revision,
           writerId: TAB_ID,
           savedAt: Date.now(),
           simulation: {
@@ -676,22 +684,45 @@
         replacement.selectedId = saved.selectedId;
         replacement.pointMode = false;
         replacement.teachingWord = null;
-        replacement.guidance = saved.guidance ? { ...saved.guidance } : null;
-        replacement.events = saved.events.map(event => ({ ...event }));
+        replacement.guidance = saved.guidance ? {
+          nornId: saved.guidance.nornId,
+          objectId: saved.guidance.objectId,
+          remaining: saved.guidance.remaining
+        } : null;
+        replacement.events = saved.events.map(event => ({
+          id: event.id, time: event.time, type: event.type, icon: event.icon, text: event.text,
+          nornId: event.nornId, memory: event.memory, relatedEventId: event.relatedEventId
+        }));
         replacement.nextEventId = saved.nextEventId;
         replacement.norns = replacement.norns.map(baseNorn => {
           const savedNorn = saved.norns.find(norn => norn.id === baseNorn.id);
           return {
             ...baseNorn,
-            ...savedNorn,
+            name: baseNorn.name,
             color: baseNorn.color,
-            traits: { ...savedNorn.traits },
-            words: { ...savedNorn.words },
-            speech: savedNorn.speech ? { ...savedNorn.speech } : null,
-            learned: { ...savedNorn.learned },
-            memories: savedNorn.memories.map(memory => ({ ...memory })),
-            lastSuccess: savedNorn.lastSuccess ? { ...savedNorn.lastSuccess } : null,
-            lastImitated: { ...savedNorn.lastImitated },
+            x: savedNorn.x,
+            y: savedNorn.y,
+            facing: savedNorn.facing,
+            hunger: savedNorn.hunger,
+            curiosity: savedNorn.curiosity,
+            traits: { curiosity: savedNorn.traits.curiosity, sociability: savedNorn.traits.sociability },
+            words: { fruit: savedNorn.words.fruit, spinner: savedNorn.words.spinner },
+            speech: savedNorn.speech ? {
+              text: savedNorn.speech.text, objectId: savedNorn.speech.objectId, until: savedNorn.speech.until
+            } : null,
+            learned: { fruit: savedNorn.learned.fruit, spinner: savedNorn.learned.spinner },
+            memories: savedNorn.memories.map(memory => ({ eventId: memory.eventId, text: memory.text })),
+            targetId: savedNorn.targetId,
+            action: savedNorn.action,
+            reason: savedNorn.reason,
+            thinkIn: savedNorn.thinkIn,
+            actionCooldown: savedNorn.actionCooldown,
+            lastSuccess: savedNorn.lastSuccess ? {
+              time: savedNorn.lastSuccess.time, objectId: savedNorn.lastSuccess.objectId,
+              kind: savedNorn.lastSuccess.kind, feedback: savedNorn.lastSuccess.feedback
+            } : null,
+            lastImitated: { fruit: savedNorn.lastImitated.fruit, spinner: savedNorn.lastImitated.spinner },
+            wiggle: savedNorn.wiggle,
             observedEventIds: new Set(savedNorn.observedEventIds)
           };
         });
@@ -702,9 +733,9 @@
         let raw;
         try {
           raw = window.localStorage.getItem(SAVE_KEY);
+          observedSaveRaw = raw;
         } catch {
-          saveBlocked = true;
-          setSaveStatus("unavailable", "Saving unavailable in this browser");
+          blockSaving("unavailable", "Saving unavailable in this browser");
           return false;
         }
         if (raw === null) {
@@ -712,39 +743,92 @@
           return false;
         }
 
-        let record;
         try {
-          record = JSON.parse(raw);
+          const record = JSON.parse(raw);
+          // A previous v1 save has no revision and is treated as revision zero.
+          if (isObject(record) && Number.isSafeInteger(record.revision) && record.revision >= 0) {
+            observedSaveRevision = record.revision;
+          }
+          if (!isValidSaveRecord(record)) {
+            blockSaving("blocked", "Saved grove version or data is unsupported · Reset to start fresh");
+            return false;
+          }
+          // Restore builds a complete replacement before assigning it to the fresh state.
+          restoreSaveRecord(record);
         } catch {
-          saveBlocked = true;
-          setSaveStatus("blocked", "Saved grove is unreadable · Reset to start fresh");
+          blockSaving("blocked", "Saved grove is unreadable · Reset to start fresh");
           return false;
         }
-        if (!isObject(record) || record.schemaVersion !== SAVE_SCHEMA_VERSION || !isValidSaveRecord(record)) {
-          saveBlocked = true;
-          setSaveStatus("blocked", "Saved grove version or data is unsupported · Reset to start fresh");
-          return false;
-        }
-
-        restoreSaveRecord(record);
         setSaveStatus("saved", "Restored from this browser");
         return true;
       }
 
-      function saveNow() {
-        if (saveBlocked) return false;
+      function blockSaving(status, message) {
+        saveBlocked = true;
+        if (saveTimeout) window.clearTimeout(saveTimeout);
+        saveTimeout = 0;
+        setSaveStatus(status, message);
+      }
+
+      function hasSafeLocking() {
         try {
-          window.localStorage.setItem(SAVE_KEY, JSON.stringify(getSaveSnapshot()));
-          setSaveStatus("saved", "Saved in this browser");
-          return true;
+          return !!navigator.locks && typeof navigator.locks.request === "function";
         } catch {
-          setSaveStatus("unavailable", "Saving unavailable · progress stays in this tab");
           return false;
         }
       }
 
+      async function writeSave(isReset = false, epoch = writeEpoch) {
+        if (!hasSafeLocking()) {
+          blockSaving("unavailable", "Autosave unavailable · browser locking required");
+          return false;
+        }
+        try {
+          return await navigator.locks.request(SAVE_LOCK, { mode: "exclusive" }, () => {
+            if (epoch !== writeEpoch || (saveBlocked && !isReset)) return false;
+            if (observedSaveRaw === undefined) {
+              blockSaving("unavailable", "Saving unavailable · reload to retry browser storage");
+              return false;
+            }
+            // The comparison and write run synchronously under the same cross-tab lock.
+            // Storage notifications may still be queued when this callback is granted.
+            const currentRaw = window.localStorage.getItem(SAVE_KEY);
+            if (currentRaw !== observedSaveRaw) {
+              blockSaving("conflict", "Grove changed in another tab · reload to continue");
+              return false;
+            }
+            if (observedSaveRevision >= Number.MAX_SAFE_INTEGER) {
+              blockSaving("blocked", "Saved grove revision limit reached · progress stays in this tab");
+              return false;
+            }
+            const revision = observedSaveRevision + 1;
+            const nextRaw = JSON.stringify(getSaveSnapshot(revision));
+            // Reset replaces the old record atomically, without a remove/recreate gap.
+            window.localStorage.setItem(SAVE_KEY, nextRaw);
+            observedSaveRaw = nextRaw;
+            observedSaveRevision = revision;
+            saveBlocked = false;
+            setSaveStatus("saved", isReset ? "Fresh grove saved in this browser" : "Saved in this browser");
+            return true;
+          });
+        } catch {
+          blockSaving("unavailable", "Saving unavailable · progress stays in this tab");
+          return false;
+        }
+      }
+
+      async function saveNow() {
+        if (saveBlocked || saveInFlight || resetPending) return false;
+        saveInFlight = true;
+        try {
+          return await writeSave();
+        } finally {
+          saveInFlight = false;
+        }
+      }
+
       function saveSoon() {
-        if (saveBlocked || saveTimeout) return;
+        if (saveBlocked || saveTimeout || resetPending) return;
         saveTimeout = window.setTimeout(() => {
           saveTimeout = 0;
           saveNow();
@@ -752,27 +836,14 @@
       }
 
       function handleStorageChange(event) {
-        if (event.key !== SAVE_KEY) return;
-        if (event.newValue === null) {
-          saveBlocked = true;
-          if (saveTimeout) window.clearTimeout(saveTimeout);
-          saveTimeout = 0;
-          setSaveStatus("conflict", "Grove reset in another tab · reload to continue");
-          return;
-        }
+        if (event.key !== SAVE_KEY && event.key !== null) return;
         try {
-          const record = JSON.parse(event.newValue);
-          if (!isObject(record) || record.writerId !== TAB_ID) {
-            saveBlocked = true;
-            if (saveTimeout) window.clearTimeout(saveTimeout);
-            saveTimeout = 0;
-            setSaveStatus("conflict", "Grove updated in another tab · reload to continue");
+          // Ignore delayed notifications when a reload already observed that value.
+          if (window.localStorage.getItem(SAVE_KEY) !== observedSaveRaw) {
+            blockSaving("conflict", "Grove changed in another tab · reload to continue");
           }
         } catch {
-          saveBlocked = true;
-          if (saveTimeout) window.clearTimeout(saveTimeout);
-          saveTimeout = 0;
-          setSaveStatus("conflict", "Grove changed in another tab · reload to continue");
+          blockSaving("unavailable", "Saving unavailable · progress stays in this tab");
         }
       }
 
@@ -1539,19 +1610,27 @@
         if (clickedNorn) selectNorn(clickedNorn.id);
       }
 
-      function resetSimulation(seed = 4181996) {
-        try {
-          window.localStorage.removeItem(SAVE_KEY);
-        } catch {
-          setSaveStatus("unavailable", "Storage unavailable · fresh grove stays in this tab");
-        }
-        saveBlocked = false;
+      async function resetSimulation(seed = 4181996) {
+        if (resetPending) return;
+        resetPending = true;
+        ui.reset.disabled = true;
+        // Invalidate any queued autosave before replacing the in-memory grove.
+        writeEpoch += 1;
+        if (saveTimeout) window.clearTimeout(saveTimeout);
+        saveTimeout = 0;
+        saveElapsed = 0;
         const next = createInitialState(seed);
         Object.assign(state, next);
-        saveNow();
         renderNornOptions();
         renderUI();
-        showToast("A fresh grove is ready.");
+        setSaveStatus("saving", "Fresh grove · waiting to save in this browser");
+        try {
+          const saved = await writeSave(true);
+          showToast(saved ? "A fresh grove is ready and saved." : "A fresh grove is ready in this tab. See the save status.");
+        } finally {
+          resetPending = false;
+          ui.reset.disabled = false;
+        }
       }
 
       function frame(now) {
@@ -1614,6 +1693,9 @@
       window.addEventListener("storage", handleStorageChange);
 
       const restored = restoreSavedState();
+      if (!hasSafeLocking()) {
+        blockSaving("unavailable", "Autosave unavailable · browser locking required");
+      }
       renderNornOptions();
       renderUI();
       if (!restored && !saveBlocked) saveNow();

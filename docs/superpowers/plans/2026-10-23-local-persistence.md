@@ -16,7 +16,8 @@
 - Store a single versioned record in browser `localStorage`.
 - Do not silently replace malformed or newer-version saved data with a fresh run; report the issue and wait for the player's Reset action.
 - Storage access or quota failures must not stop the in-memory simulation.
-- A stale open tab must stop saving after another tab updates the shared grove.
+- A stale open tab must be prevented from saving or resetting shared storage after another tab updates it, including before storage notifications arrive.
+- All mutations of shared storage require an exclusive Web Lock; unavailable locking leaves the simulation usable in memory with persistence blocked.
 - The session instruction prohibits adding or running automated tests; verify with source inspection, JavaScript syntax validation, and deployment checks.
 
 ## Review Focus
@@ -24,9 +25,9 @@
 - Unsupported or malformed storage must not crash startup or get silently overwritten; inspect the version/validation branch and reset recovery path.
 - Runtime-only values must work after restore; inspect reconstruction of `rng` and `observedEventIds`.
 - Player learning must survive reload; inspect serializer coverage for needs, learned values, vocabulary, memories, events, and recent feedback state.
-- Reset must clear the saved run as well as in-memory progress; inspect the key removal, fresh-state path, and user-facing copy.
+- Reset must replace the saved run as well as in-memory progress when safe persistence is available; inspect the serialized replacement, fresh-state path, and user-facing copy.
 - Private-mode or quota failures must leave simulation interactions usable; inspect all storage access behind error handling and the visible status branch.
-- A second tab must not silently overwrite a newer save; inspect tab identity, storage event handling, and the stale-tab write guard.
+- A second tab must not silently overwrite a newer save; inspect the exclusive lock, exact observed-record comparison, revisions, storage event handling, and Reset's use of the same writer.
 
 ---
 
@@ -67,9 +68,24 @@
 - Modify: `index.html`
 - Modify: `README.md`
 
-- [x] Make Reset clear the saved run and begin the canonical initial grove; provide clear accessible status copy.
+- [x] Make Reset replace the saved run and begin the canonical initial grove; provide clear accessible status copy.
 - [x] Explain that progress saves only in this browser and that clearing site data removes it.
 - [x] Review corrupted/newer save handling, failure paths, learning preservation, and reset behavior.
 - [ ] Commit the feature, push `main`, and confirm the Pages workflow and served page include the persistence status.
 
 **Check:** `git diff --check`, `node --check` on the extracted inline script, GitHub Actions Pages result, and a cache-busted HTTP response containing the persistence status element.
+
+### Review fix wave: malformed records, canonical identities, and serialized writes
+
+**Base:** `6774ea7 Add local autosave for the grove`
+
+- [x] Reject non-string object IDs before property lookup; guard parsing, validation, and reconstruction so failures preserve storage and leave fresh in-memory state usable.
+- [x] Restore only allowlisted mutable Norn and nested fields; preserve canonical names, IDs, and colors from the initial state.
+- [x] Serialize storage read/compare/write with an exclusive Web Lock; compare the exact last observed record and increment revisions, retaining compatibility with revision-less v1 saves.
+- [x] Route Reset through the guarded writer, invalidate queued earlier autosaves, and replace the record atomically; fail closed without locking and retain storage-event notifications.
+- [x] Update README and spec for memory-only fallback, Reset behavior, and best-effort lifecycle saves.
+- [x] Parent source inspection; `git diff --check` and inline JavaScript `node --check` passed.
+- [ ] Fix commit and scoped re-review against `6774ea7`.
+- [ ] Publish only after scoped review is clear and verify deployment.
+
+The fix implementer and parent performed source inspection. Static diff and syntax checks passed. No automated tests, commits, or pushes have been performed; the parent owns the fix commit, scoped re-review, and publication.
