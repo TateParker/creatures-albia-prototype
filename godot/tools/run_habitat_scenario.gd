@@ -371,7 +371,7 @@ func _run_scenario() -> void:
 	if not malformed_v5_records.is_empty():
 		_write_saved_record(malformed_v5_records[0])
 		world.load_game()
-		safe_v5_fallback = is_equal_approx(float(world.cognition_state["actionAssociations"]["fruit"]), 0.0) and str(world.last_status).contains("started a clean seeded Norn")
+		safe_v5_fallback = is_equal_approx(float(world.cognition_state["actionAssociations"]["fruit"]), 0.5) and str(world.last_status).contains("started a clean seeded Norn")
 		if not safe_v5_fallback:
 			_scenario_failures.append("invalid version-5 candidate did not safely reset the live habitat")
 	print("INVALID VERSION-5 FALLBACK: fresh=%s; status=%s" % [safe_v5_fallback, world.last_status])
@@ -380,7 +380,7 @@ func _run_scenario() -> void:
 	invalid_version3["biochemistry"]["compounds"]["ATP"] = 101.0
 	_write_saved_record(invalid_version3)
 	world.load_game()
-	var invalid_fallback_is_fresh: bool = str(world.last_status).to_lower().contains("failed validation") and world.cognition_state["actionAssociations"]["fruit"] == 0.0
+	var invalid_fallback_is_fresh: bool = str(world.last_status).to_lower().contains("failed validation") and world.cognition_state["actionAssociations"]["fruit"] == 0.5
 	if not invalid_fallback_is_fresh or Biochemistry.read_signals(world.get("biochemistry_state")) != world.cognition_state["chemistry"]:
 		_scenario_failures.append("invalid version-3 biochemistry did not use the safe seeded fallback")
 	print("INVALID VERSION-3 FALLBACK: fresh=%s; status=%s" % [invalid_fallback_is_fresh, world.last_status])

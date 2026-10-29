@@ -6,6 +6,9 @@ signal action_completed(actor_id: String, action_id: String, target_id: String)
 const WALK_SPEED := 2.8
 const ARRIVAL_DISTANCE := 1.05
 const OBSERVATION_STOP_DISTANCE := 2.1
+const SPHERE_RADIUS := 0.5
+const HEAD_POSITION := Vector3(0.0, 1.7, -0.02)
+const HEAD_SIZE := Vector3(0.78, 0.72, 0.66)
 
 var current_action: String = "idle"
 var action_reason: String = "Looking around the habitat"
@@ -175,29 +178,47 @@ func _build_body() -> void:
 	_visual_root.name = "LifeStageVisuals"
 	add_child(_visual_root)
 	var warm_brown := _material(body_color)
+	var eye_socket := _material(body_color.darkened(0.18))
 	var cream := _material(Color(0.92, 0.76, 0.51))
 	var dark := _material(Color(0.08, 0.055, 0.04))
 	var eye_white := _material(Color(0.96, 0.92, 0.78))
 	_add_sphere("Body", Vector3(0.0, 0.78, 0.0), Vector3(0.82, 1.05, 0.68), warm_brown, 14, 8)
 	_add_sphere("Belly", Vector3(0.0, 0.79, -0.29), Vector3(0.49, 0.7, 0.22), cream, 12, 7)
-	_add_sphere("Head", Vector3(0.0, 1.7, -0.02), Vector3(0.78, 0.72, 0.66), warm_brown, 14, 8)
-	_add_sphere("LeftEar", Vector3(-0.57, 2.18, 0.02), Vector3(0.27, 0.56, 0.25), warm_brown, 10, 6)
-	_add_sphere("RightEar", Vector3(0.57, 2.18, 0.02), Vector3(0.27, 0.56, 0.25), warm_brown, 10, 6)
-	_add_sphere("LeftEarInner", Vector3(-0.57, 2.19, -0.19), Vector3(0.15, 0.36, 0.08), cream, 8, 5)
-	_add_sphere("RightEarInner", Vector3(0.57, 2.19, -0.19), Vector3(0.15, 0.36, 0.08), cream, 8, 5)
-	_add_sphere("LeftEye", Vector3(-0.27, 1.77, -0.58), Vector3(0.16, 0.2, 0.08), eye_white, 10, 6)
-	_add_sphere("RightEye", Vector3(0.27, 1.77, -0.58), Vector3(0.16, 0.2, 0.08), eye_white, 10, 6)
-	_add_sphere("LeftPupil", Vector3(-0.25, 1.76, -0.65), Vector3(0.075, 0.11, 0.05), dark, 8, 5)
-	_add_sphere("RightPupil", Vector3(0.29, 1.76, -0.65), Vector3(0.075, 0.11, 0.05), dark, 8, 5)
-	_add_sphere("Nose", Vector3(0.0, 1.52, -0.66), Vector3(0.15, 0.11, 0.09), _material(Color(0.2, 0.1, 0.08)), 8, 5)
+	_add_sphere("Head", HEAD_POSITION, HEAD_SIZE, warm_brown, 14, 8)
+	_add_sphere("LeftEar", Vector3(-0.42, 2.13, 0.02), Vector3(0.38, 0.66, 0.25), warm_brown, 10, 6)
+	_add_sphere("RightEar", Vector3(0.42, 2.13, 0.02), Vector3(0.38, 0.66, 0.25), warm_brown, 10, 6)
+	_add_sphere("LeftEarInner", Vector3(-0.42, 2.19, -0.10), Vector3(0.15, 0.36, 0.08), cream, 8, 5)
+	_add_sphere("RightEarInner", Vector3(0.42, 2.19, -0.10), Vector3(0.15, 0.36, 0.08), cream, 8, 5)
+	var left_eye_x := -0.27
+	var right_eye_x := 0.27
+	var eye_y := 1.77
+	var eyelid_y := 1.88
+	_add_sphere("LeftEyeSocket", _front_surface_point(left_eye_x, eye_y, 0.012), Vector3(0.22, 0.26, 0.06), eye_socket, 10, 6)
+	_add_sphere("RightEyeSocket", _front_surface_point(right_eye_x, eye_y, 0.012), Vector3(0.22, 0.26, 0.06), eye_socket, 10, 6)
+	_add_sphere("LeftEye", _front_surface_point(left_eye_x, eye_y, 0.025), Vector3(0.16, 0.2, 0.08), eye_white, 10, 6)
+	_add_sphere("RightEye", _front_surface_point(right_eye_x, eye_y, 0.025), Vector3(0.16, 0.2, 0.08), eye_white, 10, 6)
+	_add_sphere("LeftPupil", _front_surface_point(-0.25, 1.76, 0.06), Vector3(0.075, 0.11, 0.05), dark, 8, 5)
+	_add_sphere("RightPupil", _front_surface_point(0.25, 1.76, 0.06), Vector3(0.075, 0.11, 0.05), dark, 8, 5)
+	_add_sphere("LeftEyelid", _front_surface_point(left_eye_x, eyelid_y, 0.018), Vector3(0.18, 0.07, 0.055), warm_brown, 10, 6)
+	_add_sphere("RightEyelid", _front_surface_point(right_eye_x, eyelid_y, 0.018), Vector3(0.18, 0.07, 0.055), warm_brown, 10, 6)
+	_add_sphere("Nose", _front_surface_point(0.0, 1.52, 0.04), Vector3(0.14, 0.1, 0.07), _material(Color(0.2, 0.1, 0.08)), 8, 5)
 	_apply_life_stage()
+
+
+func _front_surface_point(x: float, y: float, outward_offset: float = 0.0) -> Vector3:
+	var radii := HEAD_SIZE * SPHERE_RADIUS
+	var normalized_x := (x - HEAD_POSITION.x) / radii.x
+	var normalized_y := (y - HEAD_POSITION.y) / radii.y
+	var remaining := maxf(0.0, 1.0 - normalized_x * normalized_x - normalized_y * normalized_y)
+	var front_z := HEAD_POSITION.z - radii.z * sqrt(remaining)
+	return Vector3(x, y, front_z - outward_offset)
 
 
 func _add_sphere(label: String, at: Vector3, scale_value: Vector3, material: Material, segments: int, rings: int) -> void:
 	var mesh_instance := MeshInstance3D.new()
 	mesh_instance.name = label
 	var sphere := SphereMesh.new()
-	sphere.radius = 0.5
+	sphere.radius = SPHERE_RADIUS
 	sphere.height = 1.0
 	sphere.radial_segments = segments
 	sphere.rings = rings

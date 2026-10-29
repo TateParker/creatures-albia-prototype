@@ -1,10 +1,21 @@
 class_name NornCognition
 extends RefCounted
 
-const VERSION := 1
+const VERSION := 2
 const EPISODE_LIMIT := 512
 const RECURRENT_UNITS := 128
 const RECURRENT_DEGREE := 4
+const PEER_SELECTION_RADIUS := 10.0
+const ADOLESCENT_NON_PARENT_BONUS := 0.25
+const PEER_MEMORY_SCORE_LIMIT := 0.35
+const PEER_MEMORY_HALF_LIFE_SECONDS := 180.0
+const PEER_MEMORY_FAMILIARITY_UNITS := 3.0
+const ACTION_UTILITY_MIN := 0.0
+const ACTION_UTILITY_MAX := 100.0
+const ACTION_NON_DRIVE_LIMIT := 20.0
+const FRUIT_URGENT_HUNGER := 90.0
+const FRUIT_URGENT_GLUCOSE := 10.0
+const REST_URGENT_FATIGUE := 95.0
 const CHEMICAL_NAMES: Array[String] = [
 	"glucose", "hunger", "curiosity", "fatigue", "reward",
 	"punishment", "stress", "socialComfort", "arousal", "satiety"
@@ -126,14 +137,83 @@ static func decide(state: Dictionary, observation: Dictionary = {}) -> Dictionar
 	if not state.has("policy"):
 		return {}
 	_update_recurrent_state(state, observation)
-	state["lastDecision"] = _apply_commitment(state, _score_decision(state, observation), observation, true)
-	return (state["lastDecision"] as Dictionary).duplicate(true)
+	var decision := _apply_commitment(state, _score_decision(state, observation), observation, true)
+	var saved_decision := decision.duplicate(true)
+	for diagnostic: String in ["eligibleActions", "scoreBreakdown", "safetyOverride"]:
+		saved_decision.erase(diagnostic)
+	state["lastDecision"] = saved_decision
+	return decision.duplicate(true)
 
 
 static func preview(state: Dictionary, observation: Dictionary = {}) -> Dictionary:
 	if not state.has("policy"):
 		return {}
 	return _apply_commitment(state, _score_decision(state, observation), observation, false).duplicate(true)
+
+
+static func select_observation_peer(state: Dictionary, candidates: Array[Dictionary], parent_ids: Array[String], life_stage: String, now: float) -> Dictionary:
+	var scores: Array[Dictionary] = []
+	var seen_peer_ids: Dictionary = {}
+	for candidate: Dictionary in candidates:
+		var peer_id_value: Variant = candidate.get("id", null)
+		if not (peer_id_value is String):
+			continue
+		var peer_id := str(peer_id_value)
+		if peer_id.is_empty() or seen_peer_ids.has(peer_id):
+			continue
+		var distance_value: Variant = candidate.get("distance", null)
+		if not _is_finite_number(distance_value):
+			continue
+		var distance := float(distance_value)
+		if distance < 0.0:
+			continue
+		seen_peer_ids[peer_id] = true
+		var proximity := clampf(1.0 - distance / PEER_SELECTION_RADIUS, 0.0, 1.0)
+		var age_bonus := ADOLESCENT_NON_PARENT_BONUS if life_stage == "adolescent" and not parent_ids.has(peer_id) else 0.0
+		var memory_score := _peer_social_memory_score(state, peer_id, now)
+		scores.append({
+			"peerId": peer_id,
+			"distance": distance,
+			"proximity": proximity,
+			"ageBonus": age_bonus,
+			"memory": memory_score,
+			"total": proximity + age_bonus + memory_score
+		})
+	if scores.is_empty():
+		return {}
+	scores.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		var left_score := float(left["total"])
+		var right_score := float(right["total"])
+		if left_score != right_score:
+			return left_score > right_score
+		var left_distance := float(left["distance"])
+		var right_distance := float(right["distance"])
+		if left_distance != right_distance:
+			return left_distance < right_distance
+		return str(left["peerId"]) < str(right["peerId"])
+	)
+	var selected: Dictionary = scores[0]
+	var reason_key := "proximity"
+	var reason_peer_id := ""
+	var most_negative_memory := 0.0
+	for score: Dictionary in scores:
+		var peer_memory := float(score["memory"])
+		if peer_memory < most_negative_memory:
+			most_negative_memory = peer_memory
+			reason_peer_id = str(score["peerId"])
+	if float(selected["memory"]) >= 0.1:
+		reason_key = "positive_memory"
+		reason_peer_id = str(selected["peerId"])
+	elif most_negative_memory <= -0.1 and str(selected["peerId"]) != reason_peer_id:
+		reason_key = "negative_memory"
+	elif float(selected["ageBonus"]) > 0.0:
+		reason_key = "adolescent_preference"
+	return {
+		"peerId": str(selected["peerId"]),
+		"reasonKey": reason_key,
+		"reasonPeerId": reason_peer_id,
+		"scores": scores.duplicate(true)
+	}
 
 
 static func record_outcome(state: Dictionary, outcome: Dictionary = {}, external_chemistry: Dictionary = {}) -> Dictionary:
@@ -162,11 +242,12 @@ static func record_outcome(state: Dictionary, outcome: Dictionary = {}, external
 		_adjust_chemistry_for_outcome(chemistry, event_type, str(outcome.get("feedback", "")))
 	var explicit_delta = outcome.get("learningDelta", null)
 	var learning_delta := _derive_learning_delta(event_type, explicit_delta)
+	var learning_multiplier := clampf(_finite_or(outcome.get("learningMultiplier", 1.0), 1.0), 0.0, 2.0)
 	if event_type == "observe" and _is_finite_number(outcome.get("sociability", null)):
-		learning_delta = 0.06 + clampf(float(outcome["sociability"]), 0.0, 1.0) * 0.04
+		learning_delta = (0.06 + clampf(float(outcome["sociability"]), 0.0, 1.0) * 0.04) * learning_multiplier
 	elif event_type == "observe-feedback" and _is_finite_number(outcome.get("sociability", null)):
 		var direction := -1.0 if outcome.get("feedback", "") == "scold" else 1.0
-		learning_delta = direction * (0.04 + clampf(float(outcome["sociability"]), 0.0, 1.0) * 0.03)
+		learning_delta = direction * (0.04 + clampf(float(outcome["sociability"]), 0.0, 1.0) * 0.03) * learning_multiplier
 
 	var eligibility: Dictionary = state["eligibility"]
 	var context_eligibility: Dictionary = state["contextEligibility"]
@@ -285,17 +366,20 @@ static func restore_state(record: Dictionary) -> Dictionary:
 		return {}
 	var traits: Dictionary = record["traits"]
 	var chemistry: Dictionary = record["chemistry"]
+	var associations: Dictionary = record["actionAssociations"]
+	if int(record.get("version", VERSION)) < VERSION:
+		associations = _migrate_legacy_action_associations(associations)
 	var state := create_state(int(record["seed"]), traits, {
 		"hunger": chemistry["hunger"],
 		"curiosity": chemistry["curiosity"],
 		"fatigue": chemistry["fatigue"],
-		"actionAssociations": record["actionAssociations"]
+		"actionAssociations": associations
 	})
 	state["chemistry"] = chemistry.duplicate(true)
 	state["contextAssociations"] = _normalize_context_map(record["contextAssociations"])
 	state["episodes"] = (record["episodes"] as Array).duplicate(true)
 	state["nextEpisodeId"] = record["nextEpisodeId"]
-	state["eligibility"] = _normalize_associations(record["eligibility"])
+	state["eligibility"] = _normalize_associations(record["eligibility"], 0.0)
 	state["contextEligibility"] = _normalize_context_map(record["contextEligibility"], 0.0)
 	state["hidden"] = PackedFloat32Array(record["recurrent"]["hidden"])
 	state["decisionCount"] = record["recurrent"]["decisionCount"]
@@ -356,10 +440,18 @@ static func _next_random(rng: Dictionary) -> float:
 	return float(value) / 4294967296.0
 
 
-static func _normalize_associations(source: Dictionary) -> Dictionary:
+static func _normalize_associations(source: Dictionary, default_value: float = 0.5) -> Dictionary:
 	var result := {}
 	for action_id: String in ACTION_IDS:
-		result[action_id] = clampf(_finite_or(source.get(action_id, 0.0), 0.0), 0.0, 1.0)
+		result[action_id] = clampf(_finite_or(source.get(action_id, default_value), default_value), 0.0, 1.0)
+	return result
+
+
+static func _migrate_legacy_action_associations(source: Dictionary) -> Dictionary:
+	var result := {}
+	for action_id: String in ACTION_IDS:
+		var legacy_value := clampf(_finite_or(source.get(action_id, 0.0), 0.0), 0.0, 1.0)
+		result[action_id] = 0.5 + legacy_value * 0.5
 	return result
 
 
@@ -544,57 +636,210 @@ static func _score_decision(state: Dictionary, observation: Dictionary) -> Dicti
 	var associations: Dictionary = state["actionAssociations"]
 	var policy: Dictionary = _policy_signals(state)
 	var recalled: Array[Dictionary] = _retrieve_episodes(state, observation)
-	var fruit_need := maxf(0.0, float(chemistry["hunger"]) - 17.0) * 1.05
+	var hunger := clampf(float(chemistry["hunger"]), 0.0, 100.0)
+	var glucose := clampf(float(chemistry["glucose"]), 0.0, 100.0)
+	var fruit_need := maxf(hunger, 100.0 - glucose)
 	var spinner_need := maxf(0.0, float(chemistry["curiosity"]) - 16.0) * (0.58 + float(state["traits"]["curiosity"]) * 0.46)
-	var fruit_habit := float(associations["fruit"]) * 35.0
-	var spinner_habit := float(associations["spinner"]) * 32.0
-	var fruit_memory := _episodic_action_bias(recalled, "fruit")
-	var spinner_memory := _episodic_action_bias(recalled, "spinner")
 	var nearby_norns: Array = observation.get("nearbyNorns", [])
 	var contexts := _get_context_ids(chemistry, nearby_norns.size())
-	var fruit_context := clampf(float(policy["fruit"]) + fruit_memory + _contextual_action_bias(state, "fruit", contexts), -8.0, 8.0)
-	var spinner_context := clampf(float(policy["spinner"]) + spinner_memory + _contextual_action_bias(state, "spinner", contexts), -8.0, 8.0)
-	var fruit_score := fruit_need + fruit_habit + fruit_context
-	var spinner_score := spinner_need + spinner_habit + spinner_context
-	var rest_need := float(chemistry["fatigue"]) * 0.3 + maxf(0.0, 28.0 - float(chemistry["glucose"])) * 0.2
+	var low_glucose_need := 100.0 - glucose
+	var rest_need := clampf(float(chemistry["fatigue"]) * 0.85 + low_glucose_need * 0.15, 0.0, 100.0)
 	var sociability := clampf(float(state["traits"].get("sociability", 0.5)), 0.0, 1.0)
 	var observe_need := 8.0 + maxf(0.0, 50.0 - float(chemistry["socialComfort"])) * 0.12 + sociability * 20.0 if not nearby_norns.is_empty() else 0.0
-	var action_scores := {
-		"fruit": fruit_score,
-		"spinner": spinner_score,
-		"rest": rest_need + float(associations["rest"]) * 20.0 + _contextual_action_bias(state, "rest", contexts) + float(policy["rest"]),
-		"observe_peer": observe_need + float(associations["observe_peer"]) * 20.0 + _contextual_action_bias(state, "observe_peer", contexts) + float(policy["observe_peer"]),
-		"idle": 14.0 + float(associations["idle"]) * 20.0 + _contextual_action_bias(state, "idle", contexts) + float(policy["idle"])
+	var drives := {
+		"fruit": fruit_need,
+		"spinner": clampf(spinner_need, 0.0, 100.0),
+		"rest": rest_need,
+		"observe_peer": observe_need,
+		"idle": 24.0
 	}
-	var action_id := ""
-	if fruit_score >= 11.0 or spinner_score >= 14.0:
-		action_id = "fruit" if fruit_score > spinner_score else "spinner"
-	elif float(action_scores["rest"]) > 18.0:
+	var action_scores: Dictionary = {}
+	var score_breakdown: Dictionary = {}
+	for action_id: String in ACTION_IDS:
+		var action_association := _action_association_bias(associations, action_id)
+		var context_association := _contextual_action_bias(state, action_id, contexts)
+		var episodic_memory := _episodic_action_bias(recalled, action_id)
+		var recurrent_policy := float(policy[action_id])
+		var combined_preference := clampf(
+			action_association + context_association + episodic_memory + recurrent_policy,
+			-ACTION_NON_DRIVE_LIMIT,
+			ACTION_NON_DRIVE_LIMIT
+		)
+		var final_utility := clampf(float(drives[action_id]) + combined_preference, ACTION_UTILITY_MIN, ACTION_UTILITY_MAX)
+		action_scores[action_id] = final_utility
+		score_breakdown[action_id] = {
+			"drive": float(drives[action_id]),
+			"actionAssociation": action_association,
+			"contextAssociation": context_association,
+			"episodicMemory": episodic_memory,
+			"recurrentPolicy": recurrent_policy,
+			"combinedPreference": combined_preference,
+			"finalUtility": final_utility
+		}
+	var eligible_actions := _eligible_actions(observation)
+	var action_id := _highest_utility_action(action_scores, eligible_actions)
+	var safety_override := ""
+	var fruit_urgent := eligible_actions.has("fruit") and (hunger >= FRUIT_URGENT_HUNGER or glucose <= FRUIT_URGENT_GLUCOSE)
+	var rest_urgent := eligible_actions.has("rest") and float(chemistry["fatigue"]) >= REST_URGENT_FATIGUE
+	if fruit_urgent and rest_urgent:
+		var fruit_severity := maxf(
+			clampf((hunger - FRUIT_URGENT_HUNGER) / (100.0 - FRUIT_URGENT_HUNGER), 0.0, 1.0),
+			clampf((FRUIT_URGENT_GLUCOSE - glucose) / FRUIT_URGENT_GLUCOSE, 0.0, 1.0)
+		)
+		var rest_severity := clampf((float(chemistry["fatigue"]) - REST_URGENT_FATIGUE) / (100.0 - REST_URGENT_FATIGUE), 0.0, 1.0)
+		if fruit_severity >= rest_severity:
+			action_id = "fruit"
+			safety_override = "fruit"
+		else:
+			action_id = "rest"
+			safety_override = "rest"
+	elif fruit_urgent:
+		action_id = "fruit"
+		safety_override = "fruit"
+	elif rest_urgent:
 		action_id = "rest"
-	elif float(action_scores["observe_peer"]) > float(action_scores["idle"]) and observe_need > 0.0:
-		action_id = "observe_peer"
-	else:
-		action_id = "idle"
-	var reason := "Their immediate needs are settled"
-	if action_id == "fruit":
-		reason = "Remembering that fruit eased hunger before" if fruit_memory > 1.0 or fruit_habit > 8.0 else "Hunger is drawing attention to the fruit"
-	elif action_id == "spinner":
-		reason = "Remembering that the spinner was enjoyable" if spinner_memory > 1.0 or spinner_habit > 8.0 else "Curiosity is pulling toward the spinner"
-	elif action_id == "rest":
-		reason = "Fatigue or low energy is calling for a pause"
-	elif action_id == "observe_peer":
-		reason = "Staying near another Norn to notice what they do"
+		safety_override = "rest"
+	var reason := _decision_reason(action_id, score_breakdown[action_id], hunger, glucose)
+	if safety_override == "fruit":
+		reason = "Urgent hunger or low glucose is calling for food"
+	elif safety_override == "rest":
+		reason = "Extreme fatigue is calling for rest"
+	var fruit_habit := float(associations["fruit"]) * 35.0
+	var spinner_habit := float(associations["spinner"]) * 32.0
+	var fruit_context := clampf(float(policy["fruit"]) + _episodic_action_bias(recalled, "fruit") + _contextual_action_bias(state, "fruit", contexts), -8.0, 8.0)
+	var spinner_context := clampf(float(policy["spinner"]) + _episodic_action_bias(recalled, "spinner") + _contextual_action_bias(state, "spinner", contexts), -8.0, 8.0)
 	return {
 		"actionId": action_id,
 		"actionScores": action_scores,
 		"reason": reason,
 		"recalledEpisodeIds": recalled.map(func(episode: Dictionary) -> int: return int(episode["id"])),
+		"eligibleActions": eligible_actions,
+		"scoreBreakdown": score_breakdown,
+		"safetyOverride": safety_override,
 		"components": {
-			"fruitNeed": fruit_need, "fruitHabit": fruit_habit, "fruitContext": fruit_context, "fruitScore": fruit_score,
-			"spinnerNeed": spinner_need, "spinnerHabit": spinner_habit, "spinnerContext": spinner_context, "spinnerScore": spinner_score,
+			"fruitNeed": fruit_need, "fruitHabit": fruit_habit, "fruitContext": fruit_context, "fruitScore": float(action_scores["fruit"]),
+			"spinnerNeed": spinner_need, "spinnerHabit": spinner_habit, "spinnerContext": spinner_context, "spinnerScore": float(action_scores["spinner"]),
 			"restNeed": rest_need, "observeNeed": observe_need
 		}
 	}
+
+
+static func _action_association_bias(associations: Dictionary, action_id: String) -> float:
+	var weight := 20.0
+	if action_id == "fruit":
+		weight = 35.0
+	elif action_id == "spinner":
+		weight = 32.0
+	return (float(associations[action_id]) - 0.5) * weight
+
+
+static func _highest_utility_action(action_scores: Dictionary, eligible_actions: Array) -> String:
+	var best_action := "idle"
+	var best_score := -INF
+	for action_value: Variant in eligible_actions:
+		var action_id := str(action_value)
+		var score := float(action_scores.get(action_id, -INF))
+		if score > best_score:
+			best_score = score
+			best_action = action_id
+	return best_action
+
+
+static func _eligible_actions(observation: Dictionary) -> Array[String]:
+	var eligible: Array[String] = []
+	var objects_value: Variant = observation.get("nearbyObjects", [])
+	var peers_value: Variant = observation.get("nearbyNorns", [])
+	var objects: Array = objects_value if objects_value is Array else []
+	var peers: Array = peers_value if peers_value is Array else []
+	for action_id: String in ACTION_IDS:
+		if action_id == "fruit" and _has_sensed_id(objects, "fruit"):
+			eligible.append(action_id)
+		elif action_id == "spinner" and _has_sensed_id(objects, "spinner"):
+			eligible.append(action_id)
+		elif action_id == "observe_peer" and _has_sensed_peer(peers):
+			eligible.append(action_id)
+		elif ["rest", "idle"].has(action_id):
+			eligible.append(action_id)
+	return eligible
+
+
+static func _has_sensed_id(sensed: Array, expected_id: String) -> bool:
+	for entry_value: Variant in sensed:
+		if not (entry_value is Dictionary):
+			continue
+		var entry: Dictionary = entry_value
+		if str(entry.get("id", "")) == expected_id and bool(entry.get("available", true)):
+			return true
+	return false
+
+
+static func _has_sensed_peer(peers: Array) -> bool:
+	for peer_value: Variant in peers:
+		if not (peer_value is Dictionary):
+			continue
+		if not str(peer_value.get("id", "")).is_empty():
+			return true
+	return false
+
+
+static func _decision_reason(action_id: String, breakdown: Dictionary, hunger: float, glucose: float) -> String:
+	var drive := float(breakdown["drive"])
+	var preference := float(breakdown["combinedPreference"])
+	var memory := float(breakdown["episodicMemory"])
+	var strongest_preference := -INF
+	for component: String in ["actionAssociation", "contextAssociation", "episodicMemory", "recurrentPolicy"]:
+		strongest_preference = maxf(strongest_preference, float(breakdown[component]))
+	if action_id == "fruit":
+		if memory > 0.0 and memory >= strongest_preference:
+			return "Remembering that fruit eased hunger before"
+		if preference > drive:
+			return "Learned preferences are drawing attention to fruit"
+		return "Low glucose is calling for food" if 100.0 - glucose > hunger else "Hunger is drawing attention to fruit"
+	if action_id == "spinner":
+		if memory > 0.0 and memory >= strongest_preference:
+			return "Remembering that the spinner was enjoyable"
+		if preference > drive:
+			return "Learned preferences are drawing attention to the spinner"
+		return "Curiosity is pulling toward the spinner"
+	if action_id == "rest":
+		return "Learned preferences are favoring a pause" if preference > drive else "Fatigue or low energy is calling for a pause"
+	if action_id == "observe_peer":
+		return "Learned preferences are drawing them toward another Norn" if preference > drive else "Social attention is drawing them toward another Norn"
+	if preference > drive:
+		return "Learned preferences are favoring a quiet moment"
+	return "Their immediate needs are settled"
+
+
+static func _peer_social_memory_score(state: Dictionary, peer_id: String, now: float) -> float:
+	var episodes_value: Variant = state.get("episodes", [])
+	if not (episodes_value is Array):
+		return 0.0
+	var current_time := maxf(0.0, _finite_or(now, 0.0))
+	var total_weight := 0.0
+	var weighted_valence := 0.0
+	for episode_value: Variant in episodes_value:
+		if not (episode_value is Dictionary):
+			continue
+		var episode: Dictionary = episode_value
+		if str(episode.get("actorId", "")) != peer_id or not ["observe", "observe-feedback"].has(str(episode.get("eventType", episode.get("outcome", "")))):
+			continue
+		var valence_value: Variant = episode.get("valence", null)
+		if not _is_finite_number(valence_value):
+			continue
+		var salience := clampf(_finite_or(episode.get("salience", 0.55), 0.55), 0.0, 1.0)
+		var episode_time := _finite_or(episode.get("time", current_time), current_time)
+		var elapsed := maxf(0.0, current_time - episode_time)
+		var recency_weight := pow(0.5, elapsed / PEER_MEMORY_HALF_LIFE_SECONDS)
+		var evidence_weight := salience * recency_weight
+		if evidence_weight <= 0.0:
+			continue
+		total_weight += evidence_weight
+		weighted_valence += clampf(float(valence_value), -1.0, 1.0) * evidence_weight
+	if total_weight <= 0.0:
+		return 0.0
+	var familiarity := clampf(total_weight / PEER_MEMORY_FAMILIARITY_UNITS, 0.0, 1.0)
+	var mean_valence := weighted_valence / total_weight
+	return clampf(mean_valence * familiarity, -1.0, 1.0) * PEER_MEMORY_SCORE_LIMIT
 
 
 static func _apply_commitment(state: Dictionary, decision: Dictionary, observation: Dictionary, persist: bool) -> Dictionary:
@@ -604,7 +849,9 @@ static func _apply_commitment(state: Dictionary, decision: Dictionary, observati
 	var previous_action := str(previous.get("actionId", ""))
 	var previous_is_target := ["fruit", "spinner"].has(previous_action)
 	var commitment_until := float(state.get("commitmentUntil", 0.0))
-	if previous_is_target and decision["actionId"] != previous_action and now < commitment_until:
+	var eligible_actions: Array = decision.get("eligibleActions", [])
+	var safety_override := str(decision.get("safetyOverride", ""))
+	if previous_is_target and eligible_actions.has(previous_action) and safety_override.is_empty() and decision["actionId"] != previous_action and now < commitment_until:
 		var next_score := float(decision["actionScores"][decision["actionId"]])
 		var previous_score := float(decision["actionScores"][previous_action])
 		if next_score < previous_score + 18.0:
@@ -667,7 +914,7 @@ static func _adjust_chemistry_for_outcome(chemistry: Dictionary, event_type: Str
 
 
 static func _valid_record(record: Dictionary) -> bool:
-	if int(record.get("version", -1)) != VERSION:
+	if not [1, VERSION].has(int(record.get("version", -1))):
 		return false
 	var seed_value = record.get("seed", null)
 	var traits = record.get("traits", null)

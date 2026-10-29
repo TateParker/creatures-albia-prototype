@@ -43,6 +43,8 @@ func _record_preview() -> void:
 		return
 	if not _press_hud_button("Pause"):
 		return
+	if not await _run_face_closeup_demo():
+		return
 	if not await _run_teaching_walkthrough():
 		return
 	for frame in range(24):
@@ -193,6 +195,8 @@ func _record_preview() -> void:
 	if restored_moss_words.size() != expected_moss_vocabulary_size or restored_moss_words != expected_moss_words:
 		_fail("The recorded save/load interaction did not restore Moss's vocabulary.")
 		return
+	if not await _run_action_utility_walkthrough():
+		return
 	if not await _run_social_observation_walkthrough():
 		return
 	if not await _run_family_lifespan_walkthrough():
@@ -240,13 +244,87 @@ func _record_preview() -> void:
 	if not _verify_legacy_save_migration():
 		return
 	_restore_user_save()
-	print("VIDEO_CAPTURE_OK frames=%d path=%s flow=teach-fruit-food-spinner-activity-praise-scold-rest-social-observation-family-egg-hatch-stage-death-archive-save-load-migrations" % [frame_count, video_path])
+	print("VIDEO_CAPTURE_OK frames=%d path=%s flow=teach-fruit-food-spinner-activity-praise-scold-rest-action-utility-social-observation-family-egg-hatch-stage-death-archive-save-load-migrations" % [frame_count, video_path])
 	quit()
+
+
+func _run_face_closeup_demo() -> bool:
+	var mallow = _world.call("profile_for", "mallow")
+	var actor: NornActor = mallow.get("actor") if mallow != null else null
+	var camera := _world.get("_camera") as Camera3D
+	var head := actor.find_child("Head", true, false) as MeshInstance3D if actor != null else null
+	var left_ear := actor.find_child("LeftEar", true, false) as MeshInstance3D if actor != null else null
+	var right_ear := actor.find_child("RightEar", true, false) as MeshInstance3D if actor != null else null
+	if actor == null or camera == null or head == null or left_ear == null or right_ear == null:
+		_fail("The face close-up could not find Mallow, its head and ear meshes, or the habitat camera.")
+		return false
+	var previous_rotation := actor.rotation
+	var previous_physics_enabled := actor.is_physics_processing()
+	var previous_camera_target: Vector3 = _world.get("_camera_target")
+	var previous_camera_offset: Vector3 = _world.get("_camera_offset")
+	actor.set_physics_process(false)
+	actor.rotation.y = 0.0
+	_world.set("_camera_target", actor.global_position + Vector3(0.0, 1.72, 0.0))
+	_world.set("_camera_offset", Vector3(0.0, 0.08, -2.2))
+	_world.call("_update_camera")
+	var projected_head := camera.unproject_position(head.global_position)
+	var head_visible := not camera.is_position_behind(head.global_position) and projected_head.x >= 400.0 and projected_head.x <= 880.0 and projected_head.y >= 100.0 and projected_head.y <= 620.0
+	var frontal_roots_visible := _closeup_point_is_visible(camera, left_ear.global_position) and _closeup_point_is_visible(camera, right_ear.global_position)
+	var capture_failure := ""
+	var projected_left_ear := Vector2.ZERO
+	var projected_right_ear := Vector2.ZERO
+	if not head_visible or not frontal_roots_visible:
+		capture_failure = "Mallow's face or ear roots did not project into the clear frontal close-up view."
+	else:
+		for frame in range(24):
+			await process_frame
+		actor.rotation.y = 0.32
+		_world.call("_update_camera")
+		projected_left_ear = camera.unproject_position(left_ear.global_position)
+		projected_right_ear = camera.unproject_position(right_ear.global_position)
+		var quarter_roots_visible := _closeup_point_is_visible(camera, left_ear.global_position) and _closeup_point_is_visible(camera, right_ear.global_position)
+		if not quarter_roots_visible:
+			capture_failure = "Mallow's ear roots did not project into the clear three-quarter close-up view."
+		else:
+			for frame in range(24):
+				await process_frame
+	actor.rotation = previous_rotation
+	actor.set_physics_process(previous_physics_enabled)
+	_world.set("_camera_target", previous_camera_target)
+	_world.set("_camera_offset", previous_camera_offset)
+	_world.call("_update_camera")
+	if not actor.rotation.is_equal_approx(previous_rotation) or actor.is_physics_processing() != previous_physics_enabled or not camera.global_position.is_equal_approx(previous_camera_target + previous_camera_offset):
+		_fail("The face close-up did not restore Mallow's rotation, physics state, and habitat camera.")
+		return false
+	if not capture_failure.is_empty():
+		_fail(capture_failure)
+		return false
+	print("FACE_CLOSEUP_CAPTURE_OK actor=%s headScreen=(%.1f,%.1f) frontalFrames=24" % [actor.display_name, projected_head.x, projected_head.y])
+	print("EAR_ATTACHMENT_CAPTURE_OK actor=%s leftRootScreen=(%.1f,%.1f) rightRootScreen=(%.1f,%.1f) yaw=0.32 frames=24" % [actor.display_name, projected_left_ear.x, projected_left_ear.y, projected_right_ear.x, projected_right_ear.y])
+	return true
+
+
+func _closeup_point_is_visible(camera: Camera3D, point: Vector3) -> bool:
+	if camera.is_position_behind(point):
+		return false
+	var projected := camera.unproject_position(point)
+	return projected.x >= 400.0 and projected.x <= 880.0 and projected.y >= 100.0 and projected.y <= 620.0
 
 
 func _run_family_lifespan_walkthrough() -> bool:
 	if not _press_hud_button("Mallow"):
 		return false
+	var mallow_profile = _world.call("profile_for", "mallow")
+	var moss_profile = _world.call("profile_for", "moss")
+	if mallow_profile == null or moss_profile == null:
+		_fail("The family walkthrough could not find the two living founders.")
+		return false
+	var mallow_actor: NornActor = mallow_profile.get("actor")
+	var moss_actor: NornActor = moss_profile.get("actor")
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	mallow_actor.reset_position(Vector3(1.75, 0.0, 1.8))
+	moss_actor.reset_position(Vector3(5.1, 0.0, 1.8))
 	var selector := _world.find_child("SecondParentSelector", true, false) as OptionButton
 	if selector == null or selector.item_count != 1 or selector.selected < 0 or str(selector.get_item_metadata(selector.selected)) != "moss":
 		_fail("The family HUD did not select Moss as Mallow's other living adult parent.")
@@ -294,6 +372,37 @@ func _run_family_lifespan_walkthrough() -> bool:
 	if child.get("parent_ids") != ["mallow", "moss"] or child.get("generation") != 1:
 		_fail("The hatched child lost its founder lineage or generation.")
 		return false
+	var child_actor: NornActor = child.get("actor")
+	_settled_needs(child)
+	_world.call("_run_decision", child)
+	var follow_choice_deadline := Time.get_ticks_msec() + 5000
+	var following_parent = _world.call("_nearest_living_parent", child)
+	while Time.get_ticks_msec() < follow_choice_deadline and (following_parent == null or child_actor.current_action != "observe_peer" or child_actor.target != following_parent.get("actor") or child_actor.target_id != str(following_parent.get("actor_id"))):
+		await physics_frame
+		await process_frame
+		following_parent = _world.call("_nearest_living_parent", child)
+	if str(child.get("life_stage")) != "baby" or following_parent == null or child_actor.current_action != "observe_peer" or child_actor.target != following_parent.get("actor") or child_actor.target_id != str(following_parent.get("actor_id")):
+		_fail("The hatched baby did not begin following a living parent.")
+		return false
+	var follow_deadline := Time.get_ticks_msec() + 15000
+	while Time.get_ticks_msec() < follow_deadline and (child_actor.target != null or child_actor.is_walking or child_actor.global_position.distance_to(following_parent.get("actor").global_position) > 2.2):
+		await physics_frame
+		await process_frame
+	var baby_parent_distance := child_actor.global_position.distance_to(following_parent.get("actor").global_position)
+	if child_actor.target != null or child_actor.is_walking or baby_parent_distance > 2.2:
+		_fail("The baby did not visibly settle beside its living parent at the peer stop distance.")
+		return false
+	if not _press_hud_button(str(child.get("display_name"))):
+		return false
+	for frame in range(24):
+		await process_frame
+	var action_label: Label = _world.get("_ui").get("_action_label") as Label
+	if action_label == null or not action_label.text.contains("Following their parent, %s" % following_parent.get("display_name")):
+		_fail("The focused HUD did not show the baby's parent-following behavior.")
+		return false
+	print("BABY_FOLLOW_CAPTURE_OK child=%s parent=%s settledDistance=%.2f" % [child.get("display_name"), following_parent.get("display_name"), baby_parent_distance])
+	if not _press_hud_button("Mallow"):
+		return false
 	var child_seed := int(child.get("cognition_state").get("seed", -1))
 	var child_life: Dictionary = NornLifecycle.create_state(child_seed, 59.95)
 	if child_life.is_empty():
@@ -318,6 +427,10 @@ func _run_family_lifespan_walkthrough() -> bool:
 	var child_age_text := "Age %.1f s" % child_age
 	if focus_age_label == null or not focus_age_label.text.contains(child_age_text) or not focus_age_label.text.contains("Child") or child_age < 60.0 or child_age >= 62.0:
 		_fail("The focused HUD did not show the hatched child's age and new life stage.")
+		return false
+	if not await _run_child_observation_demo(child):
+		return false
+	if not await _run_adolescent_independence_demo(child):
 		return false
 	var mallow = _world.call("profile_for", "mallow")
 	if mallow == null or not _press_hud_button("Mallow"):
@@ -376,6 +489,223 @@ func _run_family_lifespan_walkthrough() -> bool:
 		_fail("The old-age notification was not visible inside the rendered HUD after scrolling to the status line.")
 		return false
 	print("FAMILY_LIFESPAN_CAPTURE_OK incubation=%.3fs childAge=%.1fs stage=%s death=%s noticeVisible=%s focus=%s archive=%s childParents=%s" % [incubation_elapsed, child_age, child.get("life_stage"), str(saved_death.get("cause", "")), death_notice_visible, str(_world.get("focused_norn_id")), archive_label.text, str(hatch_parent_ids)])
+	return true
+
+
+func _run_adolescent_independence_demo(adolescent: Object) -> bool:
+	var mallow = _world.call("profile_for", "mallow")
+	var moss = _world.call("profile_for", "moss")
+	if adolescent == null or mallow == null or moss == null:
+		_fail("The adolescent walkthrough could not find Sprout and both founders.")
+		return false
+	if not _press_hud_button("Mallow"):
+		return false
+	var second_parent_selector := _world.find_child("SecondParentSelector", true, false) as OptionButton
+	if second_parent_selector == null or second_parent_selector.selected < 0 or str(second_parent_selector.get_item_metadata(second_parent_selector.selected)) != "moss":
+		_fail("The second family egg did not select Moss as Mallow's other parent.")
+		return false
+	if int(_world.call("population_count")) != 3 or not _press_hud_button("Start family egg"):
+		_fail("The family controls could not start a second egg for the three living Norns.")
+		return false
+	if (_world.get("eggs") as Array).size() != 1 or int(_world.call("population_count")) != 4:
+		_fail("The second family egg exceeded the four-slot living-plus-egg limit.")
+		return false
+	var sibling = null
+	var hatch_deadline := Time.get_ticks_msec() + 90000
+	while Time.get_ticks_msec() < hatch_deadline:
+		await process_frame
+		sibling = _world.call("profile_for", "norn-2")
+		if sibling != null:
+			break
+	if sibling == null or not (_world.get("eggs") as Array).is_empty() or int(_world.call("population_count")) != 4:
+		_fail("The second 45-second egg did not hatch its sibling within the four-Norn population cap.")
+		return false
+	if sibling.get("parent_ids") != ["mallow", "moss"]:
+		_fail("The hatched sibling did not retain Mallow and Moss as its parents.")
+		return false
+	var adolescent_seed := int(adolescent.get("cognition_state").get("seed", -1))
+	var adolescent_life: Dictionary = NornLifecycle.create_state(adolescent_seed, 179.95)
+	if adolescent_life.is_empty():
+		_fail("Could not place Sprout just before the 180-second adolescent stage boundary.")
+		return false
+	adolescent.set("life_state", adolescent_life)
+	_world.call("_refresh_ui")
+	var stage_deadline := Time.get_ticks_msec() + 10000
+	while Time.get_ticks_msec() < stage_deadline and str(adolescent.get("life_stage")) != "adolescent":
+		await physics_frame
+		await process_frame
+	var adolescent_actor: NornActor = adolescent.get("actor")
+	var sibling_actor: NornActor = sibling.get("actor")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	var adolescent_stage_label := adolescent_actor.find_child("LifeStageLabel", true, false) as Label3D
+	if str(adolescent.get("life_stage")) != "adolescent" or adolescent_stage_label == null or adolescent_stage_label.text != "Adolescent":
+		_fail("The normal lifecycle tick did not advance Sprout into the adolescent stage.")
+		return false
+	adolescent_actor.set_physics_process(false)
+	sibling_actor.set_physics_process(false)
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	adolescent_actor.reset_position(Vector3.ZERO)
+	mallow_actor.reset_position(Vector3(0.0, 0.0, 3.0))
+	sibling_actor.reset_position(Vector3(4.2, 0.0, 0.0))
+	moss_actor.reset_position(Vector3(-8.0, 0.0, -8.0))
+	_settled_needs(adolescent)
+	var adolescent_cognition: Dictionary = adolescent.get("cognition_state")
+	var adolescent_traits: Dictionary = adolescent_cognition.get("traits", {})
+	adolescent_traits["sociability"] = 1.0
+	adolescent_cognition["traits"] = adolescent_traits
+	adolescent.set("cognition_state", adolescent_cognition)
+	var visibility_deadline := Time.get_ticks_msec() + 2000
+	var sensed_peers: Array[Dictionary] = _world.call("_sense_peers", adolescent)
+	var parent_is_visible := _contains_sensed_peer(sensed_peers, str(mallow.get("actor_id")))
+	var sibling_is_visible := _contains_sensed_peer(sensed_peers, str(sibling.get("actor_id")))
+	while (not sibling_is_visible or not parent_is_visible) and Time.get_ticks_msec() < visibility_deadline:
+		await physics_frame
+		sensed_peers = _world.call("_sense_peers", adolescent)
+		parent_is_visible = _contains_sensed_peer(sensed_peers, str(mallow.get("actor_id")))
+		sibling_is_visible = _contains_sensed_peer(sensed_peers, str(sibling.get("actor_id")))
+	_world.call("_run_decision", adolescent)
+	var parent_distance := adolescent_actor.global_position.distance_to(mallow_actor.global_position)
+	var peer_distance := adolescent_actor.global_position.distance_to(sibling_actor.global_position)
+	var neutral_decision: Dictionary = adolescent.get("current_decision")
+	var neutral_selection: Dictionary = neutral_decision.get("peerSelection", {})
+	if not parent_is_visible or not sibling_is_visible or adolescent_actor.current_action != "observe_peer" or adolescent_actor.target != sibling_actor or adolescent_actor.target_id != str(sibling.get("actor_id")) or parent_distance >= peer_distance or str(neutral_selection.get("peerId", "")) != str(sibling.get("actor_id")) or not adolescent_actor.action_reason.contains(str(sibling.get("display_name"))):
+		_fail("The adolescent did not choose its visible sibling beyond its closer parent.")
+		return false
+	if not _press_hud_button(str(adolescent.get("display_name"))):
+		return false
+	for frame in range(24):
+		await process_frame
+	var action_label: Label = _world.get("_ui").get("_action_label") as Label
+	if action_label == null or not action_label.text.contains("Observing peer %s beyond the family" % sibling.get("display_name")):
+		_fail("The focused adolescent HUD did not show its non-parent peer choice.")
+		return false
+	print("ADOLESCENT_INDEPENDENCE_CAPTURE_OK adolescent=%s peer=%s parentDistance=%.2f peerDistance=%.2f reasonVisible=true" % [adolescent.get("display_name"), sibling.get("display_name"), parent_distance, peer_distance])
+	for _memory_index in range(6):
+		var memory_result: Dictionary = Cognition.record_outcome(adolescent_cognition, {
+			"eventType": "observe",
+			"actorId": str(mallow.get("actor_id")),
+			"actionId": "observe_peer",
+			"time": float(_world.get("simulation_time")),
+			"peerCount": 1,
+			"sociability": 1.0,
+			"salience": 0.55,
+			"text": "Positive peer observation with Mallow"
+		})
+		if memory_result.is_empty():
+			_fail("Could not create a recent positive peer-memory episode for Mallow.")
+			return false
+	adolescent.set("cognition_state", adolescent_cognition)
+	_world.call("_run_decision", adolescent)
+	var remembered_decision: Dictionary = adolescent.get("current_decision")
+	var remembered_selection: Dictionary = remembered_decision.get("peerSelection", {})
+	var remembered_score := 0.0
+	for score_value: Variant in remembered_selection.get("scores", []):
+		if score_value is Dictionary and str(score_value.get("peerId", "")) == str(mallow.get("actor_id")):
+			remembered_score = float(score_value.get("memory", 0.0))
+			break
+	if adolescent_actor.current_action != "observe_peer" or adolescent_actor.target != mallow_actor or adolescent_actor.target_id != str(mallow.get("actor_id")) or str(remembered_selection.get("peerId", "")) != str(mallow.get("actor_id")) or str(remembered_selection.get("reasonKey", "")) != "positive_memory" or remembered_score < 0.3 or not adolescent_actor.action_reason.contains(str(mallow.get("display_name"))):
+		_fail("Recent positive peer memories did not overcome the adolescent's non-parent preference for Mallow.")
+		return false
+	if not _press_hud_button(str(adolescent.get("display_name"))):
+		return false
+	for frame in range(24):
+		await process_frame
+	if action_label == null or not action_label.text.contains("Remembering positive experiences with %s" % mallow.get("display_name")):
+		_fail("The focused adolescent HUD did not explain its memory-driven choice of Mallow.")
+		return false
+	print("ADOLESCENT_MEMORY_OVERRIDE_CAPTURE_OK adolescent=%s peer=%s memory=%.2f reasonVisible=true" % [adolescent.get("display_name"), mallow.get("display_name"), remembered_score])
+	return true
+
+
+func _contains_sensed_peer(sensed_peers: Array[Dictionary], actor_id: String) -> bool:
+	for sensed_peer: Dictionary in sensed_peers:
+		if str(sensed_peer.get("id", "")) == actor_id:
+			return true
+	return false
+
+
+func _run_child_observation_demo(child: Object) -> bool:
+	var mallow = _world.call("profile_for", "mallow")
+	var moss = _world.call("profile_for", "moss")
+	if child == null or mallow == null or moss == null:
+		_fail("The child-observation walkthrough could not find the child and both founders.")
+		return false
+	var child_actor: NornActor = child.get("actor")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	var fruit: Interactable = (_world.get("objects") as Dictionary).get("fruit", null)
+	if child_actor == null or mallow_actor == null or moss_actor == null or fruit == null:
+		_fail("The child-observation walkthrough could not find its actors or fruit.")
+		return false
+	mallow_actor.set_physics_process(true)
+	moss_actor.set_physics_process(false)
+	moss_actor.reset_position(Vector3(40.0, 0.0, 40.0))
+	fruit.set_available(true)
+	mallow_actor.reset_position(fruit.global_position + Vector3(0.75, 0.0, 0.0))
+	child_actor.reset_position(mallow_actor.global_position + Vector3(0.0, 0.0, 2.0))
+	_settled_needs(child)
+	var child_cognition: Dictionary = child.get("cognition_state")
+	child_cognition["traits"]["sociability"] = 1.0
+	child.set("cognition_state", child_cognition)
+	await physics_frame
+	_world.call("_run_decision", child)
+	if child_actor.current_action != "observe_peer" or child_actor.target != null or child_actor.is_walking or child_actor.global_position.distance_to(mallow_actor.global_position) > 2.1:
+		_fail("The child did not settle to observe its visible parent before the witnessed event.")
+		return false
+	if not _press_hud_button(str(mallow.get("display_name"))):
+		return false
+	var learning_before: Dictionary = child_cognition.duplicate(true)
+	var chemistry_before: Dictionary = Biochemistry.read_signals(child.get("biochemistry_state"))
+	var expected_biochemistry: Dictionary = child.get("biochemistry_state").duplicate(true)
+	if Biochemistry.apply_event(expected_biochemistry, "social").is_empty():
+		_fail("Could not prepare the expected child observation chemistry.")
+		return false
+	var chemistry_after: Dictionary = Biochemistry.read_signals(expected_biochemistry)
+	var expected_child_cognition: Dictionary = learning_before.duplicate(true)
+	var baseline_cognition: Dictionary = learning_before.duplicate(true)
+	Cognition.sync_chemistry(expected_child_cognition, chemistry_after)
+	Cognition.sync_chemistry(baseline_cognition, chemistry_after)
+	var witnessed_event := {
+		"eventType": "observe", "actorId": "mallow", "actionId": "fruit", "targetId": "fruit",
+		"time": float(_world.get("simulation_time")), "peerCount": 1,
+		"sociability": float(child_cognition["traits"].get("sociability", 0.5)), "learningMultiplier": 1.5
+	}
+	var adult_baseline_event: Dictionary = witnessed_event.duplicate(true)
+	adult_baseline_event["learningMultiplier"] = 1.0
+	var external_chemistry := {"before": chemistry_before, "after": chemistry_after}
+	var child_learning: Dictionary = Cognition.record_outcome(expected_child_cognition, witnessed_event, external_chemistry)
+	var baseline_learning: Dictionary = Cognition.record_outcome(baseline_cognition, adult_baseline_event, external_chemistry)
+	if not is_equal_approx(float(child_learning.get("learningDelta", 0.0)), float(baseline_learning.get("learningDelta", 0.0)) * 1.5):
+		_fail("The deterministic child learning fixture did not produce a 1.5× adult comparison.")
+		return false
+	if not _press_hud_button("Guide to fruit") or not await _wait_for_status("Mallow ate honey fruit", 90):
+		_fail("Mallow did not complete the fruit event while the child was attending.")
+		return false
+	var observed_episode: Dictionary = {}
+	for episode_value: Variant in child.get("cognition_state")["episodes"]:
+		if episode_value is Dictionary and episode_value.get("eventType", "") == "observe" and episode_value.get("actorId", "") == "mallow" and episode_value.get("actionId", "") == "fruit":
+			observed_episode = episode_value
+	if observed_episode.is_empty():
+		_fail("The child did not remember the parent's witnessed fruit event.")
+		return false
+	var actual_association := float(child.get("cognition_state")["actionAssociations"]["fruit"])
+	var expected_association := float(expected_child_cognition["actionAssociations"]["fruit"])
+	var baseline_association := float(baseline_cognition["actionAssociations"]["fruit"])
+	if not is_equal_approx(actual_association, expected_association) or actual_association <= baseline_association:
+		_fail("The child's witnessed fruit association did not match its 1.5× learning update above the adult baseline.")
+		return false
+	_world.call("_run_decision", child)
+	if not _press_hud_button(str(child.get("display_name"))):
+		return false
+	for frame in range(24):
+		await process_frame
+	var recall_label := _world.find_child("RememberedMomentsLabel", true, false) as Label
+	if recall_label == null or not recall_label.text.contains("observed Mallow fruit"):
+		_fail("The child's witnessed parent event was not visible in its remembered moments.")
+		return false
+	print("CHILD_OBSERVATION_CAPTURE_OK child=%s observed=Mallow fruit childDelta=%.3f adultDelta=%.3f association=%.3f memoryVisible=true" % [child.get("display_name"), float(child_learning["learningDelta"]), float(baseline_learning["learningDelta"]), actual_association])
 	return true
 
 
@@ -481,6 +811,129 @@ func _run_social_observation_walkthrough() -> bool:
 	return true
 
 
+func _run_action_utility_walkthrough() -> bool:
+	var mallow = _world.call("profile_for", "mallow")
+	if mallow == null:
+		_fail("The action-utility walkthrough could not find Mallow.")
+		return false
+	var actor: NornActor = mallow.get("actor")
+	var objects: Dictionary = _world.get("objects")
+	var fruit: Interactable = objects.get("fruit")
+	var spinner: Interactable = objects.get("spinner")
+	var ui_value: Variant = _world.get("_ui")
+	var action_label: Label = ui_value.get("_action_label") as Label if ui_value is Object else null
+	if actor == null or fruit == null or spinner == null or action_label == null:
+		_fail("The action-utility walkthrough could not find Mallow, both interactables, or the action HUD label.")
+		return false
+
+	var previous_cognition: Dictionary = (mallow.get("cognition_state") as Dictionary).duplicate(true)
+	var previous_decision: Dictionary = (mallow.get("current_decision") as Dictionary).duplicate(true)
+	var previous_recalled: Array = (mallow.get("recalled_moments") as Array).duplicate(true)
+	var previous_position := actor.global_position
+	var previous_rotation := actor.rotation
+	var previous_velocity := actor.velocity
+	var previous_target: Node3D = actor.target
+	var previous_action := actor.current_action
+	var previous_reason := actor.action_reason
+	var previous_target_id := actor.target_id
+	var previous_walking := actor.is_walking
+	var previous_physics := actor.is_physics_processing()
+	var previous_paused := bool(_world.get("paused"))
+	var previous_time := float(_world.get("simulation_time"))
+	var previous_focus := str(_world.get("focused_norn_id"))
+	var previous_status := str(_world.get("last_status"))
+	var previous_fruit_available := fruit.available
+	var previous_spinner_available := spinner.available
+	var respawn_times: Dictionary = _world.get("_respawn_times")
+	var previous_respawn_times := respawn_times.duplicate(true)
+	var capture_failure := ""
+
+	_world.set("paused", true)
+	actor.set_physics_process(false)
+	actor.reset_position(Vector3(4.4, 0.0, -0.3))
+	fruit.set_available(true)
+	spinner.set_available(true)
+	respawn_times.clear()
+	_world.set("_respawn_times", respawn_times)
+	_world.call("select_norn", "mallow")
+	var test_traits: Dictionary = previous_cognition["traits"].duplicate(true)
+	var test_state: Dictionary = Cognition.create_state(int(previous_cognition.get("seed", 4181996)), test_traits, {
+		"hunger": 10.0,
+		"curiosity": 100.0,
+		"fatigue": 5.0
+	})
+	mallow.set("cognition_state", test_state)
+	_world.call("_sync_mallow_compatibility")
+	var start_time := float(_world.get("simulation_time"))
+	_world.set("simulation_time", start_time)
+	_world.call("_update_camera")
+	await process_frame
+	await physics_frame
+	var sensed_objects: Array[Dictionary] = _world.call("_sense_objects", mallow)
+	var fruit_sensed := sensed_objects.any(func(entry: Dictionary) -> bool: return str(entry.get("id", "")) == "fruit")
+	var spinner_sensed := sensed_objects.any(func(entry: Dictionary) -> bool: return str(entry.get("id", "")) == "spinner")
+	if not fruit_sensed or not spinner_sensed:
+		capture_failure = "The controlled Mallow position could not sense both safety-test interactables."
+	else:
+		_world.call("_run_decision", mallow)
+		var initial_decision: Dictionary = mallow.get("current_decision")
+		var initial_commitment := float(mallow.get("cognition_state").get("commitmentUntil", 0.0))
+		if str(initial_decision.get("actionId", "")) != "spinner" or actor.target != spinner or initial_commitment <= start_time:
+			capture_failure = "The controlled high-curiosity state did not establish a visible spinner commitment."
+		else:
+			for frame in range(30):
+				await process_frame
+			var urgent_state: Dictionary = mallow.get("cognition_state")
+			var urgent_chemistry: Dictionary = urgent_state["chemistry"].duplicate(true)
+			urgent_chemistry["hunger"] = 90.0
+			urgent_chemistry["glucose"] = 10.0
+			urgent_state["chemistry"] = urgent_chemistry
+			mallow.set("cognition_state", urgent_state)
+			_world.set("simulation_time", start_time + 0.5)
+			_world.call("_run_decision", mallow)
+			var urgent_decision: Dictionary = mallow.get("current_decision")
+			var expected_reason := "Urgent hunger or low glucose is calling for food"
+			_world.call("_refresh_ui")
+			if str(urgent_decision.get("actionId", "")) != "fruit" or str(urgent_decision.get("safetyOverride", "")) != "fruit" or actor.current_action != "fruit" or actor.target != fruit or str(urgent_decision.get("reason", "")) != expected_reason:
+				capture_failure = "Urgent hunger did not override Mallow's live spinner commitment in the world decision path."
+			elif not action_label.text.contains("Mallow is fruit.") or not action_label.text.contains(expected_reason):
+				capture_failure = "The HUD did not show Mallow's urgent fruit choice and its reason."
+			else:
+				for frame in range(300):
+					await process_frame
+
+	# Restore the temporary simulation fixture before reporting either success or failure.
+	mallow.set("cognition_state", previous_cognition)
+	mallow.set("current_decision", previous_decision)
+	mallow.set("recalled_moments", previous_recalled)
+	actor.global_position = previous_position
+	actor.rotation = previous_rotation
+	actor.velocity = previous_velocity
+	actor.set_action_target(previous_target, previous_action, previous_reason, previous_target_id)
+	actor.is_walking = previous_walking
+	actor.set_physics_process(previous_physics)
+	fruit.set_available(previous_fruit_available)
+	spinner.set_available(previous_spinner_available)
+	respawn_times.clear()
+	respawn_times.merge(previous_respawn_times, true)
+	_world.set("_respawn_times", respawn_times)
+	_world.set("simulation_time", previous_time)
+	_world.set("paused", previous_paused)
+	_world.call("_sync_mallow_compatibility")
+	_world.call("select_norn", previous_focus)
+	_world.set("last_status", previous_status)
+	_world.call("_refresh_ui")
+	_world.call("_update_camera")
+	if not actor.global_position.is_equal_approx(previous_position) or actor.is_physics_processing() != previous_physics or not is_equal_approx(float(_world.get("simulation_time")), previous_time) or bool(_world.get("paused")) != previous_paused:
+		_fail("The action-utility walkthrough did not restore Mallow and the habitat clock safely.")
+		return false
+	if not capture_failure.is_empty():
+		_fail(capture_failure)
+		return false
+	print("ACTION_UTILITY_CAPTURE_OK prior=spinner urgent=fruit safetyOverride=fruit hudVisible=true frames=300 stateRestored=true")
+	return true
+
+
 func _settled_needs(profile: Object) -> void:
 	var biochemistry: Dictionary = profile.get("biochemistry_state")
 	var compounds: Dictionary = Biochemistry.read_compounds(biochemistry)
@@ -494,8 +947,8 @@ func _settled_needs(profile: Object) -> void:
 	Cognition.sync_chemistry(profile.get("cognition_state"), Biochemistry.read_signals(biochemistry))
 	var cognition: Dictionary = profile.get("cognition_state")
 	var associations: Dictionary = cognition["actionAssociations"]
-	associations["fruit"] = 0.0
-	associations["spinner"] = 0.0
+	associations["fruit"] = 0.5
+	associations["spinner"] = 0.5
 	cognition["actionAssociations"] = associations
 	var contexts: Dictionary = cognition["contextAssociations"]
 	for action_id: String in Cognition.ACTION_IDS:
@@ -518,8 +971,8 @@ func _show_resting_biochemistry() -> bool:
 
 	var cognition: Dictionary = _world.get("cognition_state")
 	var associations: Dictionary = cognition["actionAssociations"]
-	associations["fruit"] = 0.0
-	associations["spinner"] = 0.0
+	associations["fruit"] = 0.5
+	associations["spinner"] = 0.5
 	cognition["actionAssociations"] = associations
 	if not Cognition.sync_chemistry(cognition, Biochemistry.read_signals(biochemical_state)):
 		_fail("Could not prepare the high-fatigue inspection scenario.")

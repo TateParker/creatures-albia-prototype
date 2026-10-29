@@ -2,6 +2,8 @@ extends SceneTree
 
 const Cognition = preload("res://scripts/norn_cognition.gd")
 const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
+const Lifecycle = preload("res://scripts/norn_lifecycle.gd")
+const ProfileScript = preload("res://scripts/norn_profile.gd")
 const SAVE_PATH := "user://albia_norn_save.json"
 
 var _failures: Array[String] = []
@@ -24,6 +26,18 @@ func _run_checks() -> void:
 	await test_peer_comfort_rises_and_decays()
 	test_social_attention_selects_observation_when_needs_are_settled()
 	await test_observer_stays_settled_inside_stop_distance()
+	await test_baby_follows_nearest_living_parent_and_resumes_after_separation()
+	await test_baby_follow_respects_priorities_and_orphan_fallback()
+	await test_adolescent_observer_prefers_nearest_visible_non_parent_and_falls_back()
+	await test_adolescent_peer_preference_only_applies_to_observe_peer()
+	test_observation_peer_utility_prefers_non_parent_with_neutral_memory()
+	test_positive_peer_memory_can_override_adolescent_preference()
+	test_negative_peer_memory_can_lower_a_non_parent_score()
+	test_old_peer_memory_decays_below_adolescent_preference()
+	test_observation_peer_utility_filters_invalid_candidates_and_ties_stably()
+	await test_adolescent_world_uses_memory_when_selecting_observation_target()
+	await test_child_observer_prefers_visible_parent_then_falls_back_to_nearest_peer()
+	await test_child_witnessed_learning_is_scaled_for_positive_and_negative_events()
 	await test_observation_requires_range_visibility_and_attention()
 	await test_observed_success_and_feedback_teach_matching_action()
 	await test_contested_object_completes_once()
@@ -31,7 +45,7 @@ func _run_checks() -> void:
 	await test_invalid_focus_id_is_ignored()
 	await test_unfocused_norn_keeps_simulating()
 	if _save_backup_ok:
-		await test_version4_round_trip_preserves_both_profiles()
+		await test_version5_round_trip_preserves_both_profiles()
 		await test_v1_migration_preserves_mallow_and_seeds_moss()
 		await test_v2_migration_preserves_mallow_and_seeds_moss()
 		await test_v3_migration_preserves_mallow_and_seeds_moss()
@@ -320,8 +334,8 @@ func test_observer_stays_settled_inside_stop_distance() -> void:
 	var moss_cognition := Cognition.create_state(4181997, {"curiosity": 0.5, "sociability": 0.85}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 2.0})
 	var moss_biochemistry := Biochemistry.create_state(moss_cognition["chemistry"])
 	Cognition.sync_chemistry(moss_cognition, Biochemistry.read_signals(moss_biochemistry))
-	(moss_cognition["actionAssociations"] as Dictionary)["fruit"] = 0.0
-	(moss_cognition["actionAssociations"] as Dictionary)["spinner"] = 0.0
+	(moss_cognition["actionAssociations"] as Dictionary)["fruit"] = 0.5
+	(moss_cognition["actionAssociations"] as Dictionary)["spinner"] = 0.5
 	moss.set("cognition_state", moss_cognition)
 	moss.set("biochemistry_state", moss_biochemistry)
 	moss_actor.global_position = mallow_actor.global_position + Vector3(1.8, 0.0, 0.0)
@@ -329,6 +343,342 @@ func test_observer_stays_settled_inside_stop_distance() -> void:
 	world.call("_run_decision", moss)
 	_expect(moss_actor.current_action == "observe_peer", "nearby settled Norn keeps the observation decision")
 	_expect(moss_actor.target == null and not moss_actor.is_walking, "nearby observer does not reacquire a movement target inside stop distance")
+	await _destroy_social_world(world)
+
+
+func test_baby_follows_nearest_living_parent_and_resumes_after_separation() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	mallow_actor.reset_position(Vector3.ZERO)
+	moss_actor.reset_position(Vector3(8.0, 0.0, 0.0))
+	var baby = await _add_test_child_profile(world, "norn-1", ["mallow", "moss"], 0.0, Vector3(5.6, 0.0, 0.0), 901)
+	var baby_actor: NornActor = baby.get("actor")
+	var nearer_peer = await _add_test_child_profile(world, "norn-2", [], 600.0, Vector3(5.6, 0.0, 1.3), 903)
+	nearer_peer.get("actor").set_physics_process(false)
+	var baby_cognition: Dictionary = baby.get("cognition_state")
+	baby_cognition["actionAssociations"]["idle"] = 1.0
+	baby.set("cognition_state", baby_cognition)
+	await physics_frame
+	world.call("_run_decision", baby)
+	_expect(str(baby_actor.current_action) == "observe_peer", "a baby uses the existing peer-follow action")
+	_expect(baby_actor.target == moss_actor and baby_actor.target_id == "moss", "a baby follows its nearest living parent")
+	_expect(str(baby_actor.action_reason).contains("Moss"), "the baby's follow reason identifies its parent")
+	for _frame in range(240):
+		if baby_actor.target == null and not baby_actor.is_walking:
+			break
+		await physics_frame
+	_expect(baby_actor.target == null and not baby_actor.is_walking and baby_actor.global_position.distance_to(moss_actor.global_position) <= 2.2, "a baby settles at the existing peer stop distance")
+	mallow_actor.global_position = Vector3(-20.0, 0.0, 0.0)
+	moss_actor.global_position += Vector3(5.0, 0.0, 0.0)
+	await physics_frame
+	world.call("_run_decision", baby)
+	await physics_frame
+	_expect(baby_actor.target == moss_actor and baby_actor.is_walking, "a baby resumes following its chosen parent when they move away")
+	await _destroy_social_world(world)
+
+
+func test_baby_follow_respects_priorities_and_orphan_fallback() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	mallow_actor.reset_position(Vector3.ZERO)
+	moss_actor.reset_position(Vector3(12.0, 0.0, 0.0))
+	var baby = await _add_test_child_profile(world, "norn-1", ["mallow"], 0.0, Vector3(5.0, 0.0, 0.0), 902)
+	var baby_actor: NornActor = baby.get("actor")
+	baby.set("guidance", {"objectId": "fruit", "expiresAt": 10.0})
+	world.call("_run_decision", baby)
+	_expect(baby_actor.current_action == "fruit" and baby_actor.target == world.get("objects")["fruit"], "player guidance takes priority over baby parent following")
+	baby.set("guidance", {})
+	var hungry_cognition := Cognition.create_state(903, {"curiosity": 0.5, "sociability": 0.5}, {"hunger": 100.0, "curiosity": 0.0, "fatigue": 0.0})
+	baby.set("cognition_state", hungry_cognition)
+	world.call("_run_decision", baby)
+	_expect(baby_actor.current_action == "fruit", "a baby's fruit decision takes priority over parent following")
+	var tired_cognition := Cognition.create_state(904, {"curiosity": 0.5, "sociability": 0.5}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 100.0})
+	baby.set("cognition_state", tired_cognition)
+	world.call("_run_decision", baby)
+	_expect(baby_actor.current_action == "rest", "a baby's rest decision takes priority over parent following")
+	baby.set("cognition_state", Cognition.create_state(905, {"curiosity": 0.5, "sociability": 0.5}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 0.0}))
+	var idle_cognition: Dictionary = baby.get("cognition_state")
+	idle_cognition["actionAssociations"]["idle"] = 1.0
+	baby.set("cognition_state", idle_cognition)
+	var dead_actor: NornActor = mallow.get("actor")
+	dead_actor.set_physics_process(false)
+	dead_actor.queue_free()
+	mallow.set("actor", null)
+	mallow.get("life_state")["alive"] = false
+	moss_actor.global_position = Vector3(30.0, 0.0, 0.0)
+	await process_frame
+	await physics_frame
+	world.call("_run_decision", baby)
+	_expect(baby_actor.target == null and baby_actor.current_action == "idle", "a baby without a living parent falls back to its own cognition")
+	await _destroy_social_world(world)
+
+
+func test_adolescent_observer_prefers_nearest_visible_non_parent_and_falls_back() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	mallow_actor.reset_position(Vector3(0.0, 0.0, 3.0))
+	moss_actor.reset_position(Vector3(4.2, 0.0, 0.0))
+	var adolescent = await _add_test_child_profile(world, "norn-1", ["mallow"], 240.0, Vector3.ZERO, 916)
+	var additional_peer = await _add_test_child_profile(world, "norn-2", [], 600.0, Vector3(-5.0, 0.0, 0.0), 917)
+	var adolescent_actor: NornActor = adolescent.get("actor")
+	var additional_peer_actor: NornActor = additional_peer.get("actor")
+	adolescent_actor.set_physics_process(false)
+	additional_peer_actor.set_physics_process(false)
+	var cognition := Cognition.create_state(918, {"curiosity": 0.5, "sociability": 1.0}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 0.0})
+	cognition["chemistry"]["socialComfort"] = 10.0
+	adolescent.set("cognition_state", cognition)
+	await physics_frame
+	world.call("_run_decision", adolescent)
+	_expect(adolescent.get("life_stage") == "adolescent" and adolescent_actor.current_action == "observe_peer", "a settled adolescent can decide to observe a peer")
+	_expect(adolescent_actor.target == moss_actor and adolescent_actor.target_id == "moss", "an adolescent chooses its nearest visible non-parent even when its parent is closer")
+	_expect(adolescent_actor.action_reason.contains("Moss"), "the adolescent's observation reason identifies the selected peer")
+	moss_actor.global_position = Vector3(20.0, 0.0, 0.0)
+	additional_peer_actor.global_position = Vector3(-25.0, 0.0, 0.0)
+	await physics_frame
+	world.call("_run_decision", adolescent)
+	_expect(adolescent_actor.target == mallow_actor and adolescent_actor.target_id == "mallow", "an adolescent falls back to its nearest visible peer when no non-parent is sensed")
+	await _destroy_social_world(world)
+
+
+func test_adolescent_peer_preference_only_applies_to_observe_peer() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	mallow_actor.reset_position(Vector3(3.0, 0.0, 0.0))
+	moss_actor.reset_position(Vector3(4.2, 0.0, 0.0))
+	var adolescent = await _add_test_child_profile(world, "norn-1", ["mallow"], 240.0, Vector3.ZERO, 919)
+	var adolescent_actor: NornActor = adolescent.get("actor")
+	adolescent_actor.set_physics_process(false)
+	adolescent.set("guidance", {"objectId": "fruit", "expiresAt": 10.0})
+	world.call("_run_decision", adolescent)
+	_expect(adolescent_actor.current_action == "fruit" and adolescent_actor.target == world.get("objects")["fruit"], "player guidance keeps priority over adolescent peer preference")
+	adolescent.set("guidance", {})
+	adolescent.set("cognition_state", Cognition.create_state(920, {"curiosity": 0.5, "sociability": 1.0}, {"hunger": 100.0, "curiosity": 0.0, "fatigue": 0.0}))
+	world.call("_run_decision", adolescent)
+	_expect(adolescent_actor.current_action == "fruit", "an adolescent's urgent fruit decision keeps priority over peer preference")
+	adolescent.set("cognition_state", Cognition.create_state(921, {"curiosity": 1.0, "sociability": 1.0}, {"hunger": 0.0, "curiosity": 100.0, "fatigue": 0.0}))
+	world.call("_run_decision", adolescent)
+	_expect(adolescent_actor.current_action == "spinner", "an adolescent's urgent spinner decision keeps priority over peer preference")
+	adolescent.set("cognition_state", Cognition.create_state(922, {"curiosity": 0.5, "sociability": 1.0}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 100.0}))
+	world.call("_run_decision", adolescent)
+	_expect(adolescent_actor.current_action == "rest", "an adolescent's urgent rest decision keeps priority over peer preference")
+	await _destroy_social_world(world)
+
+
+func test_observation_peer_utility_prefers_non_parent_with_neutral_memory() -> void:
+	var state := Cognition.create_state(930)
+	var candidates: Array[Dictionary] = [
+		{"id": "mallow", "name": "Mallow", "distance": 3.0},
+		{"id": "moss", "name": "Moss", "distance": 4.2}
+	]
+	var parent_ids: Array[String] = ["mallow"]
+	var selection := _select_observation_peer_for_test(state, candidates, parent_ids, "adolescent", 100.0)
+	_expect(selection.get("peerId", "") == "moss", "neutral peer memory leaves the adolescent's non-parent preference strong enough to win")
+	var parent_score := _peer_score(selection, "mallow")
+	var peer_score := _peer_score(selection, "moss")
+	_expect(is_equal_approx(float(parent_score.get("proximity", -1.0)), 0.70) and is_equal_approx(float(peer_score.get("proximity", -1.0)), 0.58), "peer utility reports normalized proximity scores from the 10-unit sensor radius")
+	_expect(is_equal_approx(float(parent_score.get("total", -1.0)), 0.70) and is_equal_approx(float(peer_score.get("total", -1.0)), 0.83), "neutral memory leaves the 0.25 adolescent preference in the peer's total score")
+
+
+func test_positive_peer_memory_can_override_adolescent_preference() -> void:
+	var state := Cognition.create_state(931)
+	_record_observation_peer_memory(state, "mallow", "observe", "", 100.0, 6)
+	var candidates: Array[Dictionary] = [
+		{"id": "mallow", "name": "Mallow", "distance": 3.0},
+		{"id": "moss", "name": "Moss", "distance": 4.2}
+	]
+	var parent_ids: Array[String] = ["mallow"]
+	var selection := _select_observation_peer_for_test(state, candidates, parent_ids, "adolescent", 100.0)
+	_expect(selection.get("peerId", "") == "mallow", "strong recent positive memories can outweigh the adolescent non-parent preference")
+	var parent_score := _peer_score(selection, "mallow")
+	_expect(is_equal_approx(float(parent_score.get("memory", -1.0)), 0.35) and is_equal_approx(float(parent_score.get("total", -1.0)), 1.05), "repeated positive social memories saturate at the bounded parent memory score")
+
+
+func test_negative_peer_memory_can_lower_a_non_parent_score() -> void:
+	var state := Cognition.create_state(932)
+	_record_observation_peer_memory(state, "moss", "observe-feedback", "scold", 100.0, 6)
+	var candidates: Array[Dictionary] = [
+		{"id": "mallow", "name": "Mallow", "distance": 3.0},
+		{"id": "moss", "name": "Moss", "distance": 4.2}
+	]
+	var parent_ids: Array[String] = ["mallow"]
+	var selection := _select_observation_peer_for_test(state, candidates, parent_ids, "adolescent", 100.0)
+	_expect(selection.get("peerId", "") == "mallow", "strong recent negative memories can make an adolescent avoid its non-parent preference")
+	var peer_score := _peer_score(selection, "moss")
+	_expect(is_equal_approx(float(peer_score.get("memory", 1.0)), -0.35) and is_equal_approx(float(peer_score.get("total", 1.0)), 0.48), "negative social memory lowers the non-parent's score within the configured bound")
+
+
+func test_old_peer_memory_decays_below_adolescent_preference() -> void:
+	var state := Cognition.create_state(933)
+	_record_observation_peer_memory(state, "mallow", "observe", "", 0.0, 6)
+	var candidates: Array[Dictionary] = [
+		{"id": "mallow", "name": "Mallow", "distance": 3.0},
+		{"id": "moss", "name": "Moss", "distance": 4.2}
+	]
+	var parent_ids: Array[String] = ["mallow"]
+	var selection := _select_observation_peer_for_test(state, candidates, parent_ids, "adolescent", 720.0)
+	_expect(selection.get("peerId", "") == "moss", "positive memories four half-lives old no longer overcome the adolescent preference")
+	var parent_score := _peer_score(selection, "mallow")
+	_expect(is_equal_approx(float(parent_score.get("memory", -1.0)), 0.0240625), "the decayed social memory score follows the 180-second half-life and familiarity factor")
+
+
+func test_observation_peer_utility_filters_invalid_candidates_and_ties_stably() -> void:
+	var state := Cognition.create_state(934)
+	var candidates: Array[Dictionary] = [
+		{"id": "norn-2", "name": "Norn Two", "distance": 4.0},
+		{"id": "moss", "name": "Moss", "distance": 4.0},
+		{"id": "", "name": "Missing ID", "distance": 0.1},
+		{"id": "infinite", "name": "Infinite Distance", "distance": INF},
+		{"id": "negative", "name": "Negative Distance", "distance": -0.5},
+		{"name": "No ID", "distance": 0.2},
+		{"id": "nonnumeric", "name": "Bad Distance", "distance": "near"}
+	]
+	var no_parents: Array[String] = []
+	var selection := _select_observation_peer_for_test(state, candidates, no_parents, "adolescent", 100.0)
+	_expect(selection.get("peerId", "") == "moss", "equal peer scores resolve by stable actor ID instead of incoming array order")
+	var scores: Array = selection.get("scores", [])
+	_expect(scores.size() == 2, "malformed peer IDs and distances are excluded from the score breakdown")
+	var reversed: Array[Dictionary] = [candidates[1], candidates[0]]
+	var reversed_selection := _select_observation_peer_for_test(state, reversed, no_parents, "adolescent", 100.0)
+	_expect(reversed_selection.get("peerId", "") == "moss", "stable peer tie resolution is independent of candidate order")
+	var empty_selection := _select_observation_peer_for_test(state, [], no_parents, "adolescent", 100.0)
+	_expect(empty_selection.is_empty(), "an empty candidate list leaves the existing world fallback available")
+
+
+func test_adolescent_world_uses_memory_when_selecting_observation_target() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	mallow_actor.reset_position(Vector3(0.0, 0.0, 3.0))
+	moss_actor.reset_position(Vector3(4.2, 0.0, 0.0))
+	var adolescent = await _add_test_child_profile(world, "norn-1", ["mallow"], 240.0, Vector3.ZERO, 935)
+	var adolescent_actor: NornActor = adolescent.get("actor")
+	adolescent_actor.set_physics_process(false)
+	var cognition := Cognition.create_state(936, {"curiosity": 0.5, "sociability": 1.0}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 0.0})
+	cognition["chemistry"]["socialComfort"] = 10.0
+	_record_observation_peer_memory(cognition, "mallow", "observe", "", 0.0, 6)
+	adolescent.set("cognition_state", cognition)
+	await physics_frame
+	await physics_frame
+	world.call("_run_decision", adolescent)
+	_expect(adolescent_actor.current_action == "observe_peer" and adolescent_actor.target == mallow_actor and adolescent_actor.target_id == "mallow", "the world uses positive peer memory after cognition chooses adolescent observation")
+	_expect(adolescent_actor.action_reason.contains("Mallow") and adolescent_actor.action_reason.to_lower().contains("remember"), "the memory-driven target reason names Mallow and explains why it was selected")
+	await _destroy_social_world(world)
+
+
+func test_child_observer_prefers_visible_parent_then_falls_back_to_nearest_peer() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	mallow_actor.reset_position(Vector3(5.0, 0.0, 0.0))
+	moss_actor.reset_position(Vector3(1.8, 0.0, 2.0))
+	var child = await _add_test_child_profile(world, "norn-1", ["mallow"], 120.0, Vector3.ZERO, 906)
+	var child_actor: NornActor = child.get("actor")
+	var child_cognition := Cognition.create_state(907, {"curiosity": 0.5, "sociability": 1.0}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 0.0})
+	child_cognition["chemistry"]["socialComfort"] = 10.0
+	child.set("cognition_state", child_cognition)
+	await physics_frame
+	world.call("_run_decision", child)
+	_expect(child_actor.current_action == "observe_peer", "a settled child can decide to observe a nearby peer")
+	_expect(child_actor.target == mallow_actor and child_actor.target_id == "mallow", "a child prefers its visible parent over a closer non-parent")
+	child_actor.reset_position(Vector3.ZERO)
+	mallow_actor.global_position = Vector3(20.0, 0.0, 0.0)
+	moss_actor.global_position = Vector3(1.8, 0.0, 2.0)
+	await physics_frame
+	world.call("_run_decision", child)
+	_expect(child_actor.current_action == "observe_peer" and child_actor.target == moss_actor and child_actor.target_id == "moss", "a child falls back to its nearest visible peer when no parent is sensed")
+	await _destroy_social_world(world)
+
+
+func test_child_witnessed_learning_is_scaled_for_positive_and_negative_events() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	mallow_actor.set_physics_process(false)
+	moss_actor.set_physics_process(false)
+	mallow_actor.reset_position(Vector3.ZERO)
+	moss_actor.reset_position(Vector3(-2.0, 0.0, 0.0))
+	var child = await _add_test_child_profile(world, "norn-1", ["mallow"], 120.0, Vector3(2.0, 0.0, 0.0), 910)
+	var child_actor: NornActor = child.get("actor")
+	var child_cognition := Cognition.create_state(911, {"curiosity": 0.5, "sociability": 0.5}, {"hunger": 10.0, "curiosity": 10.0, "fatigue": 5.0})
+	var adult_cognition := Cognition.create_state(912, {"curiosity": 0.5, "sociability": 0.5}, {"hunger": 10.0, "curiosity": 10.0, "fatigue": 5.0})
+	var child_biochemistry := Biochemistry.create_state(child_cognition["chemistry"])
+	var adult_biochemistry := Biochemistry.create_state(adult_cognition["chemistry"])
+	Cognition.sync_chemistry(child_cognition, Biochemistry.read_signals(child_biochemistry))
+	Cognition.sync_chemistry(adult_cognition, Biochemistry.read_signals(adult_biochemistry))
+	child.set("cognition_state", child_cognition)
+	child.set("biochemistry_state", child_biochemistry)
+	moss.set("cognition_state", adult_cognition)
+	moss.set("biochemistry_state", adult_biochemistry)
+	child_actor.set_physics_process(false)
+	child_actor.set_action_target(null, "observe_peer", "Watching Mallow", "mallow")
+	moss_actor.set_action_target(null, "observe_peer", "Watching Mallow", "mallow")
+	await process_frame
+	await physics_frame
+	var expected_child_cognition: Dictionary = child_cognition.duplicate(true)
+	var expected_adult_cognition: Dictionary = adult_cognition.duplicate(true)
+	var expected_child_biochemistry: Dictionary = child_biochemistry.duplicate(true)
+	var expected_adult_biochemistry: Dictionary = adult_biochemistry.duplicate(true)
+	var positive_event := {"eventType": "observe", "actorId": "mallow", "actionId": "fruit", "targetId": "fruit", "time": 1.0, "peerCount": 1, "sociability": 0.5, "learningMultiplier": 1.5}
+	var adult_positive_event := positive_event.duplicate(true)
+	adult_positive_event["learningMultiplier"] = 1.0
+	var expected_child_positive: Dictionary = _expected_observation_update(expected_child_cognition, expected_child_biochemistry, positive_event)
+	var expected_adult_positive: Dictionary = _expected_observation_update(expected_adult_cognition, expected_adult_biochemistry, adult_positive_event)
+	world.call("_offer_observation", mallow, {"eventType": "food", "actorId": "mallow", "actionId": "fruit", "targetId": "fruit", "time": 1.0, "eventId": 1})
+	_expect(is_equal_approx(float(expected_child_positive.get("learningDelta", 0.0)), float(expected_adult_positive.get("learningDelta", 0.0)) * 1.5), "child positive observation learning is 1.5 times the adult baseline")
+	_expect(is_equal_approx(float(child_cognition["actionAssociations"]["fruit"]), float(expected_child_cognition["actionAssociations"]["fruit"])) and is_equal_approx(float(adult_cognition["actionAssociations"]["fruit"]), float(expected_adult_cognition["actionAssociations"]["fruit"])), "the world applies the age-scaled and baseline positive learning updates")
+	var expected_child_negative: Dictionary = _expected_observation_update(expected_child_cognition, expected_child_biochemistry, {"eventType": "observe-feedback", "actorId": "mallow", "actionId": "fruit", "targetId": "fruit", "feedback": "scold", "time": 2.0, "peerCount": 1, "sociability": 0.5, "learningMultiplier": 1.5})
+	var expected_adult_negative: Dictionary = _expected_observation_update(expected_adult_cognition, expected_adult_biochemistry, {"eventType": "observe-feedback", "actorId": "mallow", "actionId": "fruit", "targetId": "fruit", "feedback": "scold", "time": 2.0, "peerCount": 1, "sociability": 0.5, "learningMultiplier": 1.0})
+	world.call("_offer_observation", mallow, {"eventType": "scold", "feedback": "scold", "actorId": "mallow", "actionId": "fruit", "targetId": "fruit", "time": 2.0, "eventId": 2})
+	_expect(is_equal_approx(float(expected_child_negative.get("learningDelta", 0.0)), float(expected_adult_negative.get("learningDelta", 0.0)) * 1.5), "child negative observation learning is 1.5 times the adult baseline")
+	_expect(is_equal_approx(float(child_cognition["actionAssociations"]["fruit"]), float(expected_child_cognition["actionAssociations"]["fruit"])) and is_equal_approx(float(adult_cognition["actionAssociations"]["fruit"]), float(expected_adult_cognition["actionAssociations"]["fruit"])), "the world applies the age-scaled and baseline negative learning updates")
+	var direct_state := Cognition.create_state(913)
+	var direct_result: Dictionary = Cognition.record_outcome(direct_state, {"eventType": "food", "actionId": "fruit", "learningMultiplier": 1.5})
+	_expect(is_equal_approx(float(direct_result.get("learningDelta", 0.0)), 0.12), "the observation multiplier does not change direct food learning")
+	var upper_state := Cognition.create_state(914)
+	upper_state["actionAssociations"]["fruit"] = 0.99
+	Cognition.record_outcome(upper_state, {"eventType": "observe-feedback", "feedback": "praise", "actionId": "fruit", "sociability": 1.0, "learningMultiplier": 1.5})
+	_expect(float(upper_state["actionAssociations"]["fruit"]) <= 1.0, "positive scaled observation learning respects the upper association clamp")
+	var lower_state := Cognition.create_state(915)
+	lower_state["actionAssociations"]["fruit"] = 0.01
+	Cognition.record_outcome(lower_state, {"eventType": "observe-feedback", "feedback": "scold", "actionId": "fruit", "sociability": 1.0, "learningMultiplier": 1.5})
+	_expect(float(lower_state["actionAssociations"]["fruit"]) >= 0.0, "negative scaled observation learning respects the lower association clamp")
 	await _destroy_social_world(world)
 
 
@@ -478,7 +828,7 @@ func test_focus_routes_actions_only_to_selected_norn() -> void:
 	_expect(world.call("focused_profile").get("actor_id") == "moss", "selecting Moss changes the focused profile")
 	var ui: Node = world.get("_ui")
 	var focus_label := ui.find_child("FocusNameLabel", true, false) as Label
-	var moss_button := ui.find_child("FocusMossButton", true, false) as Button
+	var moss_button := ui.find_child("Roster_moss", true, false) as Button
 	_expect(focus_label != null and focus_label.text == "Focused: Moss", "HUD identifies the focused Norn")
 	_expect(moss_button != null and moss_button.button_pressed, "HUD marks the active focus button")
 	world.call("guide_to", "spinner")
@@ -541,7 +891,7 @@ func test_unfocused_norn_keeps_simulating() -> void:
 	await _destroy_social_world(world)
 
 
-func test_version4_round_trip_preserves_both_profiles() -> void:
+func test_version5_round_trip_preserves_both_profiles() -> void:
 	var world = await _create_social_world()
 	world.set_process(false)
 	var mallow = world.call("profile_for", "mallow")
@@ -581,14 +931,14 @@ func test_version4_round_trip_preserves_both_profiles() -> void:
 	world.call("save_game")
 	var saved := _read_save_record()
 	var saved_norns: Dictionary = saved.get("norns", {})
-	_expect(int(saved.get("version", -1)) == 4, "saving both profiles writes version 4")
-	_expect(saved_norns.has("mallow") and saved_norns.has("moss"), "version-4 save contains both stable profile IDs")
+	_expect(int(saved.get("version", -1)) == 5, "saving both profiles writes version 5")
+	_expect(saved_norns.has("mallow") and saved_norns.has("moss"), "version-5 save contains both stable profile IDs")
 	if saved_norns.has("mallow") and saved_norns.has("moss"):
 		for actor_id: String in ["mallow", "moss"]:
 			var saved_profile: Dictionary = saved_norns[actor_id]
 			_expect(saved_profile.has("cognition") and saved_profile.has("biochemistry") and saved_profile.has("language") and saved_profile.has("feedback"), "%s save contains cognition, biochemistry, language, and feedback" % actor_id.capitalize())
-	_expect(str(saved.get("focusedNornId", "")) == "moss", "version-4 save retains the focused Norn")
-	_expect(saved.get("seed", -1) == 4181996 and is_equal_approx(float(saved.get("simulationTime", -1.0)), 10.0), "version-4 save retains top-level seed and simulation time")
+	_expect(str(saved.get("focusedNornId", "")) == "moss", "version-5 save retains the focused Norn")
+	_expect(saved.get("seed", -1) == 4181996 and is_equal_approx(float(saved.get("simulationTime", -1.0)), 10.0), "version-5 save retains top-level seed and simulation time")
 	(mallow_cognition["episodes"] as Array).clear()
 	(moss_cognition["episodes"] as Array).clear()
 	(mallow.get("language_state")["words"] as Dictionary).clear()
@@ -603,12 +953,12 @@ func test_version4_round_trip_preserves_both_profiles() -> void:
 	moss = world.call("profile_for", "moss")
 	mallow_cognition = mallow.get("cognition_state")
 	moss_cognition = moss.get("cognition_state")
-	_expect(_deep_values_match(mallow_cognition["episodes"], expected_mallow_episodes) and _deep_values_match(moss_cognition["episodes"], expected_moss_episodes), "version-4 round trip preserves both Norns' episodes")
-	_expect(_number_maps_match(Biochemistry.read_compounds(mallow.get("biochemistry_state")), expected_mallow_compounds, Biochemistry.COMPOUND_IDS) and _number_maps_match(Biochemistry.read_compounds(moss.get("biochemistry_state")), expected_moss_compounds, Biochemistry.COMPOUND_IDS), "version-4 round trip preserves both Norns' compounds")
-	_expect(mallow.get("language_state")["words"] == expected_mallow_words and moss.get("language_state")["words"] == expected_moss_words, "version-4 round trip preserves both vocabularies")
-	_expect(world.get("focused_norn_id") == "moss", "version-4 round trip restores focus")
-	_expect(mallow.get("feedback_available") and mallow.get("feedback_action") == "fruit" and is_equal_approx(float(mallow.get("feedback_time")), 7.25), "version-4 round trip preserves Mallow's independent feedback window")
-	_expect(moss.get("feedback_available") and moss.get("feedback_action") == "spinner" and is_equal_approx(float(moss.get("feedback_time")), 9.5), "version-4 round trip preserves Moss's independent feedback window")
+	_expect(_deep_values_match(mallow_cognition["episodes"], expected_mallow_episodes) and _deep_values_match(moss_cognition["episodes"], expected_moss_episodes), "version-5 round trip preserves both Norns' episodes")
+	_expect(_number_maps_match(Biochemistry.read_compounds(mallow.get("biochemistry_state")), expected_mallow_compounds, Biochemistry.COMPOUND_IDS) and _number_maps_match(Biochemistry.read_compounds(moss.get("biochemistry_state")), expected_moss_compounds, Biochemistry.COMPOUND_IDS), "version-5 round trip preserves both Norns' compounds")
+	_expect(mallow.get("language_state")["words"] == expected_mallow_words and moss.get("language_state")["words"] == expected_moss_words, "version-5 round trip preserves both vocabularies")
+	_expect(world.get("focused_norn_id") == "moss", "version-5 round trip restores focus")
+	_expect(mallow.get("feedback_available") and mallow.get("feedback_action") == "fruit" and is_equal_approx(float(mallow.get("feedback_time")), 7.25), "version-5 round trip preserves Mallow's independent feedback window")
+	_expect(moss.get("feedback_available") and moss.get("feedback_action") == "spinner" and is_equal_approx(float(moss.get("feedback_time")), 9.5), "version-5 round trip preserves Moss's independent feedback window")
 	_expect(mallow.get("actor").target == null and moss.get("actor").target == null, "loading clears transient movement targets")
 	await _destroy_social_world(world)
 
@@ -807,6 +1157,25 @@ func _create_social_world() -> Node:
 	return world
 
 
+func _add_test_child_profile(world: Node, actor_id: String, parent_ids: Array[String], age_seconds: float, position: Vector3, seed: int) -> Object:
+	var cognition := Cognition.create_state(seed, {"curiosity": 0.5, "sociability": 0.5}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 5.0})
+	var biochemistry := Biochemistry.create_state(cognition["chemistry"])
+	Cognition.sync_chemistry(cognition, Biochemistry.read_signals(biochemistry))
+	var actor := NornActor.new()
+	actor.configure_identity(actor_id, "Testling", Color(0.62, 0.34, 0.18))
+	actor.position = position
+	world.add_child(actor)
+	var profile = ProfileScript.new()
+	profile.call("initialize", actor_id, "Testling", actor, cognition, biochemistry, world.get("_language").call("create_state"))
+	profile.set("parent_ids", parent_ids.duplicate())
+	profile.set("generation", 1)
+	profile.set("body_color", Color(0.62, 0.34, 0.18))
+	profile.set("life_state", Lifecycle.create_state(seed, age_seconds))
+	actor.set_life_stage(str(profile.get("life_stage")))
+	world.get("norn_profiles")[actor_id] = profile
+	return profile
+
+
 func _destroy_social_world(world: Node) -> void:
 	if is_instance_valid(world):
 		world.queue_free()
@@ -823,6 +1192,45 @@ func _set_profile_attending(observer: Object, source: Object) -> void:
 	await physics_frame
 	if is_instance_valid(observer_actor):
 		observer_actor.set_action_target(null, "observe_peer", "Watching %s" % source.get("display_name"), str(source.get("actor_id")))
+
+
+func _expected_observation_update(cognition: Dictionary, biochemistry: Dictionary, outcome: Dictionary) -> Dictionary:
+	var before: Dictionary = Biochemistry.read_signals(biochemistry)
+	var next_biochemistry: Dictionary = biochemistry.duplicate(true)
+	Biochemistry.apply_event(next_biochemistry, "social")
+	var after: Dictionary = Biochemistry.read_signals(next_biochemistry)
+	Cognition.sync_chemistry(cognition, after)
+	return Cognition.record_outcome(cognition, outcome, {"before": before, "after": after})
+
+
+func _select_observation_peer_for_test(state: Dictionary, candidates: Array[Dictionary], parent_ids: Array[String], life_stage: String, now: float) -> Dictionary:
+	var cognition_script_instance: Object = Cognition.new()
+	if _method_argument_count(cognition_script_instance, "select_observation_peer") != 5:
+		return {}
+	var value: Variant = cognition_script_instance.call("select_observation_peer", state, candidates, parent_ids, life_stage, now)
+	return value if value is Dictionary else {}
+
+
+func _peer_score(selection: Dictionary, peer_id: String) -> Dictionary:
+	for score_value: Variant in selection.get("scores", []):
+		if score_value is Dictionary and str((score_value as Dictionary).get("peerId", "")) == peer_id:
+			return score_value as Dictionary
+	return {}
+
+
+func _record_observation_peer_memory(state: Dictionary, actor_id: String, event_type: String, feedback: String, time_value: float, count: int) -> void:
+	for memory_index in range(count):
+		Cognition.record_outcome(state, {
+			"eventType": event_type,
+			"actorId": actor_id,
+			"actionId": "observe_peer",
+			"feedback": feedback,
+			"time": time_value,
+			"peerCount": 1,
+			"sociability": 0.5,
+			"salience": 0.55,
+			"text": "Observed %s social event %d" % [actor_id, memory_index]
+		})
 
 
 func _event_count(episodes: Array, event_type: String) -> int:

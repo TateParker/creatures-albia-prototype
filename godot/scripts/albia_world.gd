@@ -1479,6 +1479,35 @@ func _sense_peers(profile: NornProfile) -> Array[Dictionary]:
 	return sensed
 
 
+func _nearest_living_parent(profile: NornProfile) -> NornProfile:
+	if profile == null or profile.actor == null:
+		return null
+	var nearest: NornProfile
+	var nearest_distance := INF
+	for parent_id: String in profile.parent_ids:
+		var parent := profile_for(parent_id)
+		if parent == null or parent == profile or not bool(parent.life_state.get("alive", false)) or parent.actor == null or not is_instance_valid(parent.actor) or not parent.actor.is_inside_tree():
+			continue
+		var distance := profile.actor.global_position.distance_to(parent.actor.global_position)
+		if distance < nearest_distance:
+			nearest = parent
+			nearest_distance = distance
+	return nearest
+
+
+func _nearest_visible_parent(profile: NornProfile, nearby_norns: Array[Dictionary]) -> NornProfile:
+	if profile == null:
+		return null
+	for peer: Dictionary in nearby_norns:
+		var parent_id := str(peer.get("id", ""))
+		if not profile.parent_ids.has(parent_id):
+			continue
+		var parent := profile_for(parent_id)
+		if parent != null and bool(parent.life_state.get("alive", false)) and parent.actor != null and is_instance_valid(parent.actor) and parent.actor.is_inside_tree():
+			return parent
+	return null
+
+
 func _sense_objects(profile: NornProfile) -> Array[Dictionary]:
 	var sensed: Array[Dictionary] = []
 	if profile == null or profile.actor == null or not profile.actor.is_inside_tree():
@@ -1541,11 +1570,43 @@ func _run_decision(profile: NornProfile) -> void:
 			target = item
 			target_id = effective_action
 	elif effective_action == "observe_peer" and not nearby_norns.is_empty():
-		var peer_id := str(nearby_norns[0]["id"])
-		var peer := profile_for(peer_id)
-		if peer != null and profile.actor.global_position.distance_to(peer.actor.global_position) > NornActor.OBSERVATION_STOP_DISTANCE:
-			target = peer.actor
-			target_id = peer.actor_id
+		var peer: NornProfile
+		var peer_selection: Dictionary = {}
+		if profile.life_stage == "child":
+			peer = _nearest_visible_parent(profile, nearby_norns)
+		elif profile.life_stage == "adolescent":
+			peer_selection = Cognition.select_observation_peer(profile.cognition_state, nearby_norns, profile.parent_ids, profile.life_stage, simulation_time)
+			if not peer_selection.is_empty():
+				decision["peerSelection"] = peer_selection.duplicate(true)
+				peer = profile_for(str(peer_selection.get("peerId", "")))
+		if peer == null:
+			peer = profile_for(str(nearby_norns[0]["id"]))
+		if peer != null:
+			if profile.life_stage == "adolescent":
+				match str(peer_selection.get("reasonKey", "proximity")):
+					"positive_memory":
+						reason = "Remembering positive experiences with %s" % peer.display_name
+					"negative_memory":
+						var avoided_peer := profile_for(str(peer_selection.get("reasonPeerId", "")))
+						reason = "Avoiding a negative experience with %s; staying near %s" % [avoided_peer.display_name if avoided_peer != null else "a peer", peer.display_name]
+					"adolescent_preference":
+						reason = "Observing peer %s beyond the family" % peer.display_name
+					_:
+						reason = "Observing nearby peer %s" % peer.display_name
+			if profile.actor.global_position.distance_to(peer.actor.global_position) > NornActor.OBSERVATION_STOP_DISTANCE:
+				target = peer.actor
+				target_id = peer.actor_id
+	if profile.life_stage == "baby" and active_guidance == null and not ["fruit", "spinner", "rest"].has(effective_action):
+		var parent := _nearest_living_parent(profile)
+		if parent != null:
+			effective_action = "observe_peer"
+			reason = "Following their parent, %s" % parent.display_name
+			if profile.actor.global_position.distance_to(parent.actor.global_position) > NornActor.OBSERVATION_STOP_DISTANCE:
+				target = parent.actor
+				target_id = parent.actor_id
+			else:
+				target = null
+				target_id = ""
 	profile.actor.set_action_target(target, effective_action, reason, target_id)
 	profile.current_decision = decision.duplicate(true)
 	profile.current_decision["actionId"] = effective_action
@@ -1621,6 +1682,7 @@ func _offer_observation(source: NornProfile, outcome: Dictionary) -> void:
 			"time": maxf(0.0, float(outcome.get("time", simulation_time))),
 			"peerCount": _sense_peers(observer).size(),
 			"sociability": float(observer.cognition_state["traits"].get("sociability", 0.5)),
+			"learningMultiplier": 1.5 if observer.life_stage == "child" else 1.0,
 			"eventId": int(outcome.get("eventId", 0)),
 			"text": "%s observed %s %s" % [observer.display_name, source.display_name, action_id]
 		}

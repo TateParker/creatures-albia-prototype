@@ -359,7 +359,7 @@ func test_hatch_creates_fresh_independent_profile() -> void:
 		_expect(child != null and child.actor != null and child.generation == 1 and child.parent_ids == ["mallow", "moss"], "hatch creates a visible child with both parents")
 		_expect(child != null and child.display_name == "Sprout 1", "living-name collision adds the child number")
 		_expect(child != null and child.language_state.get("words", {}).is_empty(), "hatched Norn begins without inherited vocabulary")
-		_expect(child != null and child.cognition_state["actionAssociations"] == {"fruit": 0.0, "spinner": 0.0, "rest": 0.0, "observe_peer": 0.0, "idle": 0.0}, "hatched Norn begins without inherited action associations")
+		_expect(child != null and child.cognition_state["actionAssociations"] == {"fruit": 0.5, "spinner": 0.5, "rest": 0.5, "observe_peer": 0.5, "idle": 0.5}, "hatched Norn begins with neutral, untrained action associations")
 		if child != null and not child.cognition_state["episodes"].is_empty():
 			var birth_episode: Dictionary = child.cognition_state["episodes"][-1]
 			_expect(birth_episode.get("eventType", "") == "birth" and birth_episode.get("relatedNornIds", []) == ["mallow", "moss"], "hatching records a birth memory linked to both parents")
