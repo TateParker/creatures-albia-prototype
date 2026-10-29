@@ -12,6 +12,10 @@ The Godot project has two independently simulated profiles, Mallow and Moss. `Al
 
 The browser prototype already implements family pairing, a four-slot combined population limit, 45-second egg incubation, bounded inherited curiosity and sociability, blended color, hatching, and schema validation. Its existing rules give a concrete baseline for the native version.
 
+## Original *Creatures 1* aging and death
+
+The original game had an ageing chemical and age-related life-stage changes. Old-age death was intended, but the stock *Creatures 1* genomes omitted the gene that triggers it, so standard Norns generally aged without dying of old age. They could still die from other causes, including illness and starvation. This family slice leaves aging and death out; that preserves the shipped game's usual old-age behavior, but not its intended full life cycle. See the [Creatures Wiki's aging notes](https://creatures.fandom.com/wiki/Ageing) and [Discover Albia's Creatures 1 help](https://discoveralbia.com/help#creatures-1-faqs-and-help).
+
 ## Goals
 
 - Let the player pair the focused Norn with a different existing Norn and start an egg.
