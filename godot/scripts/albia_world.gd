@@ -8,6 +8,7 @@ const NornLanguageScript = preload("res://scripts/norn_language.gd")
 const VideoRecorder = preload("res://scripts/local_video_recorder.gd")
 const NornProfile = preload("res://scripts/norn_profile.gd")
 const NornLifecycle = preload("res://scripts/norn_lifecycle.gd")
+const NornEggScript = preload("res://scripts/norn_egg.gd")
 const START_SEED := 4181996
 const MOSS_SEED := 4181997
 const SAVE_PATH := "user://albia_norn_save.json"
@@ -16,6 +17,7 @@ const STARTER_PROFILE_IDS: Array[String] = ["mallow", "moss"]
 const MALLOW_COLOR := Color(0.43, 0.27, 0.16)
 const MOSS_COLOR := Color(0.24, 0.42, 0.34)
 const MAX_POPULATION := 4
+const CHILD_NAMES: Array[String] = ["Sprout", "Clover", "Acorn", "Pip"]
 const CHEMISTRY_STEP := 0.1
 const DECISION_STEP := 0.2
 const FEEDBACK_WINDOW := 12.0
@@ -62,6 +64,8 @@ var _camera_offset := Vector3(0.0, 11.0, 15.5)
 var _chemistry_accumulator: float = 0.0
 var _decision_accumulator: float = 0.0
 var _respawn_times: Dictionary = {}
+var _egg_nodes: Dictionary = {}
+var _nest_position := Vector3(-1.5, 0.0, -2.8)
 
 
 func _ready() -> void:
@@ -101,6 +105,7 @@ func _process(delta: float) -> void:
 		decision_steps += 1
 		for profile: NornProfile in norn_profiles.values():
 			_run_decision(profile)
+	_tick_eggs(step_delta)
 	_update_timed_state()
 	_refresh_ui()
 
@@ -303,6 +308,21 @@ func save_game() -> void:
 			_refresh_ui()
 			return
 		saved_norns[actor_id] = saved_profile
+	var saved_eggs: Array[Dictionary] = []
+	for index in range(eggs.size()):
+		var egg_record: Dictionary = eggs[index].duplicate(true)
+		var egg_id := str(egg_record.get("eggId", ""))
+		var egg_node: Variant = _egg_nodes.get(egg_id, null)
+		if egg_node is Node3D:
+			var serialized_egg: Variant = (egg_node as Node3D).call("serialize_state")
+			if serialized_egg is Dictionary:
+				egg_record = serialized_egg
+			eggs[index] = egg_record
+		if egg_record.is_empty():
+			last_status = "A local egg record failed validation and could not be saved."
+			_refresh_ui()
+			return
+		saved_eggs.append(egg_record)
 	var record := {
 		"version": SAVE_VERSION,
 		"seed": START_SEED,
@@ -310,8 +330,12 @@ func save_game() -> void:
 		"focusedNornId": focused_norn_id,
 		"nextNornNumber": next_norn_number,
 		"norns": saved_norns,
-		"eggs": eggs.duplicate(true)
+		"eggs": saved_eggs
 	}
+	if _restore_version5_record(record, maxf(0.0, simulation_time)).is_empty():
+		last_status = "The local Norn family failed validation and could not be saved."
+		_refresh_ui()
+		return
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		last_status = "Could not write local save (error %d)." % FileAccess.get_open_error()
@@ -483,7 +507,7 @@ func _restore_version5_record(record: Dictionary, saved_simulation_time: float) 
 		return {}
 	if not _is_finite_number(saved_next_number) or not is_equal_approx(float(saved_next_number), roundf(float(saved_next_number))) or int(saved_next_number) < 1:
 		return {}
-	if not (saved_eggs is Array) or not saved_eggs.is_empty():
+	if not (saved_eggs is Array):
 		return {}
 	var restored_profiles: Dictionary = {}
 	var names: Dictionary = {}
@@ -493,11 +517,13 @@ func _restore_version5_record(record: Dictionary, saved_simulation_time: float) 
 		if not (key is String) or not _is_valid_profile_id(key):
 			return {}
 		var restored_profile := _restore_profile(saved_norns.get(key, null), key, saved_simulation_time)
-		if restored_profile.is_empty() or names.has(restored_profile["displayName"]):
+		if restored_profile.is_empty():
 			return {}
-		names[restored_profile["displayName"]] = true
 		restored_profiles[key] = restored_profile
 		if bool(restored_profile["lifeState"]["alive"]):
+			if names.has(restored_profile["displayName"]):
+				return {}
+			names[restored_profile["displayName"]] = true
 			living_count += 1
 		if str(key).begins_with("norn-"):
 			highest_child_number = maxi(highest_child_number, _profile_number(str(key)))
@@ -519,9 +545,26 @@ func _restore_version5_record(record: Dictionary, saved_simulation_time: float) 
 			var expected_generation := maxi(int(first_parent["generation"]), int(second_parent["generation"])) + 1
 			if int(profile["generation"]) != expected_generation:
 				return {}
+	var restored_eggs: Array[Dictionary] = []
+	var seen_egg_ids: Dictionary = {}
+	var reserved_child_ids: Dictionary = {}
+	for raw_egg: Variant in saved_eggs:
+		var restored_egg := _restore_egg_record(raw_egg, restored_profiles)
+		if restored_egg.is_empty():
+			return {}
+		var egg_id := str(restored_egg["eggId"])
+		var child_id := str(restored_egg["childId"])
+		var child_name := str(restored_egg["displayName"])
+		if seen_egg_ids.has(egg_id) or reserved_child_ids.has(child_id) or restored_profiles.has(child_id) or names.has(child_name):
+			return {}
+		seen_egg_ids[egg_id] = true
+		reserved_child_ids[child_id] = true
+		names[child_name] = true
+		restored_eggs.append(restored_egg)
+		highest_child_number = maxi(highest_child_number, _profile_number(child_id))
 	if int(saved_next_number) <= highest_child_number:
 		return {}
-	if living_count + saved_eggs.size() > MAX_POPULATION:
+	if living_count + restored_eggs.size() > MAX_POPULATION:
 		return {}
 	if living_count == 0:
 		if not saved_focus.is_empty():
@@ -532,7 +575,66 @@ func _restore_version5_record(record: Dictionary, saved_simulation_time: float) 
 		"profiles": restored_profiles,
 		"focusedNornId": saved_focus,
 		"nextNornNumber": int(saved_next_number),
-		"eggs": []
+		"eggs": restored_eggs
+	}
+
+
+func _restore_egg_record(value: Variant, restored_profiles: Dictionary) -> Dictionary:
+	if not (value is Dictionary):
+		return {}
+	var saved: Dictionary = value
+	var egg_id = saved.get("eggId", null)
+	var child_id = saved.get("childId", null)
+	var display_name = saved.get("displayName", null)
+	var raw_parent_ids = saved.get("parentIds", null)
+	var generation_value = saved.get("generation", null)
+	var saved_traits = saved.get("traits", null)
+	var raw_color = saved.get("bodyColor", null)
+	var seed_value = saved.get("childSeed", null)
+	var remaining_value = saved.get("remainingSeconds", null)
+	if not (egg_id is String) or not egg_id.begins_with("egg-") or not (child_id is String) or not (display_name is String) or display_name.strip_edges().is_empty() or display_name.length() > 40:
+		return {}
+	var suffix: String = egg_id.trim_prefix("egg-")
+	if not suffix.is_valid_int() or int(suffix) < 1 or suffix != str(int(suffix)) or child_id != "norn-%d" % int(suffix):
+		return {}
+	if not (raw_parent_ids is Array) or raw_parent_ids.size() != 2:
+		return {}
+	var parent_ids: Array[String] = []
+	for parent_id: Variant in raw_parent_ids:
+		if not (parent_id is String) or not restored_profiles.has(parent_id):
+			return {}
+		parent_ids.append(parent_id)
+	if parent_ids[0] == parent_ids[1]:
+		return {}
+	if not _is_finite_number(generation_value) or not is_equal_approx(float(generation_value), roundf(float(generation_value))) or int(generation_value) < 1:
+		return {}
+	var first_parent: Dictionary = restored_profiles[parent_ids[0]]
+	var second_parent: Dictionary = restored_profiles[parent_ids[1]]
+	if int(generation_value) != maxi(int(first_parent["generation"]), int(second_parent["generation"])) + 1:
+		return {}
+	if not (saved_traits is Dictionary) or saved_traits.size() != 2:
+		return {}
+	var curiosity = saved_traits.get("curiosity", null)
+	var sociability = saved_traits.get("sociability", null)
+	if not _is_finite_number(curiosity) or not _is_finite_number(sociability) or float(curiosity) < 0.05 or float(curiosity) > 0.95 or float(sociability) < 0.05 or float(sociability) > 0.95:
+		return {}
+	var body_color := _restore_body_color(raw_color)
+	if not (raw_color is Array) or body_color == Color.TRANSPARENT or body_color.a <= 0.0:
+		return {}
+	if not _is_finite_number(seed_value) or not is_equal_approx(float(seed_value), roundf(float(seed_value))) or int(seed_value) != _child_seed(int(suffix)):
+		return {}
+	if not _is_finite_number(remaining_value) or float(remaining_value) < 0.0 or float(remaining_value) > NornEggScript.INCUBATION_SECONDS:
+		return {}
+	return {
+		"eggId": egg_id,
+		"childId": child_id,
+		"displayName": display_name,
+		"parentIds": parent_ids,
+		"generation": int(generation_value),
+		"traits": {"curiosity": float(curiosity), "sociability": float(sociability)},
+		"bodyColor": [body_color.r, body_color.g, body_color.b, body_color.a],
+		"childSeed": int(seed_value),
+		"remainingSeconds": float(remaining_value)
 	}
 
 
@@ -691,6 +793,7 @@ func ordered_profile_ids() -> Array[String]:
 
 func _apply_restored_world(candidate: Dictionary, saved_simulation_time: float) -> void:
 	_clear_profile_actors()
+	_clear_egg_nodes()
 	norn_profiles.clear()
 	var restored_profiles: Dictionary = candidate["profiles"]
 	var ids: Array[String] = []
@@ -731,6 +834,7 @@ func _apply_restored_world(candidate: Dictionary, saved_simulation_time: float) 
 	eggs.clear()
 	for egg: Variant in candidate["eggs"]:
 		eggs.append(egg)
+	_rebuild_egg_nodes()
 	_sync_mallow_compatibility()
 
 
@@ -742,6 +846,24 @@ func _clear_profile_actors() -> void:
 				profile.actor.free()
 	norn = null
 	moss = null
+
+
+func _clear_egg_nodes() -> void:
+	for value: Variant in _egg_nodes.values():
+		if value is Node3D and is_instance_valid(value):
+			(value as Node3D).free()
+	_egg_nodes.clear()
+
+
+func _rebuild_egg_nodes() -> void:
+	_clear_egg_nodes()
+	for index in range(eggs.size()):
+		var egg_record: Dictionary = eggs[index]
+		var egg_node: Node3D = NornEggScript.new()
+		egg_node.call("configure", egg_record)
+		egg_node.position = _egg_position(index)
+		add_child(egg_node)
+		_egg_nodes[str(egg_record.get("eggId", ""))] = egg_node
 
 
 func _spawn_actor(actor_id: String, display_name: String, color: Color) -> NornActor:
@@ -800,6 +922,233 @@ func profile_for(actor_id: String) -> NornProfile:
 	return profile as NornProfile if profile is NornProfile else null
 
 
+func living_profiles() -> Array[NornProfile]:
+	var living: Array[NornProfile] = []
+	for actor_id: String in ordered_profile_ids():
+		var profile := profile_for(actor_id)
+		if profile != null and bool(profile.life_state.get("alive", false)) and profile.actor != null:
+			living.append(profile)
+	return living
+
+
+func population_count() -> int:
+	var count := 0
+	for profile: NornProfile in norn_profiles.values():
+		if bool(profile.life_state.get("alive", false)):
+			count += 1
+	return count + eggs.size()
+
+
+func start_egg(second_parent_id: String) -> bool:
+	var first_parent := focused_profile()
+	var second_parent := profile_for(second_parent_id)
+	if first_parent == null or second_parent == null:
+		last_status = "Choose two living adult Norns before starting an egg."
+		_refresh_ui()
+		return false
+	if first_parent.actor_id == second_parent.actor_id:
+		last_status = "A Norn cannot pair with itself."
+		_refresh_ui()
+		return false
+	for parent: NornProfile in [first_parent, second_parent]:
+		var age := float(parent.life_state.get("ageSeconds", -1.0))
+		if parent.actor == null or not bool(parent.life_state.get("alive", false)) or age < NornLifecycle.ADOLESCENT_END_SECONDS:
+			last_status = "%s must be a living adult before pairing." % parent.display_name
+			_refresh_ui()
+			return false
+	if population_count() >= MAX_POPULATION:
+		last_status = "The habitat is full; hatch or free a family slot before pairing again."
+		_refresh_ui()
+		return false
+	var child_number := next_norn_number
+	var child_id := "norn-%d" % child_number
+	var egg_id := "egg-%d" % child_number
+	if norn_profiles.has(child_id) or _egg_nodes.has(egg_id):
+		last_status = "The next family ID is already reserved; the clutch was not created."
+		_refresh_ui()
+		return false
+	var first_traits: Dictionary = first_parent.cognition_state.get("traits", {})
+	var second_traits: Dictionary = second_parent.cognition_state.get("traits", {})
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _inheritance_rng_seed(child_number)
+	var child_traits := {
+		"curiosity": clampf((float(first_traits.get("curiosity", 0.5)) + float(second_traits.get("curiosity", 0.5))) * 0.5 + rng.randf_range(-0.06, 0.06), 0.05, 0.95),
+		"sociability": clampf((float(first_traits.get("sociability", 0.5)) + float(second_traits.get("sociability", 0.5))) * 0.5 + rng.randf_range(-0.06, 0.06), 0.05, 0.95)
+	}
+	var child_color := Color(
+		(first_parent.body_color.r + second_parent.body_color.r) * 0.5,
+		(first_parent.body_color.g + second_parent.body_color.g) * 0.5,
+		(first_parent.body_color.b + second_parent.body_color.b) * 0.5,
+		(first_parent.body_color.a + second_parent.body_color.a) * 0.5
+	)
+	var parent_ids: Array[String] = [first_parent.actor_id, second_parent.actor_id]
+	var child_name := _child_display_name(child_number)
+	var egg_record := {
+		"eggId": egg_id,
+		"childId": child_id,
+		"displayName": child_name,
+		"parentIds": parent_ids,
+		"generation": maxi(first_parent.generation, second_parent.generation) + 1,
+		"traits": child_traits,
+		"bodyColor": [child_color.r, child_color.g, child_color.b, child_color.a],
+		"childSeed": _child_seed(child_number),
+		"remainingSeconds": NornEggScript.INCUBATION_SECONDS
+	}
+	var egg_node: Node3D = NornEggScript.new()
+	egg_node.call("configure", egg_record)
+	egg_node.position = _egg_position(eggs.size())
+	add_child(egg_node)
+	_egg_nodes[egg_id] = egg_node
+	eggs.append(egg_record)
+	next_norn_number = child_number + 1
+	_record_family_memory(first_parent, [second_parent.actor_id, child_id], "%s and %s began a family egg." % [first_parent.display_name, second_parent.display_name])
+	_record_family_memory(second_parent, [first_parent.actor_id, child_id], "%s and %s began a family egg." % [first_parent.display_name, second_parent.display_name])
+	last_status = "%s and %s started an egg for %s." % [first_parent.display_name, second_parent.display_name, child_name]
+	var event_status := last_status
+	save_game()
+	last_status = event_status
+	_refresh_ui()
+	return true
+
+
+func _child_seed(child_number: int) -> int:
+	return int(posmod(START_SEED + child_number * 104729, 0xfffffffe)) + 1
+
+
+func _inheritance_rng_seed(child_number: int) -> int:
+	var seed := (START_SEED ^ (child_number * 0x9e3779b9)) & 0xffffffff
+	return seed if seed > 0 else 1
+
+
+func _child_display_name(child_number: int) -> String:
+	var base_name := CHILD_NAMES[posmod(child_number - 1, CHILD_NAMES.size())]
+	var in_use := false
+	for profile: NornProfile in living_profiles():
+		if profile.display_name == base_name:
+			in_use = true
+			break
+	if not in_use:
+		for egg_record: Dictionary in eggs:
+			if str(egg_record.get("displayName", "")) == base_name:
+				in_use = true
+				break
+	return "%s %d" % [base_name, child_number] if in_use else base_name
+
+
+func _egg_position(index: int) -> Vector3:
+	return _nest_position + Vector3(-0.32 + float(index % 2) * 0.64, 0.22, -0.18 + float(index / 2) * 0.5)
+
+
+func _record_family_memory(profile: NornProfile, related_norn_ids: Array[String], text_value: String) -> void:
+	if profile == null:
+		return
+	var outcome := {
+		"eventType": "family",
+		"actorId": profile.actor_id,
+		"time": simulation_time,
+		"learningDelta": 0.0,
+		"reward": 0.0,
+		"salience": 0.6,
+		"text": text_value
+	}
+	var result: Dictionary = Cognition.record_outcome(profile.cognition_state, outcome)
+	var episode_id := int(result.get("episodeId", 0))
+	if episode_id > 0:
+		for episode_value: Variant in profile.cognition_state.get("episodes", []):
+			if episode_value is Dictionary and int((episode_value as Dictionary).get("id", -1)) == episode_id:
+				(episode_value as Dictionary)["relatedNornIds"] = related_norn_ids.duplicate()
+				break
+	if profile.actor_id == "mallow":
+		_sync_mallow_compatibility()
+
+
+func _tick_eggs(delta_seconds: float) -> void:
+	var hatched_ids: Array[String] = []
+	for index in range(eggs.size()):
+		var egg_id := str(eggs[index].get("eggId", ""))
+		var egg_node: Variant = _egg_nodes.get(egg_id, null)
+		if not (egg_node is Node3D):
+			continue
+		var completed := bool((egg_node as Node3D).call("advance", delta_seconds))
+		var saved_egg: Variant = (egg_node as Node3D).call("serialize_state")
+		if saved_egg is Dictionary:
+			eggs[index] = saved_egg
+		if completed:
+			hatched_ids.append(egg_id)
+	for egg_id: String in hatched_ids:
+		_hatch_egg(egg_id)
+
+
+func _hatch_egg(egg_id: String) -> void:
+	var egg_node: Variant = _egg_nodes.get(egg_id, null)
+	if not (egg_node is Node3D):
+		return
+	var egg_record_value: Variant = (egg_node as Node3D).call("serialize_state")
+	if not (egg_record_value is Dictionary):
+		return
+	var egg_record: Dictionary = egg_record_value
+	var child_id := str(egg_record.get("childId", ""))
+	if not _is_valid_profile_id(child_id) or norn_profiles.has(child_id):
+		return
+	var parent_ids: Array[String] = []
+	for parent_id: Variant in egg_record.get("parentIds", []):
+		if parent_id is String:
+			parent_ids.append(parent_id)
+	var child_seed := int(egg_record.get("childSeed", 0))
+	var child_traits: Dictionary = egg_record.get("traits", {}).duplicate(true)
+	var child_color := _restore_body_color(egg_record.get("bodyColor", null))
+	var child_cognition: Dictionary = Cognition.create_state(child_seed, child_traits, {"hunger": 45.0, "curiosity": 45.0, "fatigue": 18.0})
+	var child_biochemistry: Dictionary = Biochemistry.create_state(child_cognition["chemistry"])
+	Cognition.sync_chemistry(child_cognition, Biochemistry.read_signals(child_biochemistry))
+	var child_language: Dictionary = _language.call("create_state")
+	var actor := _spawn_actor(child_id, str(egg_record.get("displayName", "Norn")), child_color)
+	var child := NornProfile.new()
+	child.initialize(child_id, str(egg_record.get("displayName", "Norn")), actor, child_cognition, child_biochemistry, child_language)
+	child.generation = int(egg_record.get("generation", 1))
+	child.parent_ids.clear()
+	for parent_id: String in parent_ids:
+		child.parent_ids.append(parent_id)
+	child.body_color = child_color
+	child.life_state = NornLifecycle.create_state(child_seed, 0.0)
+	norn_profiles[child_id] = child
+	var birth_outcome := {
+		"eventType": "birth",
+		"actorId": child_id,
+		"time": simulation_time,
+		"learningDelta": 0.0,
+		"reward": 0.0,
+		"text": "%s hatched to join its family." % child.display_name
+	}
+	var birth_result: Dictionary = Cognition.record_outcome(child.cognition_state, birth_outcome)
+	var birth_episode_id := int(birth_result.get("episodeId", 0))
+	if birth_episode_id > 0 and not child.cognition_state["episodes"].is_empty():
+		(child.cognition_state["episodes"][-1] as Dictionary)["relatedNornIds"] = parent_ids.duplicate()
+	for parent_id: String in parent_ids:
+		var parent := profile_for(parent_id)
+		if parent != null:
+			var other_parent := parent_ids[1] if parent_id == parent_ids[0] else parent_ids[0]
+			_record_family_memory(parent, [other_parent, child_id], "%s hatched; %s is now part of the family." % [child.display_name, child.display_name])
+	var egg_index := -1
+	for index in range(eggs.size()):
+		if str(eggs[index].get("eggId", "")) == egg_id:
+			egg_index = index
+			break
+	if egg_index >= 0:
+		eggs.remove_at(egg_index)
+	_egg_nodes.erase(egg_id)
+	(egg_node as Node3D).free()
+	var focused := focused_profile()
+	if focused == null or not bool(focused.life_state.get("alive", false)):
+		focused_norn_id = child_id
+	_run_decision(child)
+	last_status = "%s hatched from its egg." % child.display_name
+	var event_status := last_status
+	_sync_mallow_compatibility()
+	save_game()
+	last_status = event_status
+	_refresh_ui()
+
+
 func focused_profile() -> NornProfile:
 	return profile_for(focused_norn_id)
 
@@ -815,6 +1164,7 @@ func select_norn(actor_id: String) -> void:
 
 func _create_profiles() -> void:
 	_clear_profile_actors()
+	_clear_egg_nodes()
 	norn_profiles.clear()
 	eggs.clear()
 	next_norn_number = 1
@@ -928,6 +1278,30 @@ func _build_habitat() -> void:
 	_add_rock(Vector3(-5.7, 0.18, -5.8), Vector3(1.1, 0.4, 0.8))
 	_add_rock(Vector3(5.6, 0.16, 5.6), Vector3(1.2, 0.35, 0.7))
 	_add_label("Sunmeadow", Vector3(-9.6, 0.3, -7.7), 28, Color(0.95, 0.88, 0.62))
+	var nest := Node3D.new()
+	nest.name = "FamilyNest"
+	nest.position = _nest_position
+	var nest_bowl := MeshInstance3D.new()
+	nest_bowl.name = "WovenNest"
+	var bowl_mesh := CylinderMesh.new()
+	bowl_mesh.top_radius = 0.82
+	bowl_mesh.bottom_radius = 0.58
+	bowl_mesh.height = 0.24
+	nest_bowl.mesh = bowl_mesh
+	nest_bowl.position.y = 0.1
+	nest_bowl.material_override = _material(Color(0.42, 0.29, 0.17))
+	nest.add_child(nest_bowl)
+	var nest_ring := MeshInstance3D.new()
+	nest_ring.name = "NestRim"
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.58
+	ring_mesh.outer_radius = 0.78
+	nest_ring.mesh = ring_mesh
+	nest_ring.position.y = 0.2
+	nest_ring.material_override = _material(Color(0.55, 0.38, 0.2))
+	nest.add_child(nest_ring)
+	add_child(nest)
+	_add_label("Norn nest", _nest_position + Vector3(-0.65, 0.55, -0.55), 16, Color(0.96, 0.85, 0.59))
 
 
 func _build_camera() -> void:

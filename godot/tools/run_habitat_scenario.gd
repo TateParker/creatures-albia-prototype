@@ -209,6 +209,24 @@ func _run_scenario() -> void:
 	if not v5_round_trip_ok:
 		_scenario_failures.append("version-5 round trip did not preserve both Norns' learning, biochemistry, and family defaults")
 	print("VERSION-5 ROUND TRIP: both profiles=%s; focus=%s" % [v5_round_trip_ok, world.focused_norn_id])
+	var egg_round_trip_ok := false
+	if world.has_method("start_egg") and world.start_egg("moss") and world.eggs.size() == 1:
+		var live_egg: Node3D = world.get_node_or_null("egg-1") as Node3D
+		if live_egg != null:
+			live_egg.call("advance", 12.5)
+			world.eggs[0] = live_egg.call("serialize_state")
+			world.save_game()
+			var expected_egg: Dictionary = world.eggs[0].duplicate(true)
+			var live_egg_record: Dictionary = live_egg.get("record")
+			live_egg_record["remainingSeconds"] = 1.0
+			live_egg_record["traits"]["curiosity"] = 0.95
+			live_egg.set("record", live_egg_record)
+			world.load_game()
+			var restored_egg: Node3D = world.get_node_or_null("egg-1") as Node3D
+			egg_round_trip_ok = world.eggs.size() == 1 and _egg_records_equal(world.eggs[0], expected_egg) and restored_egg != null and restored_egg.get_script() == load("res://scripts/norn_egg.gd")
+	if not egg_round_trip_ok:
+		_scenario_failures.append("version-5 save/load did not preserve partial incubation and realized inheritance")
+	print("VERSION-5 EGG ROUND TRIP: restored=%s; remaining=%.1f" % [egg_round_trip_ok, float(world.eggs[0].get("remainingSeconds", -1.0)) if not world.eggs.is_empty() else -1.0])
 	var changed_bio: Dictionary = world.get("biochemistry_state")
 	var changed_compounds: Dictionary = Biochemistry.read_compounds(changed_bio)
 	changed_compounds["glucose"] = 1.0
@@ -487,6 +505,22 @@ func _number_arrays_equal(actual: Variant, expected: Array) -> bool:
 		if not is_equal_approx(float(actual[index]), float(expected[index])):
 			return false
 	return true
+
+
+func _egg_records_equal(actual: Variant, expected: Dictionary) -> bool:
+	if not (actual is Dictionary):
+		return false
+	var actual_record: Dictionary = actual
+	for key: String in ["eggId", "childId", "displayName", "parentIds"]:
+		if actual_record.get(key) != expected.get(key):
+			return false
+	if int(actual_record.get("generation", -1)) != int(expected.get("generation", -2)) or int(actual_record.get("childSeed", -1)) != int(expected.get("childSeed", -2)):
+		return false
+	if not is_equal_approx(float(actual_record.get("remainingSeconds", -1.0)), float(expected.get("remainingSeconds", -2.0))):
+		return false
+	if not _number_maps_equal(actual_record.get("traits", {}), expected.get("traits", {}), ["curiosity", "sociability"]):
+		return false
+	return _number_arrays_equal(actual_record.get("bodyColor", []), expected.get("bodyColor", []))
 
 
 func _verify_world_biochemistry(world: AlbiaWorld) -> bool:
