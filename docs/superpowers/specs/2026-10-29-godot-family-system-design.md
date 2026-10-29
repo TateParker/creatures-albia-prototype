@@ -1,6 +1,6 @@
 # Godot Family and Lifespan System — Design
 
-**Status:** Draft for review; no implementation changes are included.
+**Status:** Approved for implementation; no gameplay code changes are included yet.
 
 ## Intent
 
@@ -18,7 +18,7 @@ The original game had an ageing chemical and age-related life-stage changes. Old
 
 ## Goals
 
-- Let the player pair a focused living adult Norn with a different living adult Norn and start an egg.
+- Let the player pair a focused living adult or elder Norn with a different living adult or elder Norn and start an egg.
 - Show eggs in a visible habitat nest with names and incubation progress. Incubation follows simulation speed and stops while paused.
 - Hatch an egg into a selectable, autonomous Norn with its own cognition, biochemistry, language, and social state.
 - Show a Norn's age and life stage, mature newborns into adults, and end their active life at a deterministic old-age limit.
