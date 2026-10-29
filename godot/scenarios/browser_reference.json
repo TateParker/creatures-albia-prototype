@@ -1,0 +1,300 @@
+{
+  "version": 1,
+  "description": "Fixed-seed browser reference for initial choice, food, praise, scold, and memory/association restore.",
+  "seed": 4181996,
+  "traits": {
+    "curiosity": 0.65,
+    "sociability": 0.55
+  },
+  "initial": {
+    "hunger": 45,
+    "curiosity": 45,
+    "fatigue": 18
+  },
+  "nearbyObjects": [
+    {
+      "id": "fruit",
+      "kind": "food",
+      "label": "Honey fruit",
+      "distance": 320,
+      "affordances": [
+        "eat"
+      ]
+    },
+    {
+      "id": "spinner",
+      "kind": "toy",
+      "label": "Wind-up spinner",
+      "distance": 260,
+      "affordances": [
+        "play"
+      ]
+    }
+  ],
+  "steps": {
+    "decisions": [
+      {
+        "label": "initial",
+        "expected": {
+          "actionId": "fruit",
+          "actionScores": {
+            "fruit": 29.295753774019186,
+            "spinner": 25.42653689808143,
+            "rest": 5.4261670980355925,
+            "observe_peer": 0.32851006131540095,
+            "idle": 14.035727206433316
+          },
+          "reason": "Hunger is drawing attention to the fruit",
+          "recalledEpisodeIds": [],
+          "components": {
+            "fruitNeed": 29.400000000000002,
+            "fruitHabit": 0,
+            "fruitContext": -0.10424622598081704,
+            "fruitScore": 29.295753774019186,
+            "spinnerNeed": 25.491,
+            "spinnerHabit": 0,
+            "spinnerContext": -0.06446310191857116,
+            "spinnerScore": 25.42653689808143,
+            "restNeed": 5.3999999999999995,
+            "observeNeed": 0
+          }
+        }
+      },
+      {
+        "label": "after_food",
+        "expected": {
+          "actionId": "spinner",
+          "actionScores": {
+            "fruit": 8.453688099828781,
+            "spinner": 25.490025234588035,
+            "rest": 5.445907460371515,
+            "observe_peer": 0.34694288390959144,
+            "idle": 14.130000368831983
+          },
+          "reason": "Curiosity is pulling toward the spinner",
+          "recalledEpisodeIds": [
+            1
+          ],
+          "components": {
+            "fruitNeed": 0,
+            "fruitHabit": 5.6000000000000005,
+            "fruitContext": 2.8536880998287817,
+            "fruitScore": 8.453688099828781,
+            "spinnerNeed": 25.491,
+            "spinnerHabit": 0,
+            "spinnerContext": -0.0009747654119625377,
+            "spinnerScore": 25.490025234588035,
+            "restNeed": 5.3999999999999995,
+            "observeNeed": 0
+          }
+        }
+      },
+      {
+        "label": "after_praise",
+        "expected": {
+          "actionId": "spinner",
+          "actionScores": {
+            "fruit": 8.4443775854931,
+            "spinner": 34.39900224075898,
+            "rest": 5.4564519860909035,
+            "observe_peer": 0.3603998072104033,
+            "idle": 14.147629401468974
+          },
+          "reason": "Remembering that the spinner was enjoyable",
+          "recalledEpisodeIds": [
+            1,
+            2
+          ],
+          "components": {
+            "fruitNeed": 0,
+            "fruitHabit": 5.6000000000000005,
+            "fruitContext": 2.8443775854931,
+            "fruitScore": 8.4443775854931,
+            "spinnerNeed": 25.491,
+            "spinnerHabit": 6.4,
+            "spinnerContext": 2.508002240758981,
+            "spinnerScore": 34.39900224075898,
+            "restNeed": 5.3999999999999995,
+            "observeNeed": 0
+          }
+        }
+      },
+      {
+        "label": "after_restore",
+        "expected": {
+          "actionId": "spinner",
+          "actionScores": {
+            "fruit": 8.433549595705271,
+            "spinner": 25.479575448315448,
+            "rest": 5.465751568287884,
+            "observe_peer": 0.3403450160296504,
+            "idle": 14.13823792732518
+          },
+          "reason": "Curiosity is pulling toward the spinner",
+          "recalledEpisodeIds": [
+            1,
+            3,
+            2
+          ],
+          "components": {
+            "fruitNeed": 0,
+            "fruitHabit": 5.6000000000000005,
+            "fruitContext": 2.833549595705271,
+            "fruitScore": 8.433549595705271,
+            "spinnerNeed": 25.491,
+            "spinnerHabit": 0,
+            "spinnerContext": -0.011424551684551039,
+            "spinnerScore": 25.479575448315448,
+            "restNeed": 5.3999999999999995,
+            "observeNeed": 0
+          }
+        }
+      }
+    ],
+    "outcomes": [
+      {
+        "label": "food",
+        "input": {
+          "eventType": "food",
+          "actionId": "fruit",
+          "targetId": "fruit",
+          "actorId": "Mallow",
+          "time": 1,
+          "eventId": 1,
+          "text": "Mallow ate honey fruit"
+        },
+        "expected": {
+          "episodeId": 1,
+          "actionId": "fruit",
+          "association": 0.16,
+          "learningDelta": 0.12
+        }
+      },
+      {
+        "label": "praise",
+        "input": {
+          "eventType": "praise",
+          "actionId": "spinner",
+          "targetId": "praise",
+          "actorId": "Mallow",
+          "time": 2,
+          "eventId": 2,
+          "text": "Mallow played; praised"
+        },
+        "expected": {
+          "episodeId": 2,
+          "actionId": "spinner",
+          "association": 0.2,
+          "learningDelta": 0.2
+        }
+      },
+      {
+        "label": "scold",
+        "input": {
+          "eventType": "scold",
+          "actionId": "spinner",
+          "targetId": "scold",
+          "actorId": "Mallow",
+          "time": 3,
+          "eventId": 3,
+          "text": "Mallow played; scolded"
+        },
+        "expected": {
+          "episodeId": 3,
+          "actionId": "spinner",
+          "association": 0,
+          "learningDelta": -0.2
+        }
+      }
+    ]
+  },
+  "finalState": {
+    "chemistry": {
+      "glucose": 89,
+      "hunger": 3,
+      "curiosity": 45,
+      "fatigue": 18,
+      "reward": 20,
+      "punishment": 12,
+      "stress": 8,
+      "socialComfort": 50,
+      "arousal": 15.749999999999998,
+      "satiety": 93
+    },
+    "actionAssociations": {
+      "fruit": 0.16,
+      "spinner": 0,
+      "rest": 0,
+      "observe_peer": 0,
+      "idle": 0
+    },
+    "contextAssociations": {
+      "fruit": {
+        "hungry": 0.5800000000000001,
+        "curious": 0.5800000000000001,
+        "fatigued": 0.5,
+        "social": 0.5,
+        "settled": 0.5
+      },
+      "spinner": {
+        "hungry": 0.5,
+        "curious": 0.5,
+        "fatigued": 0.5,
+        "social": 0.5,
+        "settled": 0.5
+      },
+      "rest": {
+        "hungry": 0.5,
+        "curious": 0.5,
+        "fatigued": 0.5,
+        "social": 0.5,
+        "settled": 0.5
+      },
+      "observe_peer": {
+        "hungry": 0.5,
+        "curious": 0.5,
+        "fatigued": 0.5,
+        "social": 0.5,
+        "settled": 0.5
+      },
+      "idle": {
+        "hungry": 0.5,
+        "curious": 0.5,
+        "fatigued": 0.5,
+        "social": 0.5,
+        "settled": 0.5
+      }
+    },
+    "episodes": [
+      {
+        "id": 1,
+        "time": 1,
+        "actionId": "fruit",
+        "targetId": "fruit",
+        "eventType": "food",
+        "salience": 0.9,
+        "valence": 1
+      },
+      {
+        "id": 2,
+        "time": 2,
+        "actionId": "spinner",
+        "targetId": "praise",
+        "eventType": "praise",
+        "salience": 0.55,
+        "valence": 1
+      },
+      {
+        "id": 3,
+        "time": 3,
+        "actionId": "spinner",
+        "targetId": "scold",
+        "eventType": "scold",
+        "salience": 0.55,
+        "valence": -1
+      }
+    ],
+    "nextEpisodeId": 4,
+    "decisionCount": 4
+  }
+}

@@ -116,6 +116,7 @@
     .save-status { min-height: 12px; color: var(--muted); font-size: 9px; text-align: right; }
     .save-status[data-state="unavailable"], .save-status[data-state="blocked"], .save-status[data-state="conflict"] { color: #96564a; }
     .save-export { min-height: 30px; padding: 6px 9px; font-size: 10px; }
+    .save-export[hidden] { display: none; }
 
     .canvas-frame {
       position: relative;
@@ -171,6 +172,79 @@
 
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 13px; }
     .control-group { flex-wrap: wrap; gap: 7px; }
+    .voice-controls {
+      display: flex;
+      flex: 1 0 100%;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border: 1px solid #e2e6dc;
+      border-radius: 10px;
+      background: #f9f8f1;
+    }
+    .voice-controls-label { flex: 1 0 100%; color: #586f64; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .voice-target-label { color: #405c53; font-size: 11px; font-weight: 700; }
+    .voice-target {
+      min-width: 190px;
+      min-height: 37px;
+      padding: 8px 10px;
+      border: 1px solid #cdd6ca;
+      border-radius: 10px;
+      background: #fffdf8;
+      color: #38564d;
+      font: inherit;
+      font-size: 12px;
+    }
+    .voice-target:focus-visible { outline: 3px solid rgba(83, 145, 118, .42); outline-offset: 2px; }
+    .voice-help { flex: 1 1 250px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .voice-status { flex: 1 0 100%; min-height: 14px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .voice-status[data-state="error"] { color: #96564a; }
+    .voice-button { touch-action: none; user-select: none; }
+    .command-controls {
+      display: flex;
+      flex: 1 0 100%;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border: 1px solid #e2e6dc;
+      border-radius: 10px;
+      background: #f9f8f1;
+    }
+    .command-controls-label { flex: 1 0 100%; color: #586f64; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .command-form { display: flex; flex: 1 1 300px; flex-wrap: wrap; align-items: center; gap: 7px; }
+    .command-recipient, .command-voice-toggle { display: inline-flex; align-items: center; gap: 6px; color: #405c53; font-size: 11px; font-weight: 700; }
+    .command-input { width: 190px; min-width: 140px; min-height: 37px; padding: 8px 10px; border: 1px solid #cdd6ca; border-radius: 10px; background: #fffdf8; color: #38564d; font: inherit; font-size: 12px; font-weight: 650; }
+    .command-input::placeholder { color: #829087; font-weight: 500; }
+    .command-input:focus-visible { outline: 3px solid rgba(83, 145, 118, .42); outline-offset: 2px; }
+    .command-help, .command-status { flex: 1 0 100%; min-height: 14px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .command-status[data-state="error"] { color: #96564a; }
+    .command-status[data-state="success"] { color: #4f765c; }
+    .command-voice-toggle { flex: 0 0 auto; font-weight: 600; }
+    .command-voice-status { flex: 1 1 180px; min-height: 14px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .command-voice-toggle input { accent-color: var(--green); }
+    .family-controls {
+      display: flex;
+      flex: 1 0 100%;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border: 1px solid #e2e6dc;
+      border-radius: 10px;
+      background: #f9f8f1;
+    }
+    .family-controls-label { flex: 1 0 100%; color: #586f64; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .family-select-label { color: #405c53; font-size: 11px; font-weight: 700; }
+    .family-select { min-width: 160px; min-height: 37px; padding: 8px 10px; border: 1px solid #cdd6ca; border-radius: 10px; background: #fffdf8; color: #38564d; font: inherit; font-size: 12px; }
+    .family-select:focus-visible { outline: 3px solid rgba(83, 145, 118, .42); outline-offset: 2px; }
+    .family-help, .family-status { flex: 1 0 100%; min-height: 14px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .family-status[data-state="success"] { color: #4f765c; }
+    .family-status[data-state="error"] { color: #96564a; }
+    .world-navigation { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; }
+    .world-location { flex: 1 1 auto; color: #405c53; font-size: 11px; font-weight: 800; text-align: center; }
+    .world-navigation .button { min-height: 34px; padding: 7px 10px; }
     .feedback-controls {
       display: flex;
       max-width: 100%;
@@ -212,9 +286,29 @@
     .button:disabled { cursor: not-allowed; opacity: .52; transform: none; }
     .button .icon { font-size: 15px; line-height: 1; }
     .toolbar-note { min-height: 17px; color: var(--muted); font-size: 11px; text-align: right; }
-    .word-select { min-height: 37px; padding: 8px 27px 8px 10px; border: 1px solid #cdd6ca; border-radius: 10px; background: #fffdf8; color: #38564d; font: inherit; font-size: 12px; font-weight: 750; }
-    .word-select:focus-visible { outline: 3px solid rgba(83, 145, 118, .42); outline-offset: 2px; }
+    .word-input { width: 128px; min-width: 96px; min-height: 37px; padding: 8px 10px; border: 1px solid #cdd6ca; border-radius: 10px; background: #fffdf8; color: #38564d; font: inherit; font-size: 12px; font-weight: 700; }
+    .word-input::placeholder { color: #829087; font-weight: 500; }
+    .word-input:focus-visible { outline: 3px solid rgba(83, 145, 118, .42); outline-offset: 2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    .benchmark-panel { display: grid; gap: 11px; margin: 0 0 16px; padding: 15px 16px; }
+    .benchmark-panel[hidden] { display: none; }
+    .benchmark-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .benchmark-copy { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .benchmark-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; }
+    .benchmark-field { display: grid; gap: 4px; color: #405c53; font-size: 10px; font-weight: 750; }
+    .benchmark-field select { min-height: 37px; padding: 7px 9px; border: 1px solid #cdd6ca; border-radius: 9px; background: #fffdf8; color: #38564d; font: inherit; font-size: 11px; }
+    .benchmark-status { min-height: 16px; color: #536a5f; font-size: 10px; line-height: 1.4; }
+    .benchmark-results-wrap { overflow-x: auto; }
+    .benchmark-results { width: 100%; border-collapse: collapse; font-size: 10px; font-variant-numeric: tabular-nums; text-align: left; }
+    .benchmark-results th, .benchmark-results td { padding: 6px 8px; border-top: 1px solid #e3e6dc; white-space: nowrap; }
+    .benchmark-results th { color: #6a7d71; font-size: 9px; letter-spacing: .04em; text-transform: uppercase; }
+    .benchmark-results td { color: #405c53; }
+    body.benchmark-mode .topbar-meta, body.benchmark-mode .intro, body.benchmark-mode .inspector-card,
+    body.benchmark-mode .journal-card, body.benchmark-mode .footer { display: none; }
+    body.benchmark-mode .layout { display: block; }
+    body.benchmark-mode .habitat-card { padding: 12px; }
+    body.benchmark-mode .toolbar, body.benchmark-mode .object-targets, body.benchmark-mode .world-navigation { display: none; }
 
     .inspector-card { display: flex; flex-direction: column; padding: 16px; }
     .norn-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 14px; }
@@ -249,9 +343,14 @@
     .meter-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #8ab58e, #457b68); transition: width .3s ease; }
     .meter-fill.hunger { background: linear-gradient(90deg, #edc078, #cf785a); }
     .meter-fill.learn { background: linear-gradient(90deg, #a2c5a0, #538571); }
+    .chemistry-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; }
+    .chemistry-grid .metric { margin: 7px 0; }
     .decision-signals { display: grid; gap: 8px; }
     .decision-summary { margin: -3px 0 1px; color: #51675e; font-size: 11px; line-height: 1.4; }
     .decision-rows { display: grid; gap: 7px; }
+    .recalled-episodes { display: grid; gap: 5px; padding: 0; margin: 0; list-style: none; }
+    .recalled-episode { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; color: #536a5f; font-size: 10px; line-height: 1.4; }
+    .recalled-episode .button { min-height: 25px; padding: 4px 7px; font-size: 9px; }
     .decision-row { padding: 8px 9px; border: 1px solid #e1e5d9; border-radius: 9px; background: #f8f7ef; }
     .decision-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
     .decision-name, .decision-score { color: #405c53; font-size: 11px; font-weight: 800; }
@@ -268,6 +367,10 @@
     .tiny-meter span { display: block; height: 100%; border-radius: inherit; background: #81a88a; }
     .association { margin: 9px 0; }
     .association .metric-heading { font-size: 10px; }
+    .vocabulary-group { margin-top: 9px; }
+    .vocabulary-group:first-child { margin-top: 0; }
+    .vocabulary-group-label { margin-bottom: 3px; color: #536a5f; font-size: 9px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .vocabulary-empty { color: var(--muted); font-size: 10px; }
     .memory-list { display: grid; gap: 7px; padding: 0; margin: 0; list-style: none; }
     .memory-item { position: relative; padding: 8px 9px 8px 25px; border-radius: 9px; background: #f2f4eb; color: #51675e; font-size: 10px; line-height: 1.4; }
     .memory-item::before { position: absolute; top: 8px; left: 9px; content: "✦"; color: #8b9c65; font-size: 10px; }
@@ -318,6 +421,7 @@
       .toolbar { align-items: flex-start; }
       .toolbar-note { width: 100%; text-align: left; }
       .feedback-controls-help { flex-basis: 100%; max-width: none; }
+      .voice-target { flex: 1 1 100%; min-width: 0; }
       .inspector-card { display: flex; }
       .event-list { grid-template-columns: 1fr; }
       .footer { flex-direction: column; gap: 6px; }
@@ -350,15 +454,57 @@
         <h1 id="page-title">A world of little lives.</h1>
         <p>Guide a curious pair, notice what they learn, and see how one small success can travel through a colony.</p>
       </div>
-      <div class="field-note">Habitat 01 &nbsp;·&nbsp; Softwood Grove</div>
+      <div class="field-note">Habitat 01 &nbsp;·&nbsp; The Albia Wilds</div>
+    </section>
+
+    <section class="card benchmark-panel" id="benchmarkPanel" aria-labelledby="benchmarkTitle" hidden>
+      <div class="benchmark-heading">
+        <div>
+          <h2 class="section-title" id="benchmarkTitle">Local cognition benchmark</h2>
+          <p class="benchmark-copy">Runs the same seeded grove with the legacy chooser or cognition pilot. Benchmark mode never reads or writes browser saves.</p>
+        </div>
+        <span class="section-kicker" id="benchmarkSeedLabel">Seed 4181996 · simulation at 1×</span>
+      </div>
+      <div class="benchmark-controls">
+        <label class="benchmark-field" for="benchmarkSeed">Seed
+          <select id="benchmarkSeed">
+            <option value="4181996" selected>4181996 · baseline</option>
+            <option value="20261028">20261028</option>
+            <option value="8675309">8675309</option>
+          </select>
+        </label>
+        <label class="benchmark-field" for="benchmarkPopulation">Population
+          <select id="benchmarkPopulation">
+            <option value="2">2 Norns</option>
+            <option value="4" selected>4 Norns</option>
+            <option value="12">12 Norns · stress</option>
+          </select>
+        </label>
+        <label class="benchmark-field" for="benchmarkDuration">Simulation duration
+          <select id="benchmarkDuration">
+            <option value="10">10 seconds · quick check</option>
+            <option value="20" selected>20 seconds</option>
+            <option value="40">40 seconds</option>
+          </select>
+        </label>
+        <button class="button" id="benchmarkRuleButton" type="button">Run legacy chooser</button>
+        <button class="button primary" id="benchmarkPilotButton" type="button">Run cognition pilot</button>
+      </div>
+      <div class="benchmark-status" id="benchmarkStatus" role="status" aria-live="polite">Choose a seed and population, then run each chooser with the same settings.</div>
+      <div class="benchmark-results-wrap">
+        <table class="benchmark-results" aria-label="Benchmark results">
+          <thead><tr><th>Run</th><th>Seed</th><th>Population</th><th>Frames</th><th>Frame p95</th><th>Mean hunger</th><th>Mean glucose</th><th>Food / play</th><th>Mean episodes</th><th>Recall-bearing choices</th><th>Recalled / choice</th><th>Sim seconds</th></tr></thead>
+          <tbody id="benchmarkResults"><tr><td colspan="12">No benchmark runs yet.</td></tr></tbody>
+        </table>
+      </div>
     </section>
 
     <main class="layout">
       <section class="card habitat-card" aria-labelledby="habitat-title">
         <div class="section-heading">
           <div>
-            <h2 class="section-title" id="habitat-title">Softwood Grove</h2>
-            <div class="section-kicker">A small habitat with room to explore</div>
+            <h2 class="section-title" id="habitat-title">Albia</h2>
+            <div class="section-kicker">Three connected places to explore</div>
           </div>
           <div class="habitat-status">
             <div class="time-chip" id="worldClock" aria-live="off">DAY 1 · 06:00</div>
@@ -367,24 +513,27 @@
           </div>
         </div>
         <div class="canvas-frame">
-          <canvas id="habitat" width="960" height="500" aria-label="Side view of Softwood Grove with two Norns, a fruit dish, and a spinning toy"></canvas>
-          <div class="canvas-tag">Softwood Grove</div>
+          <canvas id="habitat" width="960" height="500" aria-label="Scrollable view across Sunmeadow, Softwood Grove, and Glassfall Hollow"></canvas>
+          <div class="canvas-tag" id="regionTag">Sunmeadow</div>
           <div class="canvas-hint" id="canvasHint">Choose a Norn, then point them toward something interesting.</div>
+        </div>
+        <div class="world-navigation" role="group" aria-label="Explore Albia">
+          <button class="button" id="worldWestButton" type="button" aria-label="Travel west one region">← West</button>
+          <span class="world-location" id="worldLocation" aria-live="polite">Sunmeadow</span>
+          <button class="button" id="worldFollowButton" type="button" aria-pressed="true">Follow Mallow</button>
+          <button class="button" id="worldEastButton" type="button" aria-label="Travel east one region">East →</button>
         </div>
         <div class="object-targets" role="group" aria-labelledby="objectTargetsLabel" aria-describedby="objectTargetsHelp">
           <span class="object-targets-label" id="objectTargetsLabel">Habitat objects</span>
           <button class="button object-target" type="button" data-object-target="fruit">Honey fruit</button>
           <button class="button object-target" type="button" data-object-target="spinner">Wind-up spinner</button>
-          <span class="object-target-help" id="objectTargetsHelp">Choose an object to point the selected Norn toward it. Choose Teach word first to teach a matching word.</span>
+          <span class="object-target-help" id="objectTargetsHelp">Type one word and choose Teach word, then select an object, Praise, or Scold to pair the word.</span>
         </div>
         <div class="toolbar" aria-label="Habitat controls">
           <div class="control-group">
             <button class="button" id="pointButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">⌖</span>Point</button>
-            <label class="sr-only" for="wordSelect">Word to teach</label>
-            <select class="word-select" id="wordSelect">
-              <option value="fruit">fruit</option>
-              <option value="spinner">spinner</option>
-            </select>
+            <label class="sr-only" for="wordInput">Word to teach</label>
+            <input class="word-input" id="wordInput" type="text" maxlength="24" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="objectTargetsHelp feedbackControlsHelp" placeholder="Type a word">
             <button class="button" id="teachButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Aa</span>Teach word</button>
             <div class="feedback-controls" role="group" aria-labelledby="feedbackControlsLabel">
               <span class="feedback-controls-label" id="feedbackControlsLabel">Learning feedback</span>
@@ -395,6 +544,40 @@
             <button class="button" id="pauseButton" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">Ⅱ</span>Pause</button>
             <button class="button" id="speedButton" type="button" aria-label="Change simulation speed">1×</button>
             <button class="button" id="resetButton" type="button" title="Start a new grove and replace this browser's saved run when saving is available"><span class="icon" aria-hidden="true">↻</span>Reset</button>
+          </div>
+          <div class="voice-controls" role="group" aria-labelledby="voiceControlsLabel" aria-describedby="voiceControlsHelp">
+            <span class="voice-controls-label" id="voiceControlsLabel">Speak a word to teach</span>
+            <label class="voice-target-label" for="voiceTarget">Word meaning</label>
+            <select class="voice-target" id="voiceTarget" aria-describedby="voiceControlsHelp voiceStatus">
+              <option value="">Choose what the word means</option>
+              <option value="fruit">Honey fruit</option>
+              <option value="spinner">Wind-up spinner</option>
+              <option value="praise">Praise</option>
+              <option value="scold">Scold</option>
+            </select>
+            <button class="button voice-button" id="voiceButton" type="button" aria-pressed="false" aria-describedby="voiceControlsHelp voiceStatus" disabled>Hold to speak</button>
+            <span class="voice-help" id="voiceControlsHelp">Choose a meaning, then hold to speak one word. Release to teach it; press Escape to cancel. Typed teaching remains available.</span>
+            <span class="voice-status" id="voiceStatus" data-state="idle" role="status" aria-live="polite">Checking whether this browser supports on-device voice teaching.</span>
+          </div>
+          <div class="command-controls" role="group" aria-labelledby="commandControlsLabel" aria-describedby="commandHelp commandStatus">
+            <span class="command-controls-label" id="commandControlsLabel">Give a Norn a word-based command</span>
+            <form class="command-form" id="commandForm">
+              <label class="command-recipient" for="commandInput">For <span id="commandNornName">Mallow</span></label>
+              <input class="command-input" id="commandInput" type="text" maxlength="96" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="commandHelp commandStatus" placeholder="Mallow push fruit">
+              <button class="button primary" id="commandButton" type="submit">Send command</button>
+            </form>
+            <span class="command-help" id="commandHelp">Try “eat fruit,” “play spinner,” or “push fruit.” Teach a word twice first; Norns may still choose based on their needs.</span>
+            <label class="command-voice-toggle"><input id="commandVoiceToggle" type="checkbox" checked aria-describedby="commandVoiceStatus"> Speak replies (local voice)</label>
+            <span class="command-voice-status" id="commandVoiceStatus" role="status" aria-live="polite">Checking for a local speech voice.</span>
+            <span class="command-status" id="commandStatus" data-state="idle" role="status" aria-live="polite">Commands go to the selected Norn.</span>
+          </div>
+          <div class="family-controls" role="group" aria-labelledby="familyControlsLabel" aria-describedby="familyHelp familyStatus">
+            <span class="family-controls-label" id="familyControlsLabel">Family and inheritance</span>
+            <label class="family-select-label" for="familyPartner">Pair <span id="familyParentName">Mallow</span> with</label>
+            <select class="family-select" id="familyPartner" aria-describedby="familyHelp familyStatus"></select>
+            <button class="button primary" id="layEggButton" type="button">Lay an egg</button>
+            <span class="family-help" id="familyHelp">Choose two Norns to start an egg. Young inherit curiosity and sociability; words and experiences are learned anew.</span>
+            <span class="family-status" id="familyStatus" data-state="idle" role="status" aria-live="polite">An egg takes 45 in-game seconds to hatch. The grove holds up to four Norns and eggs combined.</span>
           </div>
           <div class="toolbar-note" id="toolbarNote" aria-live="polite">Select an object to point it out.</div>
         </div>
@@ -423,9 +606,15 @@
           <div id="needs"></div>
 
           <div class="divider"></div>
+          <h4 class="subhead">Biochemistry</h4>
+          <div class="section-kicker">Ten local chemical signals steer energy, drives, mood, and social comfort.</div>
+          <div class="chemistry-grid" id="chemistry"></div>
+
+          <div class="divider"></div>
           <h4 class="subhead">Choice signals</h4>
           <div class="decision-signals" id="decisionSignals">
             <p class="decision-summary" id="decisionSummary"></p>
+            <ul class="recalled-episodes" id="recalledMemories" aria-label="Recalled moments"></ul>
             <div class="decision-rows" id="decisionRows"></div>
           </div>
         </div>
@@ -433,7 +622,7 @@
         <div class="inspector-details">
           <div class="divider"></div>
           <h4 class="subhead">Inherited tendencies</h4>
-          <p class="trait-help" id="sociabilityHelp">Sociability affects how likely a nearby Norn is to notice another's success, hear a word like “fruit” or “spinner,” or notice your Praise or Scold.</p>
+          <p class="trait-help" id="sociabilityHelp">Sociability affects how likely a nearby Norn is to notice another's success, hear a learned word, or notice your Praise or Scold.</p>
           <div class="traits-grid" id="traits"></div>
 
           <div class="divider"></div>
@@ -473,29 +662,50 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <script src="cognition.js"></script>
   <script>
     (() => {
       "use strict";
 
-      const WORLD_WIDTH = 960;
+      const VIEW_WIDTH = 960;
+      const WORLD_WIDTH = VIEW_WIDTH * 3;
       const WORLD_HEIGHT = 500;
       const FLOOR_Y = 420;
+      const NEST_X = 850;
+      const REGION_NAMES = ["Sunmeadow", "Softwood Grove", "Glassfall Hollow"];
+      const REGION_PALETTES = [
+        { sky: ["#d6e9d7", "#f0edc5", "#d9e6b8"], sun: "#ffe4a0", far: "#c2d59a", near: "#91b477", canopy: "#587e5a", trunk: "#789663", floor: "#729b61", grass: "#94b878" },
+        { sky: ["#cde4df", "#e9eccd", "#d4e3bf"], sun: "#fff0b3", far: "#afcfb2", near: "#88b694", canopy: "#5f8a71", trunk: "#769a7a", floor: "#6e9c70", grass: "#81ad77" },
+        { sky: ["#bbd8dd", "#d4e5d7", "#b8d5cc"], sun: "#f2e8c2", far: "#91b9b0", near: "#699a91", canopy: "#4b777b", trunk: "#5f8887", floor: "#577f7e", grass: "#75a59a" }
+      ];
       const SAVE_KEY = "new-albia-save-v1";
       const SAVE_LOCK = `${SAVE_KEY}-writer`;
-      const SAVE_SCHEMA_VERSION = 1;
+      const SAVE_SCHEMA_VERSION = 7;
       const SPEED_OPTIONS = [1, 2, 0.5];
       const SAVE_INTERVAL = 4;
+      const MAX_GROVE_POPULATION = 4;
+      const BENCHMARK_MODE = new URLSearchParams(window.location.search).get("benchmark") === "1";
+      const BENCHMARK_SEEDS = [4181996, 20261028, 8675309];
+      const EGG_INCUBATION_SECONDS = 45;
+      const CHILD_NAMES = ["Sprout", "Clover", "Acorn", "Pip"];
       const TAB_ID = globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
         ? globalThis.crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const OBJECTS = {
         fruit: { id: "fruit", kind: "food", label: "Honey fruit", x: 724, y: 389, radius: 49 },
-        spinner: { id: "spinner", kind: "toy", label: "Wind-up spinner", x: 480, y: 390, radius: 48 }
+        spinner: { id: "spinner", kind: "toy", label: "Wind-up spinner", x: 2460, y: 390, radius: 48 }
       };
       const VOCABULARY = {
         fruit: { label: "fruit", objectId: "fruit" },
         spinner: { label: "spinner", objectId: "spinner" }
       };
+      const WORD_TARGETS = {
+        fruit: { id: "fruit", kind: "object", label: "Honey fruit", objectId: "fruit" },
+        spinner: { id: "spinner", kind: "object", label: "Wind-up spinner", objectId: "spinner" },
+        praise: { id: "praise", kind: "feedback", label: "Praise" },
+        scold: { id: "scold", kind: "feedback", label: "Scold" }
+      };
+      const MAX_CUSTOM_WORDS_PER_NORN = 32;
       const PALETTE = {
         mallow: { coat: "#c88155", light: "#e1a678", ear: "#b7644f", scarf: "#738e68", cheek: "#e9a29a" },
         moss: { coat: "#738b72", light: "#a3b28a", ear: "#5d7762", scarf: "#d5a463", cheek: "#dc9b8f" }
@@ -512,8 +722,26 @@
         objectTargets: [...document.querySelectorAll("[data-object-target]")],
         toolbarNote: document.getElementById("toolbarNote"),
         point: document.getElementById("pointButton"),
-        wordSelect: document.getElementById("wordSelect"),
+        wordInput: document.getElementById("wordInput"),
         teach: document.getElementById("teachButton"),
+        voiceTarget: document.getElementById("voiceTarget"),
+        voiceButton: document.getElementById("voiceButton"),
+        voiceStatus: document.getElementById("voiceStatus"),
+        commandForm: document.getElementById("commandForm"),
+        commandInput: document.getElementById("commandInput"),
+        commandNornName: document.getElementById("commandNornName"),
+        commandVoiceToggle: document.getElementById("commandVoiceToggle"),
+        commandVoiceStatus: document.getElementById("commandVoiceStatus"),
+        commandStatus: document.getElementById("commandStatus"),
+        familyPartner: document.getElementById("familyPartner"),
+        familyParentName: document.getElementById("familyParentName"),
+        layEgg: document.getElementById("layEggButton"),
+        familyStatus: document.getElementById("familyStatus"),
+        worldWest: document.getElementById("worldWestButton"),
+        worldEast: document.getElementById("worldEastButton"),
+        worldFollow: document.getElementById("worldFollowButton"),
+        worldLocation: document.getElementById("worldLocation"),
+        regionTag: document.getElementById("regionTag"),
         praise: document.getElementById("praiseButton"),
         scold: document.getElementById("scoldButton"),
         pause: document.getElementById("pauseButton"),
@@ -526,7 +754,9 @@
         mood: document.getElementById("nornMood"),
         summary: document.getElementById("nornSummary"),
         needs: document.getElementById("needs"),
+        chemistry: document.getElementById("chemistry"),
         decisionSummary: document.getElementById("decisionSummary"),
+        recalledMemories: document.getElementById("recalledMemories"),
         decisionRows: document.getElementById("decisionRows"),
         traits: document.getElementById("traits"),
         associations: document.getElementById("associations"),
@@ -535,7 +765,16 @@
         eventList: document.getElementById("eventList"),
         eventCount: document.getElementById("eventCount"),
         journalToggle: document.getElementById("journalToggle"),
-        toast: document.getElementById("toast")
+        toast: document.getElementById("toast"),
+        benchmarkPanel: document.getElementById("benchmarkPanel"),
+        benchmarkSeed: document.getElementById("benchmarkSeed"),
+        benchmarkSeedLabel: document.getElementById("benchmarkSeedLabel"),
+        benchmarkPopulation: document.getElementById("benchmarkPopulation"),
+        benchmarkDuration: document.getElementById("benchmarkDuration"),
+        benchmarkRule: document.getElementById("benchmarkRuleButton"),
+        benchmarkPilot: document.getElementById("benchmarkPilotButton"),
+        benchmarkStatus: document.getElementById("benchmarkStatus"),
+        benchmarkResults: document.getElementById("benchmarkResults")
       };
 
       let previousFrame = 0;
@@ -552,6 +791,30 @@
       let saveInFlight = false;
       let writeEpoch = 0;
       let resetPending = false;
+      let familyOptionsKey = "";
+      let familyNotice = "";
+      let cameraX = 0;
+      let cameraFollowing = true;
+      let voiceSession = null;
+      let voiceRecognitionSupported = false;
+      let voiceLanguage = "en";
+      let speechSynthesisApi = null;
+      try { speechSynthesisApi = window.speechSynthesis || null; } catch { /* Speech output is optional. */ }
+      let localCommandVoice = null;
+      let currentCommandUtterance = null;
+      const commandSpeechLanguage = document.documentElement.lang || navigator.language || "en-US";
+      const benchmark = {
+        running: false,
+        policy: "pilot",
+        seed: 4181996,
+        duration: 20,
+        frameTimes: [],
+        decisions: null,
+        successes: null,
+        recalledDecisions: 0,
+        recalledMoments: 0,
+        results: []
+      };
 
       function makeRandom(seed) {
         let value = seed >>> 0;
@@ -564,39 +827,66 @@
         return random;
       }
 
+      function getCognitionSeed(worldSeed, nornId) {
+        let hash = (worldSeed ^ 2166136261) >>> 0;
+        for (let index = 0; index < nornId.length; index += 1) {
+          hash = Math.imul(hash ^ nornId.charCodeAt(index), 16777619) >>> 0;
+        }
+        return hash || 1;
+      }
+
+      function createNornCognition(worldSeed, nornId, traits, hunger, curiosity, learned) {
+        return window.NornCognition.createState(
+          getCognitionSeed(worldSeed, nornId),
+          traits,
+          { hunger, curiosity, actionAssociations: learned }
+        );
+      }
+
       function createInitialState(seed) {
         const rng = makeRandom(seed);
+        const mallowTraits = { curiosity: 0.47, sociability: 0.82 };
+        const mossTraits = { curiosity: 0.88, sociability: 0.66 };
+        const mallowLearned = { fruit: 0.06, spinner: 0.04 };
+        const mossLearned = { fruit: 0.03, spinner: 0.08 };
+        const mallowCognition = createNornCognition(seed, "mallow", mallowTraits, 76, 39, mallowLearned);
+        const mossCognition = createNornCognition(seed, "moss", mossTraits, 53, 81, mossLearned);
         return {
           seed,
           rng,
           time: 0,
+          chemistryAccumulator: 0,
+          decisionAccumulator: 0,
           paused: false,
           speed: 1,
           selectedId: "mallow",
           pointMode: false,
+          teachingMode: false,
           teachingWord: null,
           guidance: null,
           events: [],
           nextEventId: 1,
+          nextNornNumber: 1,
+          eggs: [],
           toast: "",
           norns: [
             {
-              id: "mallow", name: "Mallow", x: 228, y: FLOOR_Y, facing: 1,
+              id: "mallow", name: "Mallow", generation: 0, parents: null, x: 228, y: FLOOR_Y, facing: 1,
               color: PALETTE.mallow, hunger: 76, curiosity: 39,
-              traits: { curiosity: 0.47, sociability: 0.82 },
-              words: { fruit: 0, spinner: 0 }, speech: null,
-              learned: { fruit: 0.06, spinner: 0.04 }, memories: [],
+              traits: mallowTraits,
+              words: { fruit: 0, spinner: 0 }, customWords: [], speech: null,
+              cognition: mallowCognition, learned: mallowCognition.actionAssociations, memories: [],
               targetId: null, action: "taking in the grove", reason: "Noticing the habitat",
               thinkIn: 0.2, actionCooldown: 1.1, lastSuccess: null,
               lastImitated: { fruit: -99, spinner: -99 }, wiggle: rng() * 6,
               observedEventIds: new Set()
             },
             {
-              id: "moss", name: "Moss", x: 329, y: FLOOR_Y, facing: 1,
+              id: "moss", name: "Moss", generation: 0, parents: null, x: 329, y: FLOOR_Y, facing: 1,
               color: PALETTE.moss, hunger: 53, curiosity: 81,
-              traits: { curiosity: 0.88, sociability: 0.66 },
-              words: { fruit: 0, spinner: 0 }, speech: null,
-              learned: { fruit: 0.03, spinner: 0.08 }, memories: [],
+              traits: mossTraits,
+              words: { fruit: 0, spinner: 0 }, customWords: [], speech: null,
+              cognition: mossCognition, learned: mossCognition.actionAssociations, memories: [],
               targetId: null, action: "listening for a tiny rattle", reason: "Curiosity is pulling toward the spinner",
               thinkIn: 0.45, actionCooldown: 1.0, lastSuccess: null,
               lastImitated: { fruit: -99, spinner: -99 }, wiggle: rng() * 6,
@@ -604,6 +894,219 @@
             }
           ]
         };
+      }
+
+      function createBenchmarkNorn(index, seed) {
+        const id = `benchmark-${index + 1}`;
+        const random = makeRandom(getCognitionSeed(seed, id));
+        const traits = { curiosity: 0.3 + random() * 0.7, sociability: 0.25 + random() * 0.75 };
+        const hunger = 35 + random() * 40;
+        const curiosity = 25 + random() * 65;
+        const learned = { fruit: random() * 0.12, spinner: random() * 0.12 };
+        const cognition = createNornCognition(seed, id, traits, hunger, curiosity, learned);
+        return {
+          id,
+          name: `Norn ${String(index + 1).padStart(2, "0")}`,
+          generation: 0,
+          parents: null,
+          x: 0,
+          y: FLOOR_Y,
+          facing: random() < 0.5 ? -1 : 1,
+          color: { ...PALETTE[index % 2 === 0 ? "mallow" : "moss"] },
+          hunger,
+          curiosity,
+          traits,
+          words: { fruit: 0, spinner: 0 },
+          customWords: [],
+          speech: null,
+          cognition,
+          learned: cognition.actionAssociations,
+          memories: [],
+          targetId: null,
+          action: "taking in the grove",
+          reason: "Noticing the habitat",
+          thinkIn: 0.2,
+          actionCooldown: 1,
+          lastSuccess: null,
+          lastImitated: { fruit: -99, spinner: -99 },
+          wiggle: random() * 6,
+          observedEventIds: new Set()
+        };
+      }
+
+      function recordBenchmarkDecision(actionId) {
+        if (!BENCHMARK_MODE || !benchmark.running) return;
+        const knownAction = ["fruit", "spinner", "rest", "observe_peer", "idle"].includes(actionId)
+          ? actionId : "idle";
+        benchmark.decisions[knownAction] += 1;
+      }
+
+      function recordBenchmarkRecall(decision) {
+        if (!BENCHMARK_MODE || !benchmark.running || benchmark.policy !== "pilot" || !decision) return;
+        const recalledCount = decision.recalledEpisodeIds.length;
+        benchmark.recalledMoments += recalledCount;
+        if (recalledCount > 0) benchmark.recalledDecisions += 1;
+      }
+
+      function prepareBenchmarkGrove(population, seed) {
+        Object.assign(state, createInitialState(seed));
+        while (state.norns.length < population) {
+          state.norns.push(createBenchmarkNorn(state.norns.length, seed));
+        }
+        const fruitCount = Math.ceil(population / 2);
+        for (let index = 0; index < state.norns.length; index += 1) {
+          const inFruitGroup = index < fruitCount;
+          const groupStart = inFruitGroup ? 0 : fruitCount;
+          const groupSize = inFruitGroup ? fruitCount : population - fruitCount;
+          const positionInGroup = index - groupStart;
+          const center = inFruitGroup ? OBJECTS.fruit.x : OBJECTS.spinner.x;
+          state.norns[index].x = center + (positionInGroup - (groupSize - 1) / 2) * 68;
+        }
+        state.rng = makeRandom((seed ^ 0xa5b35705) >>> 0);
+        state.selectedId = "mallow";
+        state.paused = false;
+        state.speed = 1;
+        state.guidance = null;
+        state.eggs = [];
+        state.events = [];
+        state.time = 0;
+        state.chemistryAccumulator = 0;
+        state.decisionAccumulator = 0;
+        saveElapsed = 0;
+        familyNotice = "";
+        familyOptionsKey = "";
+        lastJournalRenderKey = null;
+        lastMemoryRenderKey = null;
+        journalExpanded = false;
+        cameraFollowing = true;
+        cameraX = 0;
+        previousFrame = 0;
+        uiRefresh = 0;
+        renderNornOptions();
+        renderUI();
+      }
+
+      function percentile95(samples) {
+        if (samples.length === 0) return 0;
+        const ordered = [...samples].sort((a, b) => a - b);
+        return ordered[Math.min(ordered.length - 1, Math.ceil(ordered.length * 0.95) - 1)];
+      }
+
+      function renderBenchmarkResults() {
+        if (!BENCHMARK_MODE) return;
+        if (benchmark.results.length === 0) {
+          ui.benchmarkResults.innerHTML = '<tr><td colspan="12">No benchmark runs yet.</td></tr>';
+          return;
+        }
+        ui.benchmarkResults.replaceChildren(...benchmark.results.map(result => {
+          const row = document.createElement("tr");
+          row.title = `Seed ${result.seed}. Choices fruit ${result.decisions.fruit}, spinner ${result.decisions.spinner}, rest ${result.decisions.rest}, peer ${result.decisions.observe_peer}, idle ${result.decisions.idle}. Recalled episodes in ${result.recalledDecisions} of ${result.choiceCount} choices.`;
+          const values = [
+            result.policy === "pilot" ? "Cognition pilot" : "Legacy chooser",
+            String(result.seed),
+            String(result.population),
+            String(result.frames),
+            `${result.frameP95.toFixed(2)} ms`,
+            result.meanHunger.toFixed(1),
+            result.meanGlucose.toFixed(1),
+            `${result.foodSuccesses} / ${result.playSuccesses}`,
+            result.meanEpisodes.toFixed(1),
+            String(result.recalledDecisions),
+            result.recalledMomentsPerChoice.toFixed(2),
+            `${result.duration.toFixed(1)} s`
+          ];
+          for (const value of values) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          }
+          return row;
+        }));
+      }
+
+      function finishBenchmark() {
+        if (!benchmark.running) return;
+        benchmark.running = false;
+        state.paused = true;
+        const norns = state.norns;
+        const choiceCount = Object.values(benchmark.decisions).reduce((sum, count) => sum + count, 0);
+        const result = {
+          policy: benchmark.policy,
+          seed: benchmark.seed,
+          population: norns.length,
+          duration: state.time,
+          frames: benchmark.frameTimes.length,
+          frameP95: percentile95(benchmark.frameTimes),
+          meanHunger: norns.reduce((sum, norn) => sum + norn.cognition.chemistry.hunger, 0) / norns.length,
+          meanGlucose: norns.reduce((sum, norn) => sum + norn.cognition.chemistry.glucose, 0) / norns.length,
+          foodSuccesses: benchmark.successes.food,
+          playSuccesses: benchmark.successes.toy,
+          meanEpisodes: norns.reduce((sum, norn) => sum + norn.cognition.episodes.length, 0) / norns.length,
+          recalledDecisions: benchmark.recalledDecisions,
+          recalledMomentsPerChoice: choiceCount ? benchmark.recalledMoments / choiceCount : 0,
+          choiceCount,
+          decisions: { ...benchmark.decisions }
+        };
+        benchmark.results.unshift(result);
+        benchmark.results = benchmark.results.slice(0, 24);
+        const counterpart = benchmark.results.find(candidate => candidate !== result
+          && candidate.seed === result.seed
+          && candidate.population === result.population
+          && Math.abs(candidate.duration - result.duration) < 0.25
+          && candidate.policy !== result.policy);
+        ui.benchmarkStatus.textContent = counterpart
+          ? `Finished ${result.policy === "pilot" ? "cognition pilot" : "legacy chooser"}. Same-seed comparison: mean hunger ${result.meanHunger.toFixed(1)} vs ${counterpart.meanHunger.toFixed(1)}, mean glucose ${result.meanGlucose.toFixed(1)} vs ${counterpart.meanGlucose.toFixed(1)}. The pilot had recalled episodes in ${result.policy === "pilot" ? result.recalledDecisions : counterpart.recalledDecisions} of ${result.policy === "pilot" ? result.choiceCount : counterpart.choiceCount} choices. Hover a row for action counts.`
+          : `Finished ${result.policy === "pilot" ? "cognition pilot" : "legacy chooser"}. Run the other chooser with the same settings to compare. Hover a row for action counts.`;
+        ui.benchmarkRule.disabled = false;
+        ui.benchmarkPilot.disabled = false;
+        ui.benchmarkSeed.disabled = false;
+        ui.benchmarkPopulation.disabled = false;
+        ui.benchmarkDuration.disabled = false;
+        renderBenchmarkResults();
+        renderUI();
+      }
+
+      function startBenchmark(policy) {
+        if (!BENCHMARK_MODE || benchmark.running) return;
+        const seed = Number(ui.benchmarkSeed.value);
+        const population = Number(ui.benchmarkPopulation.value);
+        const duration = Number(ui.benchmarkDuration.value);
+        if (!BENCHMARK_SEEDS.includes(seed) || ![2, 4, 12].includes(population) || ![10, 20, 40].includes(duration)) return;
+        prepareBenchmarkGrove(population, seed);
+        benchmark.running = true;
+        benchmark.policy = policy;
+        benchmark.seed = seed;
+        benchmark.duration = duration;
+        benchmark.frameTimes = [];
+        benchmark.decisions = { fruit: 0, spinner: 0, rest: 0, observe_peer: 0, idle: 0 };
+        benchmark.successes = { food: 0, toy: 0 };
+        benchmark.recalledDecisions = 0;
+        benchmark.recalledMoments = 0;
+        ui.benchmarkRule.disabled = true;
+        ui.benchmarkPilot.disabled = true;
+        ui.benchmarkSeed.disabled = true;
+        ui.benchmarkPopulation.disabled = true;
+        ui.benchmarkDuration.disabled = true;
+        ui.benchmarkStatus.textContent = `Running ${policy === "pilot" ? "cognition pilot" : "legacy chooser"} with seed ${seed}, ${population} Norns, and ${duration} simulated seconds. Saves are disabled in this tab.`;
+        renderUI();
+      }
+
+      function createLocalSpeechRecognition() {
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (typeof Recognition !== "function") return null;
+        try {
+          const recognition = new Recognition();
+          if (!("processLocally" in recognition)) return null;
+          recognition.processLocally = true;
+          if (recognition.processLocally !== true) return null;
+          recognition.lang = document.documentElement.lang || navigator.language || "en-US";
+          recognition.continuous = false;
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
+          return recognition;
+        } catch {
+          return null;
+        }
       }
 
       function isObject(value) {
@@ -614,8 +1117,98 @@
         return Number.isFinite(value) && value >= min && value <= max;
       }
 
+      function normalizeWord(value) {
+        return typeof value === "string" ? value.trim().normalize("NFKC").toLowerCase() : "";
+      }
+
+      function validateWordInput(value) {
+        const word = typeof value === "string" ? value.trim() : "";
+        const normalized = normalizeWord(word);
+        if (!word) return { valid: false, word, normalized, reason: "Type a word before choosing a target." };
+        if (word.length > 24) return { valid: false, word, normalized, reason: "Keep the word to 24 characters or fewer." };
+        if (/\s/u.test(word) || /[\u0000-\u001F\u007F-\u009F]/u.test(word)) {
+          return { valid: false, word, normalized, reason: "Teach one word at a time." };
+        }
+        return { valid: true, word, normalized, reason: "" };
+      }
+
+      function findWordEntry(norn, normalized) {
+        if (!normalized) return null;
+        for (const [targetId, definition] of Object.entries(VOCABULARY)) {
+          if (normalizeWord(definition.label) === normalized) {
+            return {
+              word: definition.label,
+              targetId,
+              confidence: norn.words[targetId],
+              isBuiltIn: true
+            };
+          }
+        }
+        const customIndex = norn.customWords.findIndex(word => normalizeWord(word.word) === normalized);
+        if (customIndex < 0) return null;
+        return { ...norn.customWords[customIndex], isBuiltIn: false, customIndex };
+      }
+
+      function wordTargetDescription(targetId) {
+        const target = WORD_TARGETS[targetId];
+        if (!target) return "that target";
+        return target.kind === "object"
+          ? "the " + OBJECTS[target.objectId].label.toLowerCase()
+          : target.label;
+      }
+
       function isKnownObjectId(value) {
         return typeof value === "string" && Object.prototype.hasOwnProperty.call(OBJECTS, value);
+      }
+
+      function isKnownNornId(value) {
+        return value === "mallow" || value === "moss"
+          || typeof value === "string" && /^norn-[1-9][0-9]{0,5}$/u.test(value);
+      }
+
+      function isChildNornId(value) {
+        return typeof value === "string" && /^norn-[1-9][0-9]{0,5}$/u.test(value);
+      }
+
+      function isValidColorPalette(value) {
+        return isObject(value)
+          && ["coat", "light", "ear", "scarf", "cheek"].every(key =>
+            typeof value[key] === "string" && /^#[0-9a-f]{6}$/iu.test(value[key]));
+      }
+
+      function blendHexColors(first, second) {
+        const a = first.slice(1), b = second.slice(1);
+        const channels = [0, 2, 4].map(index => Math.round((
+          parseInt(a.slice(index, index + 2), 16) + parseInt(b.slice(index, index + 2), 16)
+        ) / 2));
+        return "#" + channels.map(channel => channel.toString(16).padStart(2, "0")).join("");
+      }
+
+      function blendColorPalettes(first, second) {
+        return Object.fromEntries(Object.keys(first).map(key => [key, blendHexColors(first[key], second[key])]));
+      }
+
+      function inheritTrait(first, second) {
+        return clamp((first + second) / 2 + (state.rng() * 2 - 1) * 0.06, 0.05, 0.95);
+      }
+
+      function isValidSavedEgg(egg, simulation, nornIds) {
+        return isObject(egg)
+          && isChildNornId(egg.childId) && !nornIds.has(egg.childId)
+          && typeof egg.id === "string" && egg.id === "egg-" + egg.childId.slice(5)
+          && typeof egg.name === "string" && egg.name.length >= 1 && egg.name.length <= 24
+          && Array.isArray(egg.parentIds) && egg.parentIds.length === 2
+          && egg.parentIds[0] !== egg.parentIds[1]
+          && egg.parentIds.every(parentId => nornIds.has(parentId))
+          && Number.isInteger(egg.generation) && egg.generation >= 1 && egg.generation <= 3
+          && egg.generation === Math.max(...egg.parentIds.map(parentId =>
+            simulation.norns.find(parent => parent && parent.id === parentId).generation)) + 1
+          && isObject(egg.traits)
+          && isFiniteBetween(egg.traits.curiosity, 0.05, 0.95)
+          && isFiniteBetween(egg.traits.sociability, 0.05, 0.95)
+          && isValidColorPalette(egg.color)
+          && isFiniteBetween(egg.remaining, 0, EGG_INCUBATION_SECONDS)
+          && Number(egg.childId.slice(5)) < simulation.nextNornNumber;
       }
 
       function isValidSavedEvent(event, simulation) {
@@ -625,9 +1218,16 @@
           && typeof event.type === "string" && event.type.length <= 40
           && typeof event.icon === "string" && event.icon.length <= 8
           && typeof event.text === "string" && event.text.length <= 500
-          && (event.nornId === undefined || event.nornId === null || ["mallow", "moss"].includes(event.nornId))
+          && (event.nornId === undefined || event.nornId === null
+            || simulation.norns.some(norn => norn && norn.id === event.nornId))
+          && (event.actorId === undefined || simulation.norns.some(norn => norn && norn.id === event.actorId))
           && (event.memory === undefined || typeof event.memory === "string" && event.memory.length <= 500)
-          && (event.relatedEventId === undefined || Number.isInteger(event.relatedEventId));
+          && (event.relatedEventId === undefined || Number.isInteger(event.relatedEventId))
+          && (event.actionId === undefined || window.NornCognition.actionIds.includes(event.actionId))
+          && (event.targetId === undefined || !!WORD_TARGETS[event.targetId])
+          && (event.learningDelta === undefined || isFiniteBetween(event.learningDelta, -0.2, 0.2))
+          && (event.feedback === undefined || ["praise", "scold"].includes(event.feedback))
+          && (event.word === undefined || typeof event.word === "string" && event.word.length <= 24);
       }
 
       function isValidSavedSuccess(success, simulation) {
@@ -639,10 +1239,55 @@
           && (success.feedback === null || ["praise", "scold"].includes(success.feedback));
       }
 
-      function isValidSavedNorn(norn, simulation) {
+      function isValidSavedCustomWords(customWords) {
+        if (!Array.isArray(customWords) || customWords.length > MAX_CUSTOM_WORDS_PER_NORN) return false;
+        const seen = new Set(Object.values(VOCABULARY).map(entry => normalizeWord(entry.label)));
+        return customWords.every(entry => {
+          if (!isObject(entry) || typeof entry.word !== "string" || !WORD_TARGETS[entry.targetId]
+            || !isFiniteBetween(entry.confidence, 0, 1)) return false;
+          const validated = validateWordInput(entry.word);
+          if (!validated.valid || validated.word !== entry.word || seen.has(validated.normalized)) return false;
+          seen.add(validated.normalized);
+          return true;
+        });
+      }
+
+      function isValidSavedCognition(cognition, simulation, norn) {
+        const restored = window.NornCognition.restore(cognition);
+        return !!restored
+          && cognition.episodes.every(episode => episode.id < cognition.nextEpisodeId
+            && (episode.linkedEventId === null || episode.linkedEventId < simulation.nextEventId))
+          && cognition.chemistry.hunger === norn.hunger
+          && cognition.chemistry.curiosity === norn.curiosity
+          && cognition.actionAssociations.fruit === norn.learned.fruit
+          && cognition.actionAssociations.spinner === norn.learned.spinner;
+      }
+
+      function isValidSavedNorn(norn, simulation, schemaVersion) {
+        const legacy = schemaVersion === 1;
+        const family = schemaVersion >= 3;
+        const worldExpanded = schemaVersion >= 4;
+        const validSpeech = norn && (norn.speech === null || isObject(norn.speech)
+          && typeof norn.speech.text === "string" && norn.speech.text.length <= 40
+          && (legacy ? isKnownObjectId(norn.speech.objectId) : !!WORD_TARGETS[norn.speech.targetId])
+          && Number.isFinite(norn.speech.until));
+        const validCustomWords = legacy ? norn && norn.customWords === undefined : norn && isValidSavedCustomWords(norn.customWords);
+        const validIdentity = !family
+          ? ["mallow", "moss"].includes(norn && norn.id)
+          : isKnownNornId(norn && norn.id)
+            && typeof norn.name === "string" && norn.name.length >= 1 && norn.name.length <= 24
+            && isValidColorPalette(norn.color)
+            && Number.isInteger(norn.generation) && norn.generation >= 0 && norn.generation <= 3
+            && (norn.id === "mallow" || norn.id === "moss"
+              ? norn.generation === 0 && norn.parents === null
+              : norn.generation >= 1 && Array.isArray(norn.parents) && norn.parents.length === 2
+                && norn.parents[0] !== norn.parents[1]
+                && norn.parents.every(parentId => simulation.norns.some(parent => parent && parent.id === parentId))
+                && norn.generation === Math.max(...norn.parents.map(parentId =>
+                  simulation.norns.find(parent => parent && parent.id === parentId).generation)) + 1);
         return isObject(norn)
-          && ["mallow", "moss"].includes(norn.id)
-          && isFiniteBetween(norn.x, 90, 865)
+          && validIdentity
+          && isFiniteBetween(norn.x, 90, worldExpanded ? WORLD_WIDTH - 95 : 865)
           && isFiniteBetween(norn.y, FLOOR_Y - 1, FLOOR_Y + 1)
           && [-1, 1].includes(norn.facing)
           && isFiniteBetween(norn.hunger, 0, 100)
@@ -653,13 +1298,12 @@
           && isObject(norn.words)
           && isFiniteBetween(norn.words.fruit, 0, 1)
           && isFiniteBetween(norn.words.spinner, 0, 1)
-          && (norn.speech === null || isObject(norn.speech)
-            && typeof norn.speech.text === "string" && norn.speech.text.length <= 40
-            && isKnownObjectId(norn.speech.objectId)
-            && Number.isFinite(norn.speech.until))
+          && validSpeech
+          && validCustomWords
           && isObject(norn.learned)
           && isFiniteBetween(norn.learned.fruit, 0, 1)
           && isFiniteBetween(norn.learned.spinner, 0, 1)
+          && (schemaVersion < 7 || isValidSavedCognition(norn.cognition, simulation, norn))
           && Array.isArray(norn.memories) && norn.memories.length <= 4
           && norn.memories.every(memory => isObject(memory)
             && Number.isInteger(memory.eventId) && memory.eventId > 0
@@ -679,7 +1323,8 @@
       }
 
       function isValidSaveRecord(record) {
-        if (!isObject(record) || record.schemaVersion !== SAVE_SCHEMA_VERSION
+        const family = isObject(record) && record.schemaVersion >= 3;
+        if (!isObject(record) || ![1, 2, 3, 4, SAVE_SCHEMA_VERSION].includes(record.schemaVersion)
           || (record.revision !== undefined && (!Number.isSafeInteger(record.revision) || record.revision < 0))
           || typeof record.writerId !== "string" || record.writerId.length < 1 || record.writerId.length > 100
           || !isObject(record.simulation)) return false;
@@ -689,19 +1334,37 @@
           || !isFiniteBetween(simulation.time, 0, Number.MAX_SAFE_INTEGER)
           || typeof simulation.paused !== "boolean"
           || !SPEED_OPTIONS.includes(simulation.speed)
-          || !["mallow", "moss"].includes(simulation.selectedId)
           || !Number.isInteger(simulation.nextEventId) || simulation.nextEventId < 1
           || !Array.isArray(simulation.events) || simulation.events.length > 12
-          || !Array.isArray(simulation.norns) || simulation.norns.length !== 2) return false;
+          || !Array.isArray(simulation.norns)
+          || (record.schemaVersion >= 7 && !isFiniteBetween(simulation.chemistryAccumulator, 0, 0.5))
+          || (record.schemaVersion >= 7 && !isFiniteBetween(simulation.decisionAccumulator, 0, 0.8))
+          || (family
+            ? simulation.norns.length < 2 || simulation.norns.length > MAX_GROVE_POPULATION
+              || !Number.isInteger(simulation.nextNornNumber) || simulation.nextNornNumber < 1 || simulation.nextNornNumber > 100000
+              || !Array.isArray(simulation.eggs) || simulation.eggs.length > MAX_GROVE_POPULATION
+              || simulation.norns.length + simulation.eggs.length > MAX_GROVE_POPULATION
+            : simulation.norns.length !== 2)) return false;
 
+        const nornIds = new Set(simulation.norns.map(norn => norn && norn.id));
+        if (nornIds.size !== simulation.norns.length || !nornIds.has("mallow") || !nornIds.has("moss")
+          || !nornIds.has(simulation.selectedId)) return false;
+        if (!family && !["mallow", "moss"].includes(simulation.selectedId)) return false;
         if (simulation.guidance !== null && (!isObject(simulation.guidance)
-          || !["mallow", "moss"].includes(simulation.guidance.nornId)
+          || !nornIds.has(simulation.guidance.nornId)
           || !isKnownObjectId(simulation.guidance.objectId)
           || !isFiniteBetween(simulation.guidance.remaining, 0, 7))) return false;
         if (!simulation.events.every(event => isValidSavedEvent(event, simulation))) return false;
-        const nornIds = new Set(simulation.norns.map(norn => norn && norn.id));
-        return nornIds.size === 2 && nornIds.has("mallow") && nornIds.has("moss")
-          && simulation.norns.every(norn => isValidSavedNorn(norn, simulation));
+        if (!family && (nornIds.size !== 2 || !nornIds.has("mallow") || !nornIds.has("moss"))) return false;
+        if (!simulation.norns.every(norn => isValidSavedNorn(norn, simulation, record.schemaVersion))) return false;
+        if (!family) return true;
+        const childNumbers = simulation.norns.filter(norn => norn && norn.id.startsWith("norn-"))
+          .map(norn => Number(norn.id.slice(5)));
+        if (!simulation.eggs.every(egg => isValidSavedEgg(egg, simulation, nornIds))) return false;
+        const eggNumbers = simulation.eggs.map(egg => Number(egg.childId.slice(5)));
+        const allNumbers = [...childNumbers, ...eggNumbers];
+        return new Set(allNumbers).size === allNumbers.length
+          && allNumbers.every(number => Number.isInteger(number) && number >= 1 && number < simulation.nextNornNumber);
       }
 
       function setSaveStatus(status, message) {
@@ -720,14 +1383,27 @@
             seed: state.seed,
             rngState: state.rng.getState(),
             time: state.time,
+            chemistryAccumulator: state.chemistryAccumulator,
+            decisionAccumulator: state.decisionAccumulator,
             paused: state.paused,
             speed: state.speed,
             selectedId: state.selectedId,
             guidance: state.guidance ? { ...state.guidance } : null,
             events: state.events.map(event => ({ ...event })),
             nextEventId: state.nextEventId,
+            nextNornNumber: state.nextNornNumber,
+            eggs: state.eggs.map(egg => ({
+              ...egg,
+              parentIds: [...egg.parentIds],
+              traits: { ...egg.traits },
+              color: { ...egg.color }
+            })),
             norns: state.norns.map(norn => ({
               id: norn.id,
+              name: norn.name,
+              color: { ...norn.color },
+              generation: norn.generation,
+              parents: norn.parents ? [...norn.parents] : null,
               x: norn.x,
               y: norn.y,
               facing: norn.facing,
@@ -735,8 +1411,10 @@
               curiosity: norn.curiosity,
               traits: { ...norn.traits },
               words: { ...norn.words },
+              customWords: norn.customWords.map(entry => ({ ...entry })),
               speech: norn.speech ? { ...norn.speech } : null,
               learned: { ...norn.learned },
+              cognition: window.NornCognition.serialize(norn.cognition),
               memories: norn.memories.map(memory => ({ ...memory })),
               targetId: norn.targetId,
               action: norn.action,
@@ -753,42 +1431,74 @@
       }
 
       function restoreSaveRecord(record) {
+        if (voiceSession) cancelVoiceTeaching();
         const saved = record.simulation;
         const replacement = createInitialState(saved.seed);
         replacement.rng.setState(saved.rngState);
         replacement.time = saved.time;
+        replacement.chemistryAccumulator = isFiniteBetween(saved.chemistryAccumulator, 0, 0.5)
+          ? saved.chemistryAccumulator : 0;
+        replacement.decisionAccumulator = isFiniteBetween(saved.decisionAccumulator, 0, 0.8)
+          ? saved.decisionAccumulator : 0;
         replacement.paused = saved.paused;
         replacement.speed = saved.speed;
         replacement.selectedId = saved.selectedId;
         replacement.pointMode = false;
+        replacement.teachingMode = false;
         replacement.teachingWord = null;
         replacement.guidance = saved.guidance ? {
           nornId: saved.guidance.nornId,
           objectId: saved.guidance.objectId,
           remaining: saved.guidance.remaining
         } : null;
-        replacement.events = saved.events.map(event => ({
-          id: event.id, time: event.time, type: event.type, icon: event.icon, text: event.text,
-          nornId: event.nornId, memory: event.memory, relatedEventId: event.relatedEventId
-        }));
+        replacement.events = saved.events.map(event => ({ ...event }));
         replacement.nextEventId = saved.nextEventId;
-        replacement.norns = replacement.norns.map(baseNorn => {
-          const savedNorn = saved.norns.find(norn => norn.id === baseNorn.id);
+        const family = record.schemaVersion >= 3;
+        replacement.nextNornNumber = family ? saved.nextNornNumber : 1;
+        replacement.eggs = family ? saved.eggs.map(egg => ({
+          ...egg,
+          parentIds: [...egg.parentIds],
+          traits: { ...egg.traits },
+          color: { ...egg.color }
+        })) : [];
+        replacement.norns = saved.norns.map(savedNorn => {
+          const baseNorn = replacement.norns.find(norn => norn.id === savedNorn.id);
+          const traits = { curiosity: savedNorn.traits.curiosity, sociability: savedNorn.traits.sociability };
+          const cognition = record.schemaVersion >= 7
+            ? window.NornCognition.restore(savedNorn.cognition)
+            : createNornCognition(
+              saved.seed,
+              savedNorn.id,
+              traits,
+              savedNorn.hunger,
+              savedNorn.curiosity,
+              savedNorn.learned
+            );
           return {
-            ...baseNorn,
-            name: baseNorn.name,
-            color: baseNorn.color,
+            ...(baseNorn || {}),
+            id: savedNorn.id,
+            name: family ? savedNorn.name : baseNorn.name,
+            color: family ? { ...savedNorn.color } : baseNorn.color,
+            generation: family ? savedNorn.generation : 0,
+            parents: family && savedNorn.parents ? [...savedNorn.parents] : null,
             x: savedNorn.x,
             y: savedNorn.y,
             facing: savedNorn.facing,
-            hunger: savedNorn.hunger,
-            curiosity: savedNorn.curiosity,
-            traits: { curiosity: savedNorn.traits.curiosity, sociability: savedNorn.traits.sociability },
+            hunger: cognition.chemistry.hunger,
+            curiosity: cognition.chemistry.curiosity,
+            traits,
             words: { fruit: savedNorn.words.fruit, spinner: savedNorn.words.spinner },
+            customWords: (savedNorn.customWords || []).map(entry => ({
+              word: entry.word, targetId: entry.targetId, confidence: entry.confidence
+            })),
             speech: savedNorn.speech ? {
-              text: savedNorn.speech.text, objectId: savedNorn.speech.objectId, until: savedNorn.speech.until
+              text: savedNorn.speech.text,
+              targetId: record.schemaVersion === 1
+                ? savedNorn.speech.objectId : savedNorn.speech.targetId,
+              until: savedNorn.speech.until
             } : null,
-            learned: { fruit: savedNorn.learned.fruit, spinner: savedNorn.learned.spinner },
+            cognition,
+            learned: cognition.actionAssociations,
             memories: savedNorn.memories.map(memory => ({ eventId: memory.eventId, text: memory.text })),
             targetId: savedNorn.targetId,
             action: savedNorn.action,
@@ -804,6 +1514,9 @@
             observedEventIds: new Set(savedNorn.observedEventIds)
           };
         });
+        const selectedNorn = replacement.norns.find(norn => norn.id === replacement.selectedId);
+        cameraX = clamp(selectedNorn.x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
+        cameraFollowing = true;
         Object.assign(state, replacement);
       }
 
@@ -823,7 +1536,7 @@
 
         try {
           const record = JSON.parse(raw);
-          // A previous v1 save has no revision and is treated as revision zero.
+          // Older saves without a revision are treated as revision zero.
           if (isObject(record) && Number.isSafeInteger(record.revision) && record.revision >= 0) {
             observedSaveRevision = record.revision;
           }
@@ -857,6 +1570,7 @@
       }
 
       async function writeSave(isReset = false, epoch = writeEpoch) {
+        if (BENCHMARK_MODE) return false;
         if (!hasSafeLocking()) {
           blockSaving("unavailable", "Autosave unavailable · browser locking required");
           return false;
@@ -896,6 +1610,7 @@
       }
 
       async function saveNow() {
+        if (BENCHMARK_MODE) return false;
         if (saveBlocked || saveInFlight || resetPending) return false;
         saveInFlight = true;
         try {
@@ -938,6 +1653,7 @@
       }
 
       function saveSoon() {
+        if (BENCHMARK_MODE) return;
         if (saveBlocked || saveTimeout || resetPending) return;
         saveTimeout = window.setTimeout(() => {
           saveTimeout = 0;
@@ -946,6 +1662,7 @@
       }
 
       function handleStorageChange(event) {
+        if (BENCHMARK_MODE) return;
         if (event.key !== SAVE_KEY && event.key !== null) return;
         try {
           // Ignore delayed notifications when a reload already observed that value.
@@ -978,6 +1695,76 @@
         return `DAY ${day} · ${hours}:${minutes}`;
       }
 
+      function buildCognitionObservation(norn) {
+        return {
+          time: state.time,
+          targetId: norn.targetId,
+          chemistry: norn.cognition.chemistry,
+          nearbyObjects: Object.values(OBJECTS)
+            .map(object => ({
+              id: object.id,
+              category: object.kind,
+              distance: distance(norn, object),
+              direction: Math.sign(object.x - norn.x),
+              affordances: object.kind === "food" ? ["eat"] : ["play"]
+            }))
+            .filter(object => object.distance <= 900),
+          nearbyNorns: state.norns
+            .filter(other => other.id !== norn.id && distance(norn, other) <= 330)
+            .map(other => ({ id: other.id, distance: distance(norn, other) })),
+          guidance: state.guidance && state.guidance.nornId === norn.id
+            ? { objectId: state.guidance.objectId, remaining: state.guidance.remaining }
+            : null,
+          languageSignals: norn.languageSignals || {}
+        };
+      }
+
+      function recordCognitionEvent(entry, owner) {
+        if (!owner || !owner.cognition) return;
+        let actionId = entry.actionId;
+        if (!actionId && entry.type === "food") actionId = "fruit";
+        if (!actionId && entry.type === "toy") actionId = "spinner";
+        if (!actionId && ["praise", "scold", "observe-feedback"].includes(entry.type)) {
+          actionId = entry.targetId || owner.lastSuccess && owner.lastSuccess.objectId;
+        }
+        if (!actionId && entry.type === "observe" && Number.isInteger(entry.relatedEventId)) {
+          const source = state.events.find(event => event.id === entry.relatedEventId);
+          actionId = source && (source.actionId || (source.type === "food" ? "fruit" : source.type === "toy" ? "spinner" : null));
+        }
+        if (!actionId && ["fruit", "spinner"].includes(entry.targetId)) actionId = entry.targetId;
+
+        owner.languageSignals = {
+          targetId: entry.targetId || null,
+          praise: entry.type === "praise" || entry.targetId === "praise",
+          scold: entry.type === "scold" || entry.targetId === "scold"
+        };
+
+        const salienceByType = {
+          food: 0.95, toy: 0.9, praise: 0.82, scold: 0.86,
+          teach: 0.82, observe: 0.66, "observe-feedback": 0.64,
+          hear: 0.48, "hear-conflict": 0.42, command: 0.52, hatch: 0.72
+        };
+        const observation = buildCognitionObservation(owner);
+        window.NornCognition.recordOutcome(owner.cognition, {
+          time: entry.time,
+          eventId: entry.id,
+          eventType: entry.type,
+          actorId: entry.actorId || owner.id,
+          actionId,
+          targetId: entry.targetId || (["fruit", "spinner"].includes(actionId)
+            ? actionId : ["praise", "scold"].includes(entry.type) ? entry.type : null),
+          feedback: entry.feedback,
+          learningDelta: entry.learningDelta,
+          sociability: owner.traits.sociability,
+          peerCount: observation.nearbyNorns.length,
+          salience: salienceByType[entry.type] || 0.4,
+          text: entry.memory || entry.text,
+          word: entry.word
+        });
+        owner.hunger = owner.cognition.chemistry.hunger;
+        owner.curiosity = owner.cognition.chemistry.curiosity;
+      }
+
       function recordEvent(event) {
         const entry = { id: state.nextEventId++, time: state.time, ...event };
         state.events.unshift(entry);
@@ -988,6 +1775,7 @@
           owner.memories.unshift({ eventId: entry.id, text: entry.memory });
           owner.memories = owner.memories.slice(0, 4);
         }
+        recordCognitionEvent(entry, owner);
         saveSoon();
         return entry;
       }
@@ -1001,17 +1789,38 @@
       }
 
       function chooseTarget(norn) {
+        if (BENCHMARK_MODE && benchmark.running && benchmark.policy === "legacy") {
+          const target = chooseRuleBasedFallback(norn);
+          recordBenchmarkDecision(target || (norn.reason === "Resting between discoveries" ? "rest" : "idle"));
+          norn.languageSignals = {};
+          return target;
+        }
+        const decision = window.NornCognition.decide(norn.cognition, buildCognitionObservation(norn));
+        norn.languageSignals = {};
         if (state.guidance && state.guidance.nornId === norn.id && state.guidance.remaining > 0) {
-          norn.reason = `Following your point toward ${OBJECTS[state.guidance.objectId].label.toLowerCase()}`;
+          norn.reason = `Following your cue toward ${OBJECTS[state.guidance.objectId].label.toLowerCase()}`;
           return state.guidance.objectId;
         }
+        if (!decision) {
+          const target = chooseRuleBasedFallback(norn);
+          recordBenchmarkDecision(target || "idle");
+          return target;
+        }
+        recordBenchmarkRecall(decision);
+        recordBenchmarkDecision(decision.actionId);
+        norn.reason = decision.reason;
+        return decision.actionId === "fruit" || decision.actionId === "spinner" ? decision.actionId : null;
+      }
 
-        const scores = getDecisionScores(norn);
-        if (scores.targetId === null) {
+      function chooseRuleBasedFallback(norn) {
+        const fruitScore = Math.max(0, norn.hunger - 17) * 1.05 + norn.learned.fruit * 35;
+        const spinnerScore = Math.max(0, norn.curiosity - 16)
+          * (0.58 + norn.traits.curiosity * 0.46) + norn.learned.spinner * 32;
+        if (fruitScore < 11 && spinnerScore < 14) {
           norn.reason = "Resting between discoveries";
           return null;
         }
-        if (scores.targetId === "fruit") {
+        if (fruitScore > spinnerScore) {
           norn.reason = norn.learned.fruit > 0.23
             ? "Remembering that fruit eases hunger"
             : "Hunger is drawing attention to the fruit";
@@ -1024,22 +1833,23 @@
       }
 
       function getDecisionScores(norn) {
-        const fruitNeed = Math.max(0, norn.hunger - 17) * 1.05;
-        const fruitHabit = norn.learned.fruit * 35;
-        const fruitScore = fruitNeed + fruitHabit;
-        const spinnerNeed = Math.max(0, norn.curiosity - 16) * (0.58 + norn.traits.curiosity * 0.46);
-        const spinnerHabit = norn.learned.spinner * 32;
-        const spinnerScore = spinnerNeed + spinnerHabit;
-        const targetId = fruitScore < 11 && spinnerScore < 14
-          ? null
-          : fruitScore > spinnerScore ? "fruit" : "spinner";
-        return { fruitNeed, fruitHabit, fruitScore, spinnerNeed, spinnerHabit, spinnerScore, targetId };
+        const decision = window.NornCognition.preview(norn.cognition, buildCognitionObservation(norn));
+        const components = decision.components;
+        return {
+          ...components,
+          fruitScore: decision.actionScores.fruit,
+          spinnerScore: decision.actionScores.spinner,
+          actionScores: decision.actionScores,
+          actionId: decision.actionId,
+          reason: decision.reason,
+          recalledEpisodeIds: decision.recalledEpisodeIds,
+          targetId: decision.actionId === "fruit" || decision.actionId === "spinner" ? decision.actionId : null
+        };
       }
 
       function recordSuccess(norn, objectId, kind) {
+        if (BENCHMARK_MODE && benchmark.running) benchmark.successes[kind] += 1;
         const object = OBJECTS[objectId];
-        const increase = kind === "food" ? 0.12 : 0.14;
-        norn.learned[objectId] = clamp(norn.learned[objectId] + increase, 0, 1);
         norn.lastSuccess = { time: state.time, objectId, kind, feedback: null };
         norn.action = kind === "food" ? "tasting honey fruit" : "spinning the little toy";
         norn.reason = kind === "food" ? "Eating helped with hunger" : "Play satisfied curiosity";
@@ -1059,52 +1869,146 @@
         shareObservation(norn, object, actionEvent, spokenWord);
       }
 
-      function speakKnownWord(norn, objectId, context = "using") {
-        if (norn.words[objectId] < 0.6) return null;
-        const definition = VOCABULARY[objectId];
-        const object = OBJECTS[objectId];
-        const action = object.kind === "food" ? "eating" : "playing with";
-        const contextText = context === "seeking"
-          ? `while looking for the ${object.label.toLowerCase()}`
-          : `while ${action} the ${object.label.toLowerCase()}`;
-        norn.speech = { text: definition.label, objectId, until: state.time + 3.2 };
+      function knownWordsForTarget(norn, targetId) {
+        const entries = [];
+        const builtIn = VOCABULARY[targetId];
+        if (builtIn) {
+          entries.push({
+            word: builtIn.label,
+            targetId,
+            confidence: norn.words[targetId],
+            isBuiltIn: true
+          });
+        }
+        for (let index = 0; index < norn.customWords.length; index += 1) {
+          const entry = norn.customWords[index];
+          if (entry.targetId === targetId) entries.push({ ...entry, isBuiltIn: false, customIndex: index });
+        }
+        return entries;
+      }
+
+      function selectKnownWord(norn, targetId) {
+        let selected = null;
+        for (const entry of knownWordsForTarget(norn, targetId)) {
+          if (entry.confidence < 0.6) continue;
+          if (!selected
+            || entry.confidence > selected.confidence
+            || entry.confidence === selected.confidence && entry.isBuiltIn && !selected.isBuiltIn) {
+            selected = entry;
+          }
+        }
+        return selected;
+      }
+
+      function wordContextText(targetId, context) {
+        const target = WORD_TARGETS[targetId];
+        if (!target) return "in the grove";
+        if (target.kind === "object") {
+          if (context === "responding-to-command") return "in response to your command";
+          const object = OBJECTS[target.objectId];
+          const action = object.kind === "food" ? "eating" : "playing with";
+          return context === "seeking"
+            ? "while looking for the " + object.label.toLowerCase()
+            : "while " + action + " the " + object.label.toLowerCase();
+        }
+        if (context === "observing-feedback") return "while observing " + target.label.toLowerCase();
+        return "after being " + (targetId === "praise" ? "praised" : "scolded");
+      }
+
+      function speakKnownWord(norn, targetId, context = "using") {
+        const entry = selectKnownWord(norn, targetId);
+        if (!entry) return null;
+        const contextText = wordContextText(targetId, context);
+        norn.speech = { text: entry.word, targetId, until: state.time + 3.2 };
         const utterance = recordEvent({
           nornId: norn.id,
           type: "speak",
           icon: "Aa",
-          text: `${norn.name} said “${definition.label}” ${contextText}.`,
-          memory: `I said “${definition.label}” ${contextText}.`
+          text: norn.name + " said “" + entry.word + "” " + contextText + ".",
+          memory: "I said “" + entry.word + "” " + contextText + ".",
+          targetId,
+          word: entry.word
         });
-        return { wordId: objectId, eventId: utterance.id, context };
+        return {
+          word: entry.word,
+          normalizedWord: normalizeWord(entry.word),
+          targetId,
+          eventId: utterance.id,
+          context
+        };
       }
 
-      function recordWordHearing(observer, actor, object, spokenWord) {
-        if (!spokenWord || spokenWord.wordId !== object.id || observer.words[spokenWord.wordId] >= 1) return;
-        const definition = VOCABULARY[spokenWord.wordId];
-        const action = object.kind === "food" ? "eating" : "playing with";
-        const contextText = spokenWord.context === "seeking"
-          ? `while looking for the ${object.label.toLowerCase()}`
-          : `while ${action} the ${object.label.toLowerCase()}`;
-        observer.words[spokenWord.wordId] = clamp(observer.words[spokenWord.wordId] + 0.14, 0, 1);
-        observer.reason = `Heard ${actor.name} say “${definition.label}” ${contextText}`;
-        observer.action = `listening to ${actor.name}`;
+      function changeWordConfidence(norn, entry, amount) {
+        if (entry.isBuiltIn) {
+          norn.words[entry.targetId] = clamp(norn.words[entry.targetId] + amount, 0, 1);
+          return norn.words[entry.targetId];
+        }
+        const customWord = norn.customWords[entry.customIndex];
+        customWord.confidence = clamp(customWord.confidence + amount, 0, 1);
+        return customWord.confidence;
+      }
+
+      function recordWordHearing(observer, actor, spokenWord) {
+        if (!spokenWord || !WORD_TARGETS[spokenWord.targetId]) return;
+        let entry = findWordEntry(observer, spokenWord.normalizedWord);
+        const targetDescription = wordTargetDescription(spokenWord.targetId);
+        if (entry && entry.targetId !== spokenWord.targetId) {
+          observer.reason = "Heard “" + spokenWord.word + "” for " + targetDescription
+            + ", but that word already means " + wordTargetDescription(entry.targetId);
+          observer.action = "listening to " + actor.name;
+          const conflict = recordEvent({
+            nornId: observer.id,
+            type: "hear-conflict",
+            icon: "Aa",
+            text: observer.name + " heard " + actor.name + " say “" + spokenWord.word
+              + "” for " + targetDescription + " but kept its earlier meaning.",
+            memory: "I heard “" + spokenWord.word + "” for " + targetDescription
+              + ", but I already know that word for " + wordTargetDescription(entry.targetId) + ".",
+            relatedEventId: spokenWord.eventId,
+            actorId: actor.id,
+            targetId: spokenWord.targetId,
+            word: spokenWord.word
+          });
+          observer.observedEventIds.add(conflict.id);
+          return;
+        }
+        if (entry && entry.confidence >= 1) return;
+        if (!entry) {
+          if (observer.customWords.length >= MAX_CUSTOM_WORDS_PER_NORN) return;
+          observer.customWords.push({ word: spokenWord.word, targetId: spokenWord.targetId, confidence: 0 });
+          entry = {
+            word: spokenWord.word,
+            targetId: spokenWord.targetId,
+            confidence: 0,
+            isBuiltIn: false,
+            customIndex: observer.customWords.length - 1
+          };
+        }
+        const confidence = changeWordConfidence(observer, entry, 0.14);
+        const contextText = wordContextText(spokenWord.targetId, spokenWord.context);
+        observer.reason = "Heard " + actor.name + " say “" + entry.word + "” " + contextText;
+        observer.action = "listening to " + actor.name;
         const heard = recordEvent({
           nornId: observer.id,
           type: "hear",
           icon: "Aa",
-          text: `${observer.name} heard ${actor.name} say “${definition.label}” ${contextText}.`,
-          memory: `I heard ${actor.name} say “${definition.label}” ${contextText}.`,
-          relatedEventId: spokenWord.eventId
+          text: observer.name + " heard " + actor.name + " say “" + entry.word + "” " + contextText + ".",
+          memory: "I heard " + actor.name + " say “" + entry.word + "” " + contextText + ".",
+          relatedEventId: spokenWord.eventId,
+          actorId: actor.id,
+          targetId: spokenWord.targetId,
+          word: spokenWord.word
         });
         observer.observedEventIds.add(heard.id);
+        return confidence;
       }
 
-      function shareSpokenWord(actor, object, spokenWord) {
+      function shareSpokenWord(actor, spokenWord) {
         if (!spokenWord) return;
         for (const observer of state.norns) {
           if (observer.id === actor.id || distance(observer, actor) > 330) continue;
           if (state.rng() >= observer.traits.sociability) continue;
-          recordWordHearing(observer, actor, object, spokenWord);
+          recordWordHearing(observer, actor, spokenWord);
         }
       }
 
@@ -1113,11 +2017,10 @@
           if (observer.id === actor.id || distance(observer, actor) > 330) continue;
           if (state.rng() >= observer.traits.sociability) continue;
 
-          recordWordHearing(observer, actor, object, spokenWord);
+          recordWordHearing(observer, actor, spokenWord);
 
           if (state.time - observer.lastImitated[object.id] < 12) continue;
           observer.lastImitated[object.id] = state.time;
-          observer.learned[object.id] = clamp(observer.learned[object.id] + 0.16 + observer.traits.sociability * 0.07, 0, 1);
           observer.reason = `Watched ${actor.name} succeed with ${object.label.toLowerCase()}`;
           observer.action = `watching ${actor.name}`;
           const memory = object.kind === "food"
@@ -1129,14 +2032,17 @@
             icon: "◌",
             text: `${observer.name} watched ${actor.name} and learned about ${object.label.toLowerCase()}.`,
             memory,
-            relatedEventId: actionEvent.id
+            relatedEventId: actionEvent.id,
+            actorId: actor.id,
+            targetId: object.id,
+            actionId: object.id,
+            learningDelta: 0.06 + observer.traits.sociability * 0.04
           });
           observer.observedEventIds.add(observed.id);
         }
       }
 
-      function shareFeedbackObservation(actor, object, feedback, feedbackEvent) {
-        const change = feedback === "praise" ? 0.12 : -0.12;
+      function shareFeedbackObservation(actor, object, feedback, feedbackEvent, actorSpokenWord) {
         const outcome = feedback === "praise" ? "praised" : "scolded";
         const action = object.kind === "food" ? "eating" : "playing with";
         const feedbackEffect = feedback === "praise" ? "stronger" : "weaker";
@@ -1147,10 +2053,11 @@
           if (observer.id === actor.id || distance(observer, actor) > 330) continue;
           if (state.rng() >= observer.traits.sociability) continue;
 
+          if (actorSpokenWord) recordWordHearing(observer, actor, actorSpokenWord);
           const previousAssociation = observer.learned[object.id];
+          const change = (feedback === "praise" ? 1 : -1) * (0.04 + observer.traits.sociability * 0.03);
           const nextAssociation = clamp(previousAssociation + change, 0, 1);
           const changed = nextAssociation !== previousAssociation;
-          observer.learned[object.id] = nextAssociation;
           observer.action = `watching ${actor.name}`;
           const effectText = changed ? `the association grew ${feedbackEffect}` : `the association was ${limitEffect}`;
           const memoryEffect = changed
@@ -1163,37 +2070,60 @@
             icon: feedback === "praise" ? "♡" : "!",
             text: `${observer.name} watched ${observation}; ${effectText}.`,
             memory: `I saw ${observation}; ${memoryEffect}.`,
-            relatedEventId: feedbackEvent.id
+            relatedEventId: feedbackEvent.id,
+            actorId: actor.id,
+            targetId: object.id,
+            actionId: object.id,
+            feedback,
+            learningDelta: change
           });
           observer.observedEventIds.add(observed.id);
+          const observerSpokenWord = speakKnownWord(observer, feedback, "observing-feedback");
+          if (observerSpokenWord) shareSpokenWord(observer, observerSpokenWord);
         }
       }
 
-      function updateNorn(norn, dt) {
-        norn.hunger = clamp(norn.hunger + dt * 1.55, 0, 100);
-        norn.curiosity = clamp(norn.curiosity + dt * (0.68 + norn.traits.curiosity * 0.34), 0, 100);
-        norn.actionCooldown = Math.max(0, norn.actionCooldown - dt);
-        norn.thinkIn -= dt;
-
-        if (norn.thinkIn <= 0) {
-          const previousTargetId = norn.targetId;
-          norn.targetId = chooseTarget(norn);
-          if (norn.targetId && norn.targetId !== previousTargetId) {
-            const selectedTarget = OBJECTS[norn.targetId];
-            const selectedArrivalRange = selectedTarget.id === "fruit" ? 52 : 48;
-            if (Math.abs(selectedTarget.x - norn.x) > selectedArrivalRange
-              && (!norn.speech || norn.speech.until <= state.time)) {
-              const spokenWord = speakKnownWord(norn, norn.targetId, "seeking");
-              if (spokenWord) shareSpokenWord(norn, selectedTarget, spokenWord);
-            }
+      function decideNorn(norn) {
+        const previousTargetId = norn.targetId;
+        norn.targetId = chooseTarget(norn);
+        if (norn.targetId && norn.targetId !== previousTargetId) {
+          const selectedTarget = OBJECTS[norn.targetId];
+          const selectedArrivalRange = selectedTarget.id === "fruit" ? 52 : 48;
+          if (Math.abs(selectedTarget.x - norn.x) > selectedArrivalRange
+            && (!norn.speech || norn.speech.until <= state.time)) {
+            const spokenWord = speakKnownWord(norn, norn.targetId, "seeking");
+            if (spokenWord) shareSpokenWord(norn, spokenWord);
           }
-          norn.thinkIn = 0.9 + state.rng() * 0.55;
         }
+        norn.thinkIn = 0.2;
+      }
+
+      function updateNorn(norn, dt) {
+        norn.hunger = norn.cognition.chemistry.hunger;
+        norn.curiosity = norn.cognition.chemistry.curiosity;
+        norn.actionCooldown = Math.max(0, norn.actionCooldown - dt);
 
         if (!norn.targetId) {
-          norn.action = norn.hunger > 58 ? "resting, but getting hungry" : "wandering softly";
-          norn.x += Math.sin(state.time * 0.4 + norn.wiggle) * dt * 3;
-          norn.x = clamp(norn.x, 90, 865);
+          const decision = norn.cognition.lastDecision;
+          if (decision && decision.actionId === "observe_peer") {
+            const peer = state.norns
+              .filter(other => other.id !== norn.id)
+              .sort((a, b) => distance(norn, a) - distance(norn, b))[0];
+            if (peer && distance(norn, peer) <= 330) {
+              norn.action = "watching " + peer.name;
+              norn.reason = decision.reason;
+              if (Math.abs(peer.x - norn.x) > 95) norn.x += Math.sign(peer.x - norn.x) * dt * 16;
+            } else {
+              norn.action = "wandering softly";
+            }
+          } else if (decision && decision.actionId === "rest") {
+            norn.action = "resting between discoveries";
+            norn.reason = decision.reason;
+          } else {
+            norn.action = norn.hunger > 58 ? "resting, but getting hungry" : "wandering softly";
+            norn.x += Math.sin(state.time * 0.4 + norn.wiggle) * dt * 3;
+          }
+          norn.x = clamp(norn.x, 90, WORLD_WIDTH - 95);
           return;
         }
 
@@ -1203,15 +2133,13 @@
         const arrive = target.id === "fruit" ? 52 : 48;
         if (Math.abs(dx) > arrive) {
           norn.x += Math.sign(dx) * dt * (46 + norn.traits.curiosity * 13);
-          norn.x = clamp(norn.x, 90, 865);
+          norn.x = clamp(norn.x, 90, WORLD_WIDTH - 95);
           norn.action = `walking toward ${target.label.toLowerCase()}`;
         } else if (norn.actionCooldown <= 0) {
           if (target.kind === "food" && norn.hunger > 13) {
-            norn.hunger = clamp(norn.hunger - 42, 0, 100);
             recordSuccess(norn, target.id, "food");
             norn.actionCooldown = 4.5;
           } else if (target.kind === "toy" && norn.curiosity > 18) {
-            norn.curiosity = clamp(norn.curiosity - 45, 0, 100);
             recordSuccess(norn, target.id, "toy");
             norn.actionCooldown = 3.8;
           } else {
@@ -1223,12 +2151,164 @@
         }
       }
 
+      function setFamilyStatus(message, status = "idle") {
+        if (ui.familyStatus.textContent === message && ui.familyStatus.dataset.state === status) return;
+        ui.familyStatus.textContent = message;
+        ui.familyStatus.dataset.state = status;
+      }
+
+      function createFamilyEgg(parentA, parentB) {
+        const number = state.nextNornNumber++;
+        return {
+          id: "egg-" + number,
+          childId: "norn-" + number,
+          name: CHILD_NAMES[(number - 1) % CHILD_NAMES.length],
+          parentIds: [parentA.id, parentB.id],
+          generation: Math.max(parentA.generation, parentB.generation) + 1,
+          traits: {
+            curiosity: inheritTrait(parentA.traits.curiosity, parentB.traits.curiosity),
+            sociability: inheritTrait(parentA.traits.sociability, parentB.traits.sociability)
+          },
+          color: blendColorPalettes(parentA.color, parentB.color),
+          remaining: EGG_INCUBATION_SECONDS
+        };
+      }
+
+      function layFamilyEgg() {
+        if (resetPending) {
+          setFamilyStatus("The grove is resetting. Try again when it is ready.", "error");
+          return false;
+        }
+        if (state.norns.length + state.eggs.length >= MAX_GROVE_POPULATION) {
+          setFamilyStatus("The grove is full. It can hold four Norns and eggs combined.", "error");
+          return false;
+        }
+        const parentA = getNorn(state.selectedId);
+        const parentB = getNorn(ui.familyPartner.value);
+        if (!parentA || !parentB || parentA.id === parentB.id) {
+          setFamilyStatus("Choose two different Norns to start an egg.", "error");
+          return false;
+        }
+
+        const egg = createFamilyEgg(parentA, parentB);
+        state.eggs.push(egg);
+        cameraFollowing = false;
+        cameraX = clamp(NEST_X - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
+        const event = recordEvent({
+          type: "egg",
+          icon: "◌",
+          text: parentA.name + " and " + parentB.name + " started an egg in the nest."
+        });
+        for (const parent of [parentA, parentB]) {
+          parent.memories.unshift({
+            eventId: event.id,
+            text: "We started an egg together. Our young will share parts of our temperament."
+          });
+          parent.memories = parent.memories.slice(0, 4);
+        }
+        familyNotice = egg.name + "'s egg was started by " + parentA.name + " and " + parentB.name + ".";
+        saveSoon();
+        showToast(egg.name + "'s egg is warming in the nest. It will hatch in about 45 in-game seconds.");
+        renderUI();
+        return true;
+      }
+
+      function createHatchedNorn(egg) {
+        const parents = egg.parentIds.map(getNorn);
+        const parentNames = parents.map(parent => parent.name);
+        const traits = { ...egg.traits };
+        const learned = { fruit: 0, spinner: 0 };
+        const cognition = createNornCognition(state.seed, egg.childId, traits, 43, 47, learned);
+        const child = {
+          id: egg.childId,
+          name: egg.name,
+          generation: egg.generation,
+          parents: [...egg.parentIds],
+          x: NEST_X + 100 + Math.max(0, state.norns.length - 2) * 90,
+          y: FLOOR_Y,
+          facing: 1,
+          color: { ...egg.color },
+          hunger: 43,
+          curiosity: 47,
+          traits,
+          words: { fruit: 0, spinner: 0 },
+          customWords: [],
+          speech: null,
+          cognition,
+          learned: cognition.actionAssociations,
+          memories: [],
+          targetId: null,
+          action: "taking in the grove",
+          reason: "Just hatched from an egg shared by " + parentNames.join(" and "),
+          thinkIn: 0.5,
+          actionCooldown: 1,
+          lastSuccess: null,
+          lastImitated: { fruit: -99, spinner: -99 },
+          wiggle: state.rng() * 6,
+          observedEventIds: new Set()
+        };
+        state.norns.push(child);
+        const event = recordEvent({
+          nornId: child.id,
+          type: "hatch",
+          icon: "✦",
+          text: child.name + " hatched from an egg shared by " + parentNames.join(" and ") + ".",
+          memory: "I hatched from an egg shared by " + parentNames.join(" and ") + ". My curiosity and sociability came from both of them."
+        });
+        parents.forEach(parent => {
+          parent.memories.unshift({
+            eventId: event.id,
+            text: "Our egg hatched into " + child.name + ". " + child.name + " is beginning to explore the grove."
+          });
+          parent.memories = parent.memories.slice(0, 4);
+        });
+        familyNotice = child.name + " hatched and joined the grove.";
+        renderNornOptions();
+        showToast(child.name + " hatched and joined the grove.");
+        saveSoon();
+      }
+
+      function updateEggs(simState, dt) {
+        const hatching = [];
+        simState.eggs = simState.eggs.filter(egg => {
+          egg.remaining = Math.max(0, egg.remaining - dt);
+          if (egg.remaining > 0) return true;
+          hatching.push(egg);
+          return false;
+        });
+        for (const egg of hatching) createHatchedNorn(egg);
+      }
+
       function stepSimulation(simState, deltaSeconds) {
         if (simState.paused || deltaSeconds <= 0) return;
         simState.time += deltaSeconds;
         if (simState.guidance) {
           simState.guidance.remaining -= deltaSeconds;
           if (simState.guidance.remaining <= 0) simState.guidance = null;
+        }
+        updateEggs(simState, deltaSeconds);
+        simState.chemistryAccumulator = Math.min(0.5, simState.chemistryAccumulator + deltaSeconds);
+        let chemistrySteps = 0;
+        while (simState.chemistryAccumulator >= 0.1 && chemistrySteps < 5) {
+          for (const norn of simState.norns) {
+            const nearbyPeer = simState.norns.some(other => other.id !== norn.id && distance(norn, other) <= 330);
+            window.NornCognition.advanceChemistry(norn.cognition, {
+              active: norn.targetId ? 1 : 0.2,
+              resting: norn.targetId ? 0 : 1,
+              nearbyPeer: nearbyPeer ? 1 : 0
+            }, 0.1);
+            norn.hunger = norn.cognition.chemistry.hunger;
+            norn.curiosity = norn.cognition.chemistry.curiosity;
+          }
+          simState.chemistryAccumulator = Math.max(0, simState.chemistryAccumulator - 0.1);
+          chemistrySteps += 1;
+        }
+        simState.decisionAccumulator = Math.min(0.8, simState.decisionAccumulator + deltaSeconds);
+        let decisionSteps = 0;
+        while (simState.decisionAccumulator >= 0.2 && decisionSteps < 4) {
+          for (const norn of simState.norns) decideNorn(norn);
+          simState.decisionAccumulator = Math.max(0, simState.decisionAccumulator - 0.2);
+          decisionSteps += 1;
         }
         for (const norn of simState.norns) updateNorn(norn, deltaSeconds);
       }
@@ -1239,51 +2319,75 @@
       }
 
       function drawBackdrop(context) {
-        const sky = context.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
-        sky.addColorStop(0, "#cde4df");
-        sky.addColorStop(.58, "#e9eccd");
-        sky.addColorStop(1, "#d4e3bf");
-        context.fillStyle = sky;
-        context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        for (let regionIndex = 0; regionIndex < REGION_NAMES.length; regionIndex++) {
+          const palette = REGION_PALETTES[regionIndex];
+          context.save();
+          context.translate(regionIndex * VIEW_WIDTH, 0);
 
-        context.fillStyle = "rgba(255, 248, 207, .88)";
-        context.beginPath(); context.arc(804, 82, 34, 0, Math.PI * 2); context.fill();
-        context.fillStyle = "rgba(255, 255, 255, .33)";
-        context.beginPath(); context.arc(804, 82, 47, 0, Math.PI * 2); context.fill();
+          const sky = context.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
+          sky.addColorStop(0, palette.sky[0]);
+          sky.addColorStop(.58, palette.sky[1]);
+          sky.addColorStop(1, palette.sky[2]);
+          context.fillStyle = sky;
+          context.fillRect(0, 0, VIEW_WIDTH, WORLD_HEIGHT);
 
-        context.fillStyle = "#afcfb2";
-        context.beginPath(); context.moveTo(0, 290); context.quadraticCurveTo(158, 189, 323, 282); context.quadraticCurveTo(494, 365, 675, 255); context.quadraticCurveTo(820, 172, 960, 276); context.lineTo(960, 435); context.lineTo(0, 435); context.closePath(); context.fill();
-        context.fillStyle = "#88b694";
-        context.beginPath(); context.moveTo(0, 346); context.quadraticCurveTo(190, 280, 352, 344); context.quadraticCurveTo(543, 414, 715, 319); context.quadraticCurveTo(839, 251, 960, 334); context.lineTo(960, 442); context.lineTo(0, 442); context.closePath(); context.fill();
+          context.fillStyle = palette.sun;
+          context.beginPath(); context.arc(regionIndex === 1 ? 140 : 804, 82, 34, 0, Math.PI * 2); context.fill();
+          context.fillStyle = "rgba(255, 255, 255, .28)";
+          context.beginPath(); context.arc(regionIndex === 1 ? 140 : 804, 82, 47, 0, Math.PI * 2); context.fill();
 
-        // Canopy silhouettes
-        for (const tree of [{x:78,y:206,s:1.08},{x:145,y:240,s:.78},{x:854,y:220,s:1.12},{x:924,y:250,s:.8}]) {
-          context.fillStyle = "#769a7a";
-          context.fillRect(tree.x - 7 * tree.s, tree.y + 44 * tree.s, 14 * tree.s, 112 * tree.s);
-          context.fillStyle = "#5f8a71";
-          context.beginPath(); context.arc(tree.x, tree.y, 43 * tree.s, 0, Math.PI * 2); context.fill();
-          context.beginPath(); context.arc(tree.x - 25 * tree.s, tree.y + 20 * tree.s, 28 * tree.s, 0, Math.PI * 2); context.fill();
-          context.beginPath(); context.arc(tree.x + 27 * tree.s, tree.y + 19 * tree.s, 31 * tree.s, 0, Math.PI * 2); context.fill();
-        }
+          context.fillStyle = palette.far;
+          context.beginPath(); context.moveTo(0, 290); context.quadraticCurveTo(158, 189, 323, 282); context.quadraticCurveTo(494, 365, 675, 255); context.quadraticCurveTo(820, 172, VIEW_WIDTH, 276); context.lineTo(VIEW_WIDTH, 435); context.lineTo(0, 435); context.closePath(); context.fill();
+          context.fillStyle = palette.near;
+          context.beginPath(); context.moveTo(0, 346); context.quadraticCurveTo(190, 280, 352, 344); context.quadraticCurveTo(543, 414, 715, 319); context.quadraticCurveTo(839, 251, VIEW_WIDTH, 334); context.lineTo(VIEW_WIDTH, 442); context.lineTo(0, 442); context.closePath(); context.fill();
 
-        // Distant flowers and habitat floor
-        for (const flower of [{x:195,y:335,c:"#f2cf86"},{x:285,y:361,c:"#e9a6a0"},{x:645,y:336,c:"#f3d285"},{x:874,y:365,c:"#e9a6a0"}]) {
-          context.strokeStyle = "#6f9c73"; context.lineWidth = 2;
-          context.beginPath(); context.moveTo(flower.x, flower.y); context.lineTo(flower.x + 1, flower.y + 30); context.stroke();
-          context.fillStyle = flower.c;
-          for (let i = 0; i < 5; i++) {
-            const angle = i * Math.PI * 2 / 5;
-            context.beginPath(); context.arc(flower.x + Math.cos(angle) * 6, flower.y + Math.sin(angle) * 6, 4, 0, Math.PI * 2); context.fill();
+          if (regionIndex === 2) {
+            for (const crystal of [{x:105,y:275,h:128},{x:282,y:252,h:166},{x:472,y:291,h:104},{x:680,y:245,h:178},{x:858,y:280,h:132}]) {
+              context.fillStyle = palette.canopy;
+              context.beginPath(); context.moveTo(crystal.x - 34, crystal.y + crystal.h); context.lineTo(crystal.x - 12, crystal.y + 24); context.lineTo(crystal.x, crystal.y); context.lineTo(crystal.x + 25, crystal.y + 54); context.lineTo(crystal.x + 38, crystal.y + crystal.h); context.closePath(); context.fill();
+              context.fillStyle = "rgba(219, 242, 221, .32)";
+              context.beginPath(); context.moveTo(crystal.x - 12, crystal.y + 24); context.lineTo(crystal.x, crystal.y); context.lineTo(crystal.x + 7, crystal.y + 83); context.lineTo(crystal.x - 4, crystal.y + crystal.h); context.closePath(); context.fill();
+            }
+          } else {
+            const trees = regionIndex === 0
+              ? [{x:78,y:226,s:.82},{x:280,y:250,s:.58},{x:680,y:239,s:.73},{x:913,y:220,s:.86}]
+              : [{x:78,y:206,s:1.08},{x:145,y:240,s:.78},{x:854,y:220,s:1.12},{x:924,y:250,s:.8}];
+            for (const tree of trees) {
+              context.fillStyle = palette.trunk;
+              context.fillRect(tree.x - 7 * tree.s, tree.y + 44 * tree.s, 14 * tree.s, 112 * tree.s);
+              context.fillStyle = palette.canopy;
+              context.beginPath(); context.arc(tree.x, tree.y, 43 * tree.s, 0, Math.PI * 2); context.fill();
+              context.beginPath(); context.arc(tree.x - 25 * tree.s, tree.y + 20 * tree.s, 28 * tree.s, 0, Math.PI * 2); context.fill();
+              context.beginPath(); context.arc(tree.x + 27 * tree.s, tree.y + 19 * tree.s, 31 * tree.s, 0, Math.PI * 2); context.fill();
+            }
           }
-          context.fillStyle = "#e9b75c"; context.beginPath(); context.arc(flower.x, flower.y, 3.3, 0, Math.PI * 2); context.fill();
-        }
 
-        context.fillStyle = "#6e9c70";
-        context.fillRect(0, 416, WORLD_WIDTH, 84);
-        context.fillStyle = "#81ad77";
-        context.beginPath(); context.moveTo(0, 422); context.quadraticCurveTo(228, 407, 424, 423); context.quadraticCurveTo(701, 443, 960, 415); context.lineTo(960, 500); context.lineTo(0, 500); context.closePath(); context.fill();
-        context.fillStyle = "rgba(244, 240, 205, .36)";
-        context.fillRect(0, 420, WORLD_WIDTH, 2);
+          const flowers = regionIndex === 2 ? [] : regionIndex === 0
+            ? [{x:195,y:335,c:"#f2cf86"},{x:360,y:361,c:"#e9a6a0"},{x:645,y:336,c:"#f3d285"},{x:874,y:365,c:"#e9a6a0"}]
+            : [{x:195,y:335,c:"#f2cf86"},{x:285,y:361,c:"#e9a6a0"},{x:645,y:336,c:"#f3d285"},{x:874,y:365,c:"#e9a6a0"}];
+          for (const flower of flowers) {
+            context.strokeStyle = "#6f9c73"; context.lineWidth = 2;
+            context.beginPath(); context.moveTo(flower.x, flower.y); context.lineTo(flower.x + 1, flower.y + 30); context.stroke();
+            context.fillStyle = flower.c;
+            for (let i = 0; i < 5; i++) {
+              const angle = i * Math.PI * 2 / 5;
+              context.beginPath(); context.arc(flower.x + Math.cos(angle) * 6, flower.y + Math.sin(angle) * 6, 4, 0, Math.PI * 2); context.fill();
+            }
+            context.fillStyle = "#e9b75c"; context.beginPath(); context.arc(flower.x, flower.y, 3.3, 0, Math.PI * 2); context.fill();
+          }
+
+          context.fillStyle = palette.floor;
+          context.fillRect(0, 416, VIEW_WIDTH, 84);
+          context.fillStyle = palette.grass;
+          context.beginPath(); context.moveTo(0, 422); context.quadraticCurveTo(228, 407, 424, 423); context.quadraticCurveTo(701, 443, VIEW_WIDTH, 415); context.lineTo(VIEW_WIDTH, 500); context.lineTo(0, 500); context.closePath(); context.fill();
+          context.fillStyle = "rgba(244, 240, 205, .36)";
+          context.fillRect(0, 420, VIEW_WIDTH, 2);
+          context.fillStyle = "rgba(40, 70, 58, .82)";
+          context.font = "800 12px system-ui, sans-serif";
+          context.textAlign = "center";
+          context.fillText(REGION_NAMES[regionIndex].toUpperCase(), VIEW_WIDTH / 2, 62);
+          context.restore();
+        }
       }
 
       function drawFruit(context, object) {
@@ -1326,6 +2430,51 @@
         context.font = "700 10px system-ui, sans-serif";
         context.textAlign = "center";
         context.fillText("WIND-UP SPINNER", x, y + 39);
+      }
+
+      function drawNest(context, eggs) {
+        const x = NEST_X, y = FLOOR_Y - 4;
+        context.fillStyle = "rgba(40, 65, 49, .13)";
+        context.beginPath(); context.ellipse(x, y + 17, 49, 8, 0, 0, Math.PI * 2); context.fill();
+        context.strokeStyle = "#9b7549";
+        context.lineWidth = 5;
+        context.beginPath(); context.ellipse(x, y + 5, 45, 15, 0, .1, Math.PI - .1); context.stroke();
+        context.strokeStyle = "#b68b55";
+        context.lineWidth = 3;
+        context.beginPath(); context.ellipse(x, y + 3, 36, 10, 0, .15, Math.PI - .15); context.stroke();
+        context.strokeStyle = "#846b46";
+        context.lineWidth = 2;
+        for (const offset of [-24, -12, 1, 14, 25]) {
+          context.beginPath(); context.moveTo(x + offset - 6, y + 7); context.lineTo(x + offset + 6, y + 2); context.stroke();
+        }
+
+        eggs.forEach((egg, index) => {
+          const eggX = eggs.length > 1 ? x - 22 + index * 44 : x;
+          const eggY = y - 8;
+          context.fillStyle = egg.color.coat;
+          context.beginPath(); context.ellipse(eggX, eggY, 15, 21, -.12, 0, Math.PI * 2); context.fill();
+          context.strokeStyle = egg.color.ear;
+          context.lineWidth = 2;
+          context.beginPath(); context.ellipse(eggX, eggY, 15, 21, -.12, .65, 2.5); context.stroke();
+          context.fillStyle = egg.color.light;
+          context.beginPath(); context.ellipse(eggX - 4, eggY - 8, 4, 6, -.25, 0, Math.PI * 2); context.fill();
+          context.fillStyle = "#fffdf4";
+          context.font = "700 9px system-ui, sans-serif";
+          context.textAlign = "center";
+          context.fillText(egg.name, eggX, y + 32);
+          const progress = 1 - egg.remaining / EGG_INCUBATION_SECONDS;
+          context.fillStyle = "rgba(255,253,244,.82)";
+          roundedRect(context, eggX - 17, y + 35, 34, 4, 2); context.fill();
+          context.fillStyle = egg.color.scarf;
+          roundedRect(context, eggX - 17, y + 35, 34 * clamp(progress, 0, 1), 4, 2); context.fill();
+        });
+
+        if (eggs.length === 0) {
+          context.fillStyle = "#fffdf4";
+          context.font = "700 9px system-ui, sans-serif";
+          context.textAlign = "center";
+          context.fillText("NEST", x, y + 31);
+        }
       }
 
       function drawNorn(context, norn, selected, time, screenScaleX, screenScaleY, speechStackOffsetY) {
@@ -1392,7 +2541,11 @@
         }
 
         if (norn.speech && time < norn.speech.until) {
-          const bubbleWidth = 76 / screenScaleX;
+          const speechText = `“${norn.speech.text}”`;
+          context.font = `750 ${14 / screenScaleY}px system-ui, sans-serif`;
+          const textWidthCss = context.measureText(speechText).width * screenScaleX;
+          const bubbleWidthCss = clamp(textWidthCss + 20, 76, 190);
+          const bubbleWidth = bubbleWidthCss / screenScaleX;
           const bubbleHeight = 32 / screenScaleY;
           const bubbleX = clamp(x, bubbleWidth / 2 + 8 / screenScaleX, WORLD_WIDTH - bubbleWidth / 2 - 8 / screenScaleX);
           const bubbleY = y - 105 - speechStackOffsetY;
@@ -1408,15 +2561,14 @@
           context.lineTo(bubbleX + 5 / screenScaleX, bubbleY + bubbleHeight / 2 - 1 / screenScaleY);
           context.closePath(); context.fill();
           context.fillStyle = "#315748";
-          context.font = `750 ${14 / screenScaleY}px system-ui, sans-serif`;
           context.textAlign = "center";
-          context.fillText(`“${norn.speech.text}”`, bubbleX, bubbleY + 4 / screenScaleY);
+          context.fillText(speechText, bubbleX, bubbleY + 4 / screenScaleY, bubbleWidth - 12 / screenScaleX);
         }
       }
 
       function renderWorld(context, simState) {
         const rect = canvas.getBoundingClientRect();
-        const screenScaleX = rect.width > 0 ? rect.width / WORLD_WIDTH : 1;
+        const screenScaleX = rect.width > 0 ? rect.width / VIEW_WIDTH : 1;
         const screenScaleY = rect.height > 0 ? rect.height / WORLD_HEIGHT : 1;
         const ratio = window.devicePixelRatio || 1;
         const pixelWidth = Math.max(1, Math.round(rect.width * ratio));
@@ -1425,37 +2577,51 @@
           canvas.width = pixelWidth;
           canvas.height = pixelHeight;
         }
-        context.setTransform(pixelWidth / WORLD_WIDTH, 0, 0, pixelHeight / WORLD_HEIGHT, 0, 0);
-        context.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        if (cameraFollowing) {
+          const selectedNorn = simState.norns.find(norn => norn.id === simState.selectedId);
+          if (selectedNorn) cameraX = clamp(selectedNorn.x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
+        }
+        cameraX = clamp(cameraX, 0, WORLD_WIDTH - VIEW_WIDTH);
+        context.setTransform(pixelWidth / VIEW_WIDTH, 0, 0, pixelHeight / WORLD_HEIGHT, 0, 0);
+        context.clearRect(0, 0, VIEW_WIDTH, WORLD_HEIGHT);
+        context.save();
+        context.translate(-cameraX, 0);
         drawBackdrop(context);
+        drawNest(context, simState.eggs);
         drawFruit(context, OBJECTS.fruit);
         drawSpinner(context, OBJECTS.spinner, simState.time);
         const activeSpeakers = simState.norns.filter(norn => norn.speech && simState.time < norn.speech.until);
-        const speechStacked = activeSpeakers.length > 1
-          && Math.abs(activeSpeakers[0].x - activeSpeakers[1].x) * screenScaleX < 76;
         for (const norn of simState.norns) {
-          const speechStackOffsetY = speechStacked && norn.id === "moss" ? 42 / screenScaleY : 0;
+          const speakerIndex = activeSpeakers.indexOf(norn);
+          const overlappingSpeakersBefore = speakerIndex < 0 ? 0 : activeSpeakers.slice(0, speakerIndex)
+            .filter(speaker => Math.abs(speaker.x - norn.x) * screenScaleX < 190).length;
+          const speechStackOffsetY = overlappingSpeakersBefore * 42 / screenScaleY;
           drawNorn(context, norn, norn.id === simState.selectedId, simState.time, screenScaleX, screenScaleY, speechStackOffsetY);
         }
+        context.restore();
 
-        if (simState.teachingWord) {
+        if (simState.teachingMode) {
           context.fillStyle = "rgba(52, 100, 76, .93)";
           context.font = "800 12px system-ui, sans-serif";
           context.textAlign = "center";
-          context.fillText(`SHOW “${simState.teachingWord.toUpperCase()}” TO ${getNorn(simState.selectedId).name.toUpperCase()}`, WORLD_WIDTH / 2, 44);
+          const word = typeof simState.teachingWord === "string" ? simState.teachingWord.trim() : "";
+          const prompt = word
+            ? `PAIR “${word.toUpperCase()}” WITH A THING OR FEEDBACK`
+            : "TYPE A WORD, THEN CHOOSE A TEACHING TARGET";
+          context.fillText(prompt, VIEW_WIDTH / 2, 44);
         } else if (simState.pointMode) {
           context.fillStyle = "rgba(52, 100, 76, .93)";
           context.font = "800 12px system-ui, sans-serif";
           context.textAlign = "center";
-          context.fillText(`CHOOSE SOMETHING FOR ${getNorn(simState.selectedId).name.toUpperCase()}`, WORLD_WIDTH / 2, 44);
+          context.fillText(`CHOOSE SOMETHING FOR ${getNorn(simState.selectedId).name.toUpperCase()}`, VIEW_WIDTH / 2, 44);
         }
         if (simState.paused) {
           context.fillStyle = "rgba(34, 61, 50, .34)";
-          context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+          context.fillRect(0, 0, VIEW_WIDTH, WORLD_HEIGHT);
           context.fillStyle = "#fffdf3";
           context.font = "600 23px Georgia, serif";
           context.textAlign = "center";
-          context.fillText("A quiet moment", WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
+          context.fillText("A quiet moment", VIEW_WIDTH / 2, WORLD_HEIGHT / 2);
         }
       }
 
@@ -1468,10 +2634,95 @@
           button.setAttribute("aria-pressed", norn.id === state.selectedId ? "true" : "false");
           button.innerHTML = `<span class="avatar-dot" style="background:${norn.color.coat}"></span><span><span class="option-name"></span><span class="option-type"></span></span>`;
           button.querySelector(".option-name").textContent = norn.name;
-          button.querySelector(".option-type").textContent = norn.id === "mallow" ? "thoughtful" : "explorer";
+          button.querySelector(".option-type").textContent = norn.generation > 0
+            ? `generation ${norn.generation}`
+            : norn.id === "mallow" ? "thoughtful" : "explorer";
           button.addEventListener("click", () => selectNorn(norn.id));
           ui.options.appendChild(button);
         }
+      }
+
+      function renderFamilyControls() {
+        const selected = getNorn(state.selectedId);
+        ui.familyParentName.textContent = selected.name;
+        const partners = state.norns.filter(norn => norn.id !== selected.id);
+        const optionsKey = selected.id + ":" + partners.map(norn => norn.id).join("|");
+        if (optionsKey !== familyOptionsKey) {
+          const previousPartnerId = ui.familyPartner.value;
+          const options = partners.map(norn => {
+            const option = document.createElement("option");
+            option.value = norn.id;
+            option.textContent = norn.name;
+            return option;
+          });
+          if (options.length === 0) {
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "No other Norns";
+            options.push(option);
+          }
+          ui.familyPartner.replaceChildren(...options);
+          ui.familyPartner.value = partners.some(norn => norn.id === previousPartnerId)
+            ? previousPartnerId : (partners[0] ? partners[0].id : "");
+          familyOptionsKey = optionsKey;
+        }
+
+        const full = state.norns.length + state.eggs.length >= MAX_GROVE_POPULATION;
+        ui.familyPartner.disabled = full || partners.length === 0;
+        ui.layEgg.disabled = resetPending || full || partners.length === 0;
+        const incubation = state.eggs.map(egg => {
+          const parents = egg.parentIds.map(id => getNorn(id).name).join(" and ");
+          return egg.name + "'s egg from " + parents + " is warming in the nest. The egg's progress bar shows incubation.";
+        }).join(" ");
+        if (full) {
+          setFamilyStatus("The grove is full. It can hold four Norns and eggs combined. " + incubation, "error");
+        } else if (incubation) {
+          setFamilyStatus(incubation, "success");
+        } else if (familyNotice) {
+          setFamilyStatus(familyNotice, "success");
+        } else {
+          setFamilyStatus("An egg takes 45 in-game seconds to hatch. The grove holds up to four Norns and eggs combined.");
+        }
+      }
+
+      function getVisibleRegionIndex() {
+        const focusX = cameraFollowing ? getNorn(state.selectedId).x : cameraX + VIEW_WIDTH / 2;
+        return clamp(Math.floor(focusX / VIEW_WIDTH), 0, REGION_NAMES.length - 1);
+      }
+
+      function renderWorldNavigation() {
+        const regionIndex = getVisibleRegionIndex();
+        const name = REGION_NAMES[regionIndex];
+        const selected = getNorn(state.selectedId);
+        if (ui.worldLocation.textContent !== name) ui.worldLocation.textContent = name;
+        if (ui.regionTag.textContent !== name) ui.regionTag.textContent = name;
+        ui.worldWest.disabled = regionIndex === 0;
+        ui.worldEast.disabled = regionIndex === REGION_NAMES.length - 1;
+        const followLabel = "Follow " + selected.name;
+        if (ui.worldFollow.textContent !== followLabel) ui.worldFollow.textContent = followLabel;
+        if (ui.worldFollow.getAttribute("aria-pressed") !== String(cameraFollowing)) {
+          ui.worldFollow.setAttribute("aria-pressed", String(cameraFollowing));
+        }
+        const followTitle = cameraFollowing
+          ? selected.name + " is being followed. Travel west or east to look around."
+          : "Return to " + selected.name + " and follow their movement.";
+        if (ui.worldFollow.title !== followTitle) ui.worldFollow.title = followTitle;
+      }
+
+      function navigateWorld(direction) {
+        const targetRegion = clamp(getVisibleRegionIndex() + direction, 0, REGION_NAMES.length - 1);
+        cameraFollowing = false;
+        cameraX = targetRegion * VIEW_WIDTH;
+        renderWorldNavigation();
+        renderWorld(ctx, state);
+      }
+
+      function followSelectedNorn() {
+        const selected = getNorn(state.selectedId);
+        cameraFollowing = true;
+        cameraX = clamp(selected.x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
+        renderWorldNavigation();
+        renderWorld(ctx, state);
       }
 
       function renderMeter(label, value, className = "") {
@@ -1553,10 +2804,37 @@
       }
 
       function renderVocabulary(container, norn) {
-        container.replaceChildren(
-          renderAssociation('“fruit”', norn.words.fruit),
-          renderAssociation('“spinner”', norn.words.spinner)
-        );
+        const groups = document.createDocumentFragment();
+        for (const target of Object.values(WORD_TARGETS)) {
+          const group = document.createElement("div");
+          group.className = "vocabulary-group";
+          const heading = document.createElement("div");
+          heading.className = "vocabulary-group-label";
+          heading.textContent = target.label;
+          group.appendChild(heading);
+
+          const entries = [];
+          const builtIn = VOCABULARY[target.id];
+          if (builtIn) {
+            entries.push({ word: builtIn.label, confidence: norn.words[target.id] });
+          }
+          for (const entry of norn.customWords) {
+            if (entry.targetId === target.id) entries.push(entry);
+          }
+
+          if (entries.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "vocabulary-empty";
+            empty.textContent = "No word learned yet";
+            group.appendChild(empty);
+          } else {
+            for (const entry of entries) {
+              group.appendChild(renderAssociation("“" + entry.word + "”", entry.confidence));
+            }
+          }
+          groups.appendChild(group);
+        }
+        container.replaceChildren(groups);
       }
 
       function renderMemories(norn) {
@@ -1613,7 +2891,7 @@
         }
       }
 
-      function renderDecisionRow(label, needLabel, needScore, habitScore, totalScore) {
+      function renderDecisionRow(label, needLabel, needScore, habitScore, totalScore, biasLabel = "learned preference") {
         const row = document.createElement("div");
         row.className = "decision-row";
 
@@ -1624,23 +2902,24 @@
         name.textContent = `${label} pull`;
         const score = document.createElement("span");
         score.className = "decision-score";
-        score.textContent = `${Math.round(totalScore)} / 125 points`;
+        const displayedScore = Math.round(clamp(totalScore, 0, 150));
+        score.textContent = `${displayedScore} / 150 points`;
         heading.append(name, score);
 
         const components = document.createElement("div");
         components.className = "decision-components";
-        components.textContent = `${needLabel} ${Math.round(needScore)} + learned preference ${Math.round(habitScore)}`;
+        components.textContent = `${needLabel} ${Math.round(needScore)} + ${biasLabel} ${Math.round(habitScore)}`;
 
         const meter = document.createElement("div");
         meter.className = "decision-meter";
         meter.setAttribute("role", "meter");
         meter.setAttribute("aria-label", `${label} pull`);
         meter.setAttribute("aria-valuemin", "0");
-        meter.setAttribute("aria-valuemax", "125");
-        meter.setAttribute("aria-valuenow", String(Math.round(totalScore)));
-        meter.setAttribute("aria-valuetext", `${Math.round(totalScore)} points: ${needLabel.toLowerCase()} ${Math.round(needScore)} plus learned preference ${Math.round(habitScore)}`);
+        meter.setAttribute("aria-valuemax", "150");
+        meter.setAttribute("aria-valuenow", String(displayedScore));
+        meter.setAttribute("aria-valuetext", `${displayedScore} points: ${needLabel.toLowerCase()} ${Math.round(needScore)} plus ${biasLabel} ${Math.round(habitScore)}`);
         const fill = document.createElement("span");
-        fill.style.width = `${clamp(totalScore / 125 * 100, 0, 100)}%`;
+        fill.style.width = `${clamp(totalScore / 150 * 100, 0, 100)}%`;
         meter.appendChild(fill);
         row.append(heading, components, meter);
         return row;
@@ -1649,21 +2928,53 @@
       function renderDecisionSignals(norn) {
         const scores = getDecisionScores(norn);
         const hasGuidance = state.guidance && state.guidance.nornId === norn.id && state.guidance.remaining > 0;
+        const decisionLabels = {
+          fruit: "fruit",
+          spinner: "the spinner",
+          rest: "rest",
+          observe_peer: "watching a nearby Norn",
+          idle: "wandering"
+        };
         if (hasGuidance) {
           const guidedObject = OBJECTS[state.guidance.objectId].label.toLowerCase();
           const independentChoice = scores.targetId ? OBJECTS[scores.targetId].label.toLowerCase() : "neither";
           const remainingSeconds = Math.max(1, Math.ceil(state.guidance.remaining));
           const timeUnit = remainingSeconds === 1 ? "second" : "seconds";
           ui.decisionSummary.textContent = `Following your point to the ${guidedObject} for ${remainingSeconds} more in-game ${timeUnit}. Choosing alone: ${independentChoice}.`;
-        } else if (scores.targetId) {
-          ui.decisionSummary.textContent = `Current preference: ${OBJECTS[scores.targetId].label.toLowerCase()}.`;
         } else {
-          ui.decisionSummary.textContent = "Their drives are settled; neither need crosses its choice threshold.";
+          const recalled = scores.recalledEpisodeIds.length > 0
+            ? ` Recalling ${scores.recalledEpisodeIds.length} related moment${scores.recalledEpisodeIds.length === 1 ? "" : "s"}.`
+            : "";
+          ui.decisionSummary.textContent = `Current choice: ${decisionLabels[scores.actionId]}. ${scores.reason}.${recalled}`;
         }
 
+        const recalledEpisodes = scores.recalledEpisodeIds
+          .map(id => norn.cognition.episodes.find(episode => episode.id === id))
+          .filter(Boolean);
+        ui.recalledMemories.replaceChildren(...recalledEpisodes.map(episode => {
+          const item = document.createElement("li");
+          item.className = "recalled-episode";
+          const text = document.createElement("span");
+          text.textContent = episode.text || `A ${episode.eventType} moment involving ${episode.targetId || "the grove"}.`;
+          item.appendChild(text);
+          if (episode.linkedEventId && state.events.some(event => event.id === episode.linkedEventId)) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "button memory-find";
+            button.textContent = "Find in journal";
+            button.setAttribute("aria-label", "Find recalled moment in journal");
+            button.addEventListener("click", () => showMemoryEvent(episode.linkedEventId));
+            item.appendChild(button);
+          }
+          return item;
+        }));
+
         ui.decisionRows.replaceChildren(
-          renderDecisionRow("Fruit", "Hunger", scores.fruitNeed, scores.fruitHabit, scores.fruitScore),
-          renderDecisionRow("Spinner", "Curiosity", scores.spinnerNeed, scores.spinnerHabit, scores.spinnerScore)
+          renderDecisionRow("Fruit", "Hunger", scores.fruitNeed, scores.fruitHabit + scores.fruitContext, scores.fruitScore, "memory and policy"),
+          renderDecisionRow("Spinner", "Curiosity", scores.spinnerNeed, scores.spinnerHabit + scores.spinnerContext, scores.spinnerScore, "memory and policy"),
+          renderDecisionRow("Rest", "Fatigue / energy", scores.restNeed, scores.actionScores.rest - scores.restNeed, scores.actionScores.rest, "association and policy"),
+          renderDecisionRow("Observe peer", "Social context", scores.observeNeed, scores.actionScores.observe_peer - scores.observeNeed, scores.actionScores.observe_peer, "association and policy"),
+          renderDecisionRow("Idle", "Baseline", 14, scores.actionScores.idle - 14, scores.actionScores.idle, "association and policy")
         );
       }
 
@@ -1672,12 +2983,30 @@
         if (!norn) return;
         ui.name.textContent = norn.name;
         ui.mood.textContent = norn.hunger > 67 ? "hungry" : norn.curiosity > 68 ? "curious" : "settled";
-        ui.summary.textContent = `${norn.action.charAt(0).toUpperCase()}${norn.action.slice(1)}. ${norn.reason}.`;
+        const familyText = norn.generation > 0
+          ? `Generation ${norn.generation}, child of ${norn.parents.map(id => getNorn(id).name).join(" and ")}. `
+          : "Original grove Norn. ";
+        ui.summary.textContent = `${familyText}${norn.action.charAt(0).toUpperCase()}${norn.action.slice(1)}. ${norn.reason}.`;
 
         ui.needs.replaceChildren(
           renderMeter("Hunger", norn.hunger, "hunger"),
           renderMeter("Curiosity", norn.curiosity)
         );
+        const chemistryLabels = {
+          glucose: "Glucose / energy",
+          hunger: "Hunger",
+          curiosity: "Curiosity",
+          fatigue: "Fatigue",
+          reward: "Reward",
+          punishment: "Punishment",
+          stress: "Stress",
+          socialComfort: "Social comfort",
+          arousal: "Arousal",
+          satiety: "Satiety"
+        };
+        ui.chemistry.replaceChildren(...window.NornCognition.chemicalNames.map(name =>
+          renderMeter(chemistryLabels[name], norn.cognition.chemistry[name])
+        ));
         renderDecisionSignals(norn);
         ui.traits.replaceChildren(
           renderTrait("Curiosity", norn.traits.curiosity),
@@ -1754,6 +3083,278 @@
         item.focus({ preventScroll: true });
       }
 
+      function renderCommandVoiceStatus() {
+        const hasSpeechApi = speechSynthesisApi && typeof window.SpeechSynthesisUtterance === "function"
+          && typeof speechSynthesisApi.getVoices === "function";
+        if (!hasSpeechApi || !localCommandVoice) {
+          ui.commandVoiceToggle.disabled = true;
+          ui.commandVoiceStatus.textContent = hasSpeechApi
+            ? "No local speech voice is available; replies will appear in text."
+            : "Local speech output is unavailable; replies will appear in text.";
+          return;
+        }
+        ui.commandVoiceToggle.disabled = false;
+        ui.commandVoiceStatus.textContent = currentCommandUtterance
+          ? "Speaking with the local voice."
+          : ui.commandVoiceToggle.checked
+            ? "Local voice ready: " + localCommandVoice.name + "."
+            : "Local voice replies are muted.";
+      }
+
+      function updateLocalCommandVoice() {
+        localCommandVoice = null;
+        if (speechSynthesisApi && typeof speechSynthesisApi.getVoices === "function") {
+          try {
+            const voices = speechSynthesisApi.getVoices().filter(voice => voice.localService === true);
+            const language = commandSpeechLanguage.toLowerCase();
+            const baseLanguage = language.split("-")[0];
+            localCommandVoice = voices.find(voice => String(voice.lang || "").toLowerCase() === language)
+              || voices.find(voice => String(voice.lang || "").toLowerCase().split("-")[0] === baseLanguage)
+              || voices.find(voice => voice.default === true)
+              || voices[0]
+              || null;
+          } catch {
+            localCommandVoice = null;
+          }
+        }
+        renderCommandVoiceStatus();
+      }
+
+      function initializeCommandVoiceReplies() {
+        if (speechSynthesisApi && typeof speechSynthesisApi.addEventListener === "function") {
+          speechSynthesisApi.addEventListener("voiceschanged", updateLocalCommandVoice);
+        }
+        updateLocalCommandVoice();
+      }
+
+      function cancelCommandSpeech() {
+        currentCommandUtterance = null;
+        if (speechSynthesisApi) {
+          try { speechSynthesisApi.cancel(); } catch { /* Speech output is optional. */ }
+        }
+        renderCommandVoiceStatus();
+      }
+
+      function speakLocalCommandReply(norn, word) {
+        if (!speechSynthesisApi || !localCommandVoice || !ui.commandVoiceToggle.checked
+          || typeof window.SpeechSynthesisUtterance !== "function") return;
+        try {
+          speechSynthesisApi.cancel();
+          const utterance = new window.SpeechSynthesisUtterance(word);
+          utterance.voice = localCommandVoice;
+          utterance.lang = localCommandVoice.lang || commandSpeechLanguage;
+          utterance.rate = 0.9;
+          utterance.pitch = norn.id === "mallow" ? 1.12 : 0.88;
+          utterance.volume = 0.85;
+          currentCommandUtterance = utterance;
+          utterance.onend = () => {
+            if (currentCommandUtterance !== utterance) return;
+            currentCommandUtterance = null;
+            renderCommandVoiceStatus();
+          };
+          utterance.onerror = () => {
+            if (currentCommandUtterance !== utterance) return;
+            currentCommandUtterance = null;
+            ui.commandVoiceStatus.textContent = "The local voice could not speak this reply; the text bubble is still available.";
+          };
+          ui.commandVoiceStatus.textContent = "Speaking with the local voice.";
+          speechSynthesisApi.speak(utterance);
+        } catch {
+          currentCommandUtterance = null;
+          ui.commandVoiceStatus.textContent = "The local voice could not speak this reply; the text bubble is still available.";
+        }
+      }
+
+      function setVoiceStatus(message, status = "idle") {
+        ui.voiceStatus.dataset.state = status;
+        ui.voiceStatus.textContent = message;
+      }
+
+      function setCommandStatus(message, status = "idle") {
+        ui.commandStatus.dataset.state = status;
+        ui.commandStatus.textContent = message;
+      }
+
+      function updateVoiceReadyStatus() {
+        if (!voiceRecognitionSupported) {
+          setVoiceStatus("On-device voice recognition is unavailable in this browser. Typed teaching still works.", "error");
+        } else if (!WORD_TARGETS[ui.voiceTarget.value]) {
+          setVoiceStatus("Choose what the word means to enable voice teaching.", "idle");
+        } else {
+          setVoiceStatus("Ready. Hold to speak one word; release to teach it. The local language model may need to be available in your browser.", "ready");
+        }
+      }
+
+      function renderVoiceControls() {
+        const hasTarget = !!WORD_TARGETS[ui.voiceTarget.value];
+        const session = voiceSession;
+        const disabled = !voiceRecognitionSupported || !hasTarget || resetPending || !!(session && session.released);
+        const pressed = !!(session && session.held);
+        const buttonText = !session
+          ? "Hold to speak"
+          : session.released ? "Processing…" : session.ended ? "Word ready · release to teach" : "Listening · release to teach";
+        const accessibleLabel = session && !session.released
+          ? session.ended
+            ? "Recognition ended. Release to teach the recognized word, or press Escape to cancel."
+            : "Listening. Release to teach the recognized word, or press Escape to cancel."
+          : "Hold to speak one word. Release to teach it.";
+        if (ui.voiceTarget.disabled !== !!session) ui.voiceTarget.disabled = !!session;
+        if (ui.voiceButton.disabled !== disabled) ui.voiceButton.disabled = disabled;
+        if (ui.voiceButton.getAttribute("aria-pressed") !== String(pressed)) {
+          ui.voiceButton.setAttribute("aria-pressed", String(pressed));
+        }
+        if (ui.voiceButton.textContent !== buttonText) ui.voiceButton.textContent = buttonText;
+        if (ui.voiceButton.getAttribute("aria-label") !== accessibleLabel) {
+          ui.voiceButton.setAttribute("aria-label", accessibleLabel);
+        }
+      }
+
+      function initializeVoiceTeaching() {
+        const recognition = createLocalSpeechRecognition();
+        voiceRecognitionSupported = !!recognition;
+        if (recognition) voiceLanguage = recognition.lang;
+        updateVoiceReadyStatus();
+        renderVoiceControls();
+      }
+
+      function voiceRecognitionErrorMessage(error) {
+        if (error === "not-allowed") return "Microphone permission was denied. Allow microphone access in your browser or type a word instead.";
+        if (error === "service-not-allowed") {
+          return "This browser could not provide on-device speech recognition for " + voiceLanguage + ". No remote fallback was used; type a word instead.";
+        }
+        if (error === "audio-capture") return "The microphone could not be started. Check the selected microphone or type a word instead.";
+        if (error === "no-speech") return "No speech was detected. Hold to speak and try again.";
+        if (error === "language-not-supported" || error === "language-unavailable") {
+          return "On-device recognition for " + voiceLanguage + " is unavailable in this browser. Type a word instead.";
+        }
+        if (error === "network") return "On-device recognition failed. No remote fallback was used; type a word instead.";
+        return "On-device recognition stopped. Type a word or try again.";
+      }
+
+      function completeVoiceTeaching(session) {
+        if (voiceSession !== session || session.cancelled || session.completed
+          || !session.released || !session.ended) return;
+        session.completed = true;
+        voiceSession = null;
+        renderVoiceControls();
+        if (!session.transcript) {
+          setVoiceStatus("No word was recognized. Hold to speak and try again, or type a word.", "error");
+          return;
+        }
+        const norn = getNorn(session.nornId);
+        const taught = teachWord(norn, session.transcript, session.targetId);
+        if (taught) {
+          const target = wordTargetDescription(session.targetId);
+          setVoiceStatus(norn.name + " learned “" + session.transcript.trim() + "” for " + target + ".", "ready");
+        } else {
+          setVoiceStatus("The spoken word wasn't taught. See the message for details, then try again or type a word.", "error");
+        }
+      }
+
+      function cancelVoiceTeaching(message = "Voice teaching cancelled. Nothing was taught.", status = "idle", abort = true) {
+        const session = voiceSession;
+        if (session) {
+          session.cancelled = true;
+          voiceSession = null;
+          if (abort && !session.ended) {
+            try { session.recognition.abort(); } catch { /* The browser may have already ended the session. */ }
+          }
+        }
+        renderVoiceControls();
+        if (message) setVoiceStatus(message, status);
+        else updateVoiceReadyStatus();
+      }
+
+      function startVoiceTeaching(source, pointerId = null, key = null) {
+        if (voiceSession) return false;
+        const targetId = ui.voiceTarget.value;
+        if (!WORD_TARGETS[targetId]) {
+          setVoiceStatus("Choose what the word means before speaking.", "error");
+          return false;
+        }
+        const recognition = createLocalSpeechRecognition();
+        if (!recognition) {
+          voiceRecognitionSupported = false;
+          updateVoiceReadyStatus();
+          renderVoiceControls();
+          return false;
+        }
+
+        voiceLanguage = recognition.lang;
+        const session = {
+          recognition,
+          nornId: state.selectedId,
+          targetId,
+          source,
+          pointerId,
+          key,
+          held: true,
+          released: false,
+          ended: false,
+          cancelled: false,
+          completed: false,
+          transcript: ""
+        };
+        voiceSession = session;
+        setVoiceStatus("Listening on this device. Say one word and release to teach it.", "listening");
+        renderVoiceControls();
+
+        recognition.onresult = event => {
+          if (voiceSession !== session || session.cancelled) return;
+          const finalParts = [];
+          for (let index = event.resultIndex || 0; index < event.results.length; index += 1) {
+            const result = event.results[index];
+            if (result.isFinal && result[0]) finalParts.push(result[0].transcript);
+          }
+          if (finalParts.length) {
+            session.transcript = finalParts.join(" ").trim();
+            if (session.held) setVoiceStatus("Word recognized. Release to teach it, or press Escape to cancel.", "listening");
+          }
+        };
+        recognition.onerror = event => {
+          if (voiceSession !== session || session.cancelled) return;
+          cancelVoiceTeaching(voiceRecognitionErrorMessage(event.error), "error", false);
+        };
+        recognition.onend = () => {
+          if (voiceSession !== session || session.cancelled) return;
+          session.ended = true;
+          if (session.released) {
+            completeVoiceTeaching(session);
+          } else {
+            setVoiceStatus(session.transcript
+              ? "Recognition ended. Release to teach the word, or press Escape to cancel."
+              : "Recognition ended. Release, then try again or type a word.", "listening");
+            renderVoiceControls();
+          }
+        };
+        try {
+          recognition.start();
+          return true;
+        } catch {
+          cancelVoiceTeaching("Could not start on-device recognition. Check microphone permission or type a word instead.", "error");
+          return false;
+        }
+      }
+
+      function stopVoiceTeaching() {
+        const session = voiceSession;
+        if (!session || session.released) return;
+        session.held = false;
+        session.released = true;
+        setVoiceStatus("Finishing on-device recognition…", "listening");
+        renderVoiceControls();
+        if (session.ended) {
+          completeVoiceTeaching(session);
+          return;
+        }
+        try {
+          session.recognition.stop();
+        } catch {
+          if (session.ended) completeVoiceTeaching(session);
+          else cancelVoiceTeaching("Recognition could not finish. Type a word or try again.", "error", false);
+        }
+      }
+
       function renderUI() {
         ui.clock.textContent = formatWorldTime(state.time);
         ui.pause.innerHTML = state.paused
@@ -1764,37 +3365,53 @@
         ui.speed.setAttribute("aria-label", `Simulation speed ${state.speed} times; activate to change`);
         ui.point.classList.toggle("active", state.pointMode);
         ui.point.setAttribute("aria-pressed", String(state.pointMode));
-        ui.teach.classList.toggle("active", Boolean(state.teachingWord));
-        ui.teach.setAttribute("aria-pressed", String(Boolean(state.teachingWord)));
-        canvas.classList.toggle("pointing", state.pointMode || Boolean(state.teachingWord));
+        ui.teach.classList.toggle("active", state.teachingMode);
+        ui.teach.setAttribute("aria-pressed", String(state.teachingMode));
+        renderVoiceControls();
+        canvas.classList.toggle("pointing", state.pointMode || state.teachingMode);
         const selectedNorn = getNorn(state.selectedId);
-        const feedbackCopy = feedbackWindowText(selectedNorn);
+        ui.commandNornName.textContent = selectedNorn.name;
+        renderFamilyControls();
+        renderWorldNavigation();
+        const typedWord = typeof state.teachingWord === "string" ? state.teachingWord.trim() : "";
+        const wordLabel = typedWord ? `“${typedWord}”` : "a word";
+        const feedbackCopy = state.teachingMode
+          ? `Teach ${selectedNorn.name} a word for Praise or Scold by activating the matching button. No behavior feedback will be applied.`
+          : feedbackWindowText(selectedNorn);
         if (ui.feedbackHelp.textContent !== feedbackCopy) ui.feedbackHelp.textContent = feedbackCopy;
+        if (state.teachingMode) {
+          ui.praise.setAttribute("aria-label", `Praise: teach ${wordLabel} to ${selectedNorn.name}`);
+          ui.scold.setAttribute("aria-label", `Scold: teach ${wordLabel} to ${selectedNorn.name}`);
+        } else {
+          ui.praise.removeAttribute("aria-label");
+          ui.scold.removeAttribute("aria-label");
+        }
         for (const target of ui.objectTargets) {
           const object = OBJECTS[target.dataset.objectTarget];
-          const label = state.teachingWord
-            ? `Use the ${object.label.toLowerCase()} for the word ${VOCABULARY[state.teachingWord].label}`
+          const label = state.teachingMode
+            ? `Teach ${selectedNorn.name} the word ${wordLabel} using the ${object.label.toLowerCase()}`
             : `Point ${selectedNorn.name} toward the ${object.label.toLowerCase()}`;
           if (target.getAttribute("aria-label") !== label) target.setAttribute("aria-label", label);
         }
         let objectHelp = "";
-        if (state.teachingWord) {
-          const objectName = OBJECTS[VOCABULARY[state.teachingWord].objectId].label.toLowerCase();
-          ui.hint.textContent = `Choose the ${objectName} to teach ${selectedNorn.name} the word “${state.teachingWord}”.`;
-          ui.toolbarNote.textContent = `Show “${state.teachingWord}” to ${selectedNorn.name}.`;
-          objectHelp = `Choose the ${objectName} to teach ${selectedNorn.name} the word “${state.teachingWord}”.`;
+        if (state.teachingMode) {
+          ui.hint.textContent = `Choose an object, Praise, or Scold to teach ${selectedNorn.name} ${wordLabel}.`;
+          ui.toolbarNote.textContent = `Choose an object or feedback target for ${wordLabel}.`;
+          objectHelp = `Choose the fruit or spinner to teach ${selectedNorn.name} ${wordLabel}; use Praise or Scold to teach those feedback words.`;
         } else if (state.pointMode) {
           ui.hint.textContent = `Choose an object to point it out to ${selectedNorn.name}.`;
           ui.toolbarNote.textContent = "Choose the fruit or spinner in the habitat.";
           objectHelp = `Choose the fruit dish or spinner to point it out to ${selectedNorn.name}.`;
         } else if (state.guidance && state.guidance.remaining > 0) {
-          ui.hint.textContent = `${getNorn(state.guidance.nornId).name} is following your point.`;
+          ui.hint.textContent = `${getNorn(state.guidance.nornId).name} is heading toward ${OBJECTS[state.guidance.objectId].label.toLowerCase()}.`;
           ui.toolbarNote.textContent = "They’ll try it, then decide what they think.";
-          objectHelp = `Choose another object to point ${selectedNorn.name} toward it. Select Teach word first to teach a matching word.`;
+          objectHelp = `Choose another object to point ${selectedNorn.name} toward it. To teach a word, type it, select Teach word, then choose a target.`;
         } else {
-          ui.hint.textContent = "Choose a Norn, then point them toward something interesting.";
+          ui.hint.textContent = cameraFollowing
+            ? `Following ${selectedNorn.name} through ${REGION_NAMES[getVisibleRegionIndex()]}. Use West and East to explore.`
+            : `Viewing ${REGION_NAMES[getVisibleRegionIndex()]}. Select a Norn to follow or travel between regions.`;
           ui.toolbarNote.textContent = "Select an object to point it out.";
-          objectHelp = `Choose an object to point ${selectedNorn.name} toward it. Select Teach word first to teach a matching word.`;
+          objectHelp = `Choose an object to point ${selectedNorn.name} toward it. To teach a word, type it and select Teach word.`;
         }
         if (ui.objectHelp.textContent !== objectHelp) ui.objectHelp.textContent = objectHelp;
         renderInspector();
@@ -1819,51 +3436,207 @@
       }
 
       function selectNorn(id) {
+        if (voiceSession) cancelVoiceTeaching("Voice teaching cancelled because you changed Norns.");
+        if (currentCommandUtterance) cancelCommandSpeech();
         state.selectedId = id;
+        cameraFollowing = true;
+        cameraX = clamp(getNorn(id).x - VIEW_WIDTH / 2, 0, WORLD_WIDTH - VIEW_WIDTH);
         state.pointMode = false;
+        state.teachingMode = false;
         state.teachingWord = null;
+        setCommandStatus("Commands now go to " + getNorn(id).name + ".", "idle");
         saveSoon();
         renderNornOptions();
         renderUI();
       }
 
       function beginWordTeaching() {
-        if (state.teachingWord) {
+        if (state.teachingMode) {
+          state.teachingMode = false;
           state.teachingWord = null;
+          showToast("Stopped word teaching.");
         } else {
           state.pointMode = false;
-          state.teachingWord = ui.wordSelect.value;
-          showToast(`Show ${getNorn(state.selectedId).name} the object for “${state.teachingWord}”.`);
+          state.teachingMode = true;
+          state.teachingWord = ui.wordInput.value;
+          if (state.teachingWord.trim()) {
+            showToast("Choose an object, Praise, or Scold to teach “" + state.teachingWord.trim() + "”.");
+          } else {
+            showToast("Type one word, then choose an object, Praise, or Scold.");
+          }
+          ui.wordInput.focus();
         }
         renderUI();
       }
 
-      function teachWord(norn, wordId, object) {
-        const definition = VOCABULARY[wordId];
-        norn.words[wordId] = clamp(norn.words[wordId] + 0.38, 0, 1);
-        norn.action = `learning the word “${definition.label}”`;
-        norn.reason = `You paired “${definition.label}” with ${object.label.toLowerCase()}`;
+      function teachWord(norn, rawWord, targetId) {
+        const input = validateWordInput(rawWord);
+        if (!input.valid) {
+          state.teachingWord = typeof rawWord === "string" ? rawWord : "";
+          showToast(input.reason);
+          renderUI();
+          return false;
+        }
+        const target = WORD_TARGETS[targetId];
+        if (!target) {
+          showToast("Choose one of the available teaching targets.");
+          return false;
+        }
+
+        const existing = findWordEntry(norn, input.normalized);
+        if (existing && existing.targetId !== targetId) {
+          showToast("“" + input.word + "” already means " + wordTargetDescription(existing.targetId) + " to " + norn.name + ". Choose a different word.");
+          return false;
+        }
+        if (existing) {
+          if (existing.isBuiltIn) {
+            norn.words[existing.targetId] = clamp(norn.words[existing.targetId] + 0.38, 0, 1);
+          } else {
+            const customWord = norn.customWords[existing.customIndex];
+            customWord.confidence = clamp(customWord.confidence + 0.38, 0, 1);
+          }
+        } else {
+          if (norn.customWords.length >= MAX_CUSTOM_WORDS_PER_NORN) {
+            showToast("This Norn has learned the maximum of " + MAX_CUSTOM_WORDS_PER_NORN + " custom words. Reuse a learned word or teach the other Norn.");
+            return false;
+          }
+          norn.customWords.push({ word: input.word, targetId, confidence: 0.38 });
+        }
+
+        const targetDescription = wordTargetDescription(targetId);
+        const feedbackName = target.label;
+        norn.action = "learning the word “" + input.word + "”";
+        norn.reason = "You paired “" + input.word + "” with " + targetDescription;
+        const eventText = target.kind === "object"
+          ? "You showed " + norn.name + " " + targetDescription + " and said “" + input.word + "”."
+          : "You taught " + norn.name + " “" + input.word + "” as a word for " + feedbackName + ".";
+        const memoryText = target.kind === "object"
+          ? "You said “" + input.word + "” while showing me " + targetDescription + "."
+          : "You paired “" + input.word + "” with " + feedbackName + ".";
         recordEvent({
           nornId: norn.id,
           type: "teach",
           icon: "Aa",
-          text: `You showed ${norn.name} the ${object.label.toLowerCase()} and said “${definition.label}”.`,
-          memory: `You said “${definition.label}” while showing me the ${object.label.toLowerCase()}.`
+          targetId,
+          actionId: ["fruit", "spinner"].includes(targetId) ? targetId : undefined,
+          word: input.word,
+          text: eventText,
+          memory: memoryText
         });
+        state.teachingMode = false;
         state.teachingWord = null;
-        showToast(`${norn.name} heard “${definition.label}”.`);
+        saveSoon();
+        showToast(target.kind === "object"
+          ? norn.name + " heard “" + input.word + "” with " + targetDescription + "."
+          : norn.name + " learned “" + input.word + "” as a word for " + feedbackName + ".");
         renderUI();
+        return true;
+      }
+
+      function normalizeCommandToken(value) {
+        return normalizeWord(value).replace(/^[,;:]+/u, "").replace(/[,;.!?]+$/u, "");
+      }
+
+      function parseNornCommand(norn, rawCommand) {
+        const command = typeof rawCommand === "string" ? rawCommand.trim() : "";
+        if (!command) return { valid: false, reason: "Type a command such as ‘eat fruit’ or ‘play spinner’." };
+        if (command.length > 96) return { valid: false, reason: "Keep the command to 96 characters or fewer." };
+
+        let tokens = command.split(/\s+/u).map(normalizeCommandToken);
+        if (tokens.some(token => !token)) {
+          return { valid: false, reason: "Use one verb and one object word." };
+        }
+        const namedNorn = state.norns.find(candidate => normalizeWord(candidate.name) === tokens[0]);
+        if (namedNorn) {
+          if (namedNorn.id !== norn.id) {
+            return { valid: false, reason: "That command names " + namedNorn.name + ". Select that Norn before sending it." };
+          }
+          tokens = tokens.slice(1);
+        }
+        if (tokens.length !== 2) {
+          return { valid: false, reason: "Use a verb and one learned object word, like ‘Mallow eat fruit’." };
+        }
+
+        const [verb, objectWord] = tokens;
+        if (!["push", "eat", "play"].includes(verb)) {
+          return { valid: false, reason: "This grove understands ‘push’, ‘eat’, and ‘play’ commands." };
+        }
+        const learnedEntry = findWordEntry(norn, objectWord);
+        if (!learnedEntry) {
+          return { valid: false, reason: norn.name + " has not learned that object word yet. Teach a word for fruit or the spinner first." };
+        }
+        if (!["fruit", "spinner"].includes(learnedEntry.targetId)) {
+          return { valid: false, reason: "Commands need a learned object word for Honey fruit or the Wind-up spinner." };
+        }
+        if (learnedEntry.confidence < 0.6) {
+          return { valid: false, reason: norn.name + " has not learned that word clearly yet. Teach it again, then try." };
+        }
+        if (verb === "eat" && learnedEntry.targetId !== "fruit") {
+          return { valid: false, reason: "‘Eat’ needs a word for Honey fruit." };
+        }
+        if (verb === "play" && learnedEntry.targetId !== "spinner") {
+          return { valid: false, reason: "‘Play’ needs a word for the Wind-up spinner." };
+        }
+
+        return { valid: true, verb, objectId: learnedEntry.targetId, learnedEntry };
+      }
+
+      function guideNornToObject(norn, object) {
+        state.guidance = { nornId: norn.id, objectId: object.id, remaining: 7 };
+        cameraFollowing = true;
+        norn.targetId = object.id;
+        norn.reason = `Following your cue toward ${object.label.toLowerCase()}`;
+      }
+
+      function issueNornCommand(rawCommand) {
+        if (resetPending) {
+          setCommandStatus("The grove is resetting. Try again when it is ready.", "error");
+          return false;
+        }
+        const norn = getNorn(state.selectedId);
+        const parsed = parseNornCommand(norn, rawCommand);
+        if (!parsed.valid) {
+          setCommandStatus(parsed.reason, "error");
+          showToast(parsed.reason);
+          return false;
+        }
+
+        const object = OBJECTS[parsed.objectId];
+        guideNornToObject(norn, object);
+        norn.reason = "You suggested " + parsed.verb + " the " + object.label.toLowerCase();
+        recordEvent({
+          nornId: norn.id,
+          type: "command",
+          icon: "⌨",
+          targetId: object.id,
+          actionId: object.id,
+          word: parsed.learnedEntry.word,
+          text: "You asked " + norn.name + " to " + parsed.verb + " “" + parsed.learnedEntry.word + "” (" + object.label.toLowerCase() + ").",
+          memory: "You suggested I " + parsed.verb + " “" + parsed.learnedEntry.word + "” for " + object.label.toLowerCase() + "; I can decide whether to act."
+        });
+
+        const spokenWord = speakKnownWord(norn, parsed.objectId, "responding-to-command");
+        if (spokenWord) {
+          shareSpokenWord(norn, spokenWord);
+          speakLocalCommandReply(norn, spokenWord.word);
+        }
+        saveSoon();
+        setCommandStatus(norn.name + " heard your command and is heading toward " + object.label.toLowerCase() + ". Their needs still guide what they do there.", "success");
+        showToast(norn.name + " heard you. They’ll decide whether to act based on their needs.");
+        renderUI();
+        return true;
       }
 
       function pointNornToObject(object) {
         const norn = getNorn(state.selectedId);
-        state.guidance = { nornId: norn.id, objectId: object.id, remaining: 7 };
+        guideNornToObject(norn, object);
         state.pointMode = false;
-        norn.thinkIn = 0;
         recordEvent({
           nornId: norn.id,
           type: "point",
           icon: "⌖",
+          targetId: object.id,
+          actionId: object.id,
           text: `You pointed ${norn.name} toward ${object.label.toLowerCase()}.`,
           memory: `You pointed out the ${object.label.toLowerCase()}; I went to take a closer look.`
         });
@@ -1874,14 +3647,8 @@
       function activateObjectTarget(objectId) {
         const object = OBJECTS[objectId];
         if (!object) return;
-        if (state.teachingWord) {
-          const definition = VOCABULARY[state.teachingWord];
-          if (object.id !== definition.objectId) {
-            const expectedObject = OBJECTS[definition.objectId];
-            showToast(`Show “${definition.label}” with the ${expectedObject.label.toLowerCase()}.`);
-            return;
-          }
-          teachWord(getNorn(state.selectedId), state.teachingWord, object);
+        if (state.teachingMode) {
+          teachWord(getNorn(state.selectedId), ui.wordInput.value, object.id);
           return;
         }
         pointNornToObject(object);
@@ -1909,7 +3676,6 @@
         const previousAssociation = norn.learned[object.id];
         const nextAssociation = clamp(previousAssociation + 0.2, 0, 1);
         const changed = nextAssociation !== previousAssociation;
-        norn.learned[object.id] = nextAssociation;
         const effectText = changed
           ? "the association grew stronger"
           : "the association was already as strong as it could be";
@@ -1920,12 +3686,18 @@
           nornId: norn.id,
           type: "praise",
           icon: "♡",
+          targetId: object.id,
+          actionId: object.id,
+          feedback: "praise",
+          learningDelta: 0.2,
           text: `You praised ${norn.name} after ${success.kind === "food" ? "eating" : "playing"}; ${effectText}.`,
           memory: changed
             ? `You praised me after I used the ${objectLabel}; I may remember it as helpful.`
             : `You praised me after I used the ${objectLabel}; my association was already as strong as it could be.`
         });
-        shareFeedbackObservation(norn, object, "praise", feedbackEvent);
+        const spokenWord = speakKnownWord(norn, "praise", "receiving-feedback");
+        shareFeedbackObservation(norn, object, "praise", feedbackEvent, spokenWord);
+        saveSoon();
         showToast(`${norn.name} noticed your praise. The ${objectLabel} association ${changed ? "grew stronger." : "was already at its strongest."}`);
         renderUI();
       }
@@ -1941,7 +3713,6 @@
         const previousAssociation = norn.learned[object.id];
         const nextAssociation = clamp(previousAssociation - 0.2, 0, 1);
         const changed = nextAssociation !== previousAssociation;
-        norn.learned[object.id] = nextAssociation;
         norn.action = "noticing your disapproval";
         const effectText = changed
           ? "the association weakened"
@@ -1953,12 +3724,18 @@
           nornId: norn.id,
           type: "scold",
           icon: "!",
+          targetId: object.id,
+          actionId: object.id,
+          feedback: "scold",
+          learningDelta: -0.2,
           text: `You scolded ${norn.name} after ${actionForJournal} the ${objectLabel}; ${effectText}.`,
           memory: changed
             ? `You scolded me after I ${action} the ${objectLabel}; I may be less likely to choose it.`
             : `You scolded me after I ${action} the ${objectLabel}; my association was already as weak as it could be.`
         });
-        shareFeedbackObservation(norn, object, "scold", feedbackEvent);
+        const spokenWord = speakKnownWord(norn, "scold", "receiving-feedback");
+        shareFeedbackObservation(norn, object, "scold", feedbackEvent, spokenWord);
+        saveSoon();
         showToast(`${norn.name} noticed your scolding. The ${objectLabel} association ${changed ? "weakened." : "was already at its weakest."}`);
         renderUI();
       }
@@ -1973,19 +3750,18 @@
       function canvasPosition(event) {
         const rect = canvas.getBoundingClientRect();
         return {
-          x: (event.clientX - rect.left) / rect.width * WORLD_WIDTH,
+          x: cameraX + (event.clientX - rect.left) / rect.width * VIEW_WIDTH,
           y: (event.clientY - rect.top) / rect.height * WORLD_HEIGHT
         };
       }
 
       function handleCanvasClick(event) {
         const point = canvasPosition(event);
-        if (state.teachingWord || state.pointMode) {
+        if (state.teachingMode || state.pointMode) {
           const object = objectAt(point.x, point.y);
           if (!object) {
-            if (state.teachingWord) {
-              const expectedObject = OBJECTS[VOCABULARY[state.teachingWord].objectId];
-              showToast(`Click the ${expectedObject.label.toLowerCase()} to show that word.`);
+            if (state.teachingMode) {
+              showToast("Choose the fruit or spinner in the habitat, or use Praise or Scold to teach that feedback word.");
             } else {
               showToast("Point to the fruit dish or wind-up spinner in the habitat.");
             }
@@ -2001,6 +3777,8 @@
 
       async function resetSimulation(seed = 4181996) {
         if (resetPending) return;
+        if (voiceSession) cancelVoiceTeaching("Voice teaching cancelled because the grove was reset.");
+        cancelCommandSpeech();
         resetPending = true;
         ui.reset.disabled = true;
         journalExpanded = false;
@@ -2009,8 +3787,14 @@
         if (saveTimeout) window.clearTimeout(saveTimeout);
         saveTimeout = 0;
         saveElapsed = 0;
+        familyNotice = "";
+        familyOptionsKey = "";
+        cameraFollowing = true;
+        cameraX = 0;
         const next = createInitialState(seed);
         Object.assign(state, next);
+        ui.commandInput.value = "";
+        setCommandStatus("Commands go to the selected Norn.", "idle");
         renderNornOptions();
         renderUI();
         setSaveStatus("saving", "Fresh grove · waiting to save in this browser");
@@ -2024,6 +3808,7 @@
       }
 
       function frame(now) {
+        const benchmarkFrameStarted = BENCHMARK_MODE && benchmark.running ? performance.now() : 0;
         if (!previousFrame) previousFrame = now;
         const elapsed = Math.min((now - previousFrame) / 1000, .08);
         previousFrame = now;
@@ -2041,12 +3826,19 @@
           renderUI();
           uiRefresh = 0;
         }
+        if (BENCHMARK_MODE && benchmark.running) {
+          benchmark.frameTimes.push(performance.now() - benchmarkFrameStarted);
+          if (state.time >= benchmark.duration) finishBenchmark();
+        }
         window.requestAnimationFrame(frame);
       }
 
       ui.point.addEventListener("click", () => {
         state.pointMode = !state.pointMode;
-        if (state.pointMode) state.teachingWord = null;
+        if (state.pointMode) {
+          state.teachingMode = false;
+          state.teachingWord = null;
+        }
         if (state.pointMode) showToast(`Point to something for ${getNorn(state.selectedId).name} to explore.`);
         renderUI();
       });
@@ -2054,15 +3846,85 @@
         target.addEventListener("click", () => activateObjectTarget(target.dataset.objectTarget));
       }
       ui.teach.addEventListener("click", beginWordTeaching);
+      ui.voiceTarget.addEventListener("change", () => {
+        updateVoiceReadyStatus();
+        renderVoiceControls();
+      });
+      ui.commandForm.addEventListener("submit", event => {
+        event.preventDefault();
+        if (issueNornCommand(ui.commandInput.value)) ui.commandInput.value = "";
+      });
+      ui.layEgg.addEventListener("click", layFamilyEgg);
+      ui.worldWest.addEventListener("click", () => navigateWorld(-1));
+      ui.worldEast.addEventListener("click", () => navigateWorld(1));
+      ui.worldFollow.addEventListener("click", followSelectedNorn);
+      ui.commandVoiceToggle.addEventListener("change", () => {
+        if (!ui.commandVoiceToggle.checked) cancelCommandSpeech();
+        else renderCommandVoiceStatus();
+      });
+      ui.voiceButton.addEventListener("pointerdown", event => {
+        if (event.button !== 0) return;
+        if (!startVoiceTeaching("pointer", event.pointerId)) return;
+        try { ui.voiceButton.setPointerCapture(event.pointerId); } catch { /* Release events still work without pointer capture. */ }
+      });
+      ui.voiceButton.addEventListener("pointerup", event => {
+        if (voiceSession && voiceSession.source === "pointer" && voiceSession.pointerId === event.pointerId) {
+          stopVoiceTeaching();
+        }
+      });
+      ui.voiceButton.addEventListener("pointercancel", event => {
+        if (voiceSession && voiceSession.source === "pointer" && voiceSession.pointerId === event.pointerId) {
+          cancelVoiceTeaching("Voice teaching cancelled. Nothing was taught.");
+        }
+      });
+      ui.voiceButton.addEventListener("lostpointercapture", event => {
+        if (voiceSession && voiceSession.source === "pointer" && voiceSession.pointerId === event.pointerId
+          && !voiceSession.released) {
+          cancelVoiceTeaching("Voice teaching stopped because the button was released. Nothing was taught.");
+        }
+      });
+      ui.voiceButton.addEventListener("keydown", event => {
+        if (event.key === "Escape" && voiceSession) {
+          event.preventDefault();
+          cancelVoiceTeaching("Voice teaching cancelled. Nothing was taught.");
+          return;
+        }
+        if (![" ", "Spacebar", "Enter"].includes(event.key)) return;
+        event.preventDefault();
+        if (!event.repeat) startVoiceTeaching("keyboard", null, event.key);
+      });
+      ui.voiceButton.addEventListener("keyup", event => {
+        if (voiceSession && voiceSession.source === "keyboard"
+          && (event.key === voiceSession.key || event.key === "Spacebar" && voiceSession.key === " ")) {
+          stopVoiceTeaching();
+        }
+      });
+      ui.voiceButton.addEventListener("blur", () => {
+        if (voiceSession && !voiceSession.released) {
+          cancelVoiceTeaching("Voice teaching stopped because the control lost focus. Nothing was taught.");
+        }
+      });
       ui.exportSave.addEventListener("click", exportCurrentRun);
-      ui.wordSelect.addEventListener("change", () => {
-        if (state.teachingWord) {
-          state.teachingWord = ui.wordSelect.value;
+      ui.wordInput.addEventListener("input", () => {
+        if (state.teachingMode) {
+          state.teachingWord = ui.wordInput.value;
           renderUI();
         }
       });
-      ui.praise.addEventListener("click", applyPraise);
-      ui.scold.addEventListener("click", applyScold);
+      ui.praise.addEventListener("click", () => {
+        if (state.teachingMode) {
+          teachWord(getNorn(state.selectedId), ui.wordInput.value, "praise");
+          return;
+        }
+        applyPraise();
+      });
+      ui.scold.addEventListener("click", () => {
+        if (state.teachingMode) {
+          teachWord(getNorn(state.selectedId), ui.wordInput.value, "scold");
+          return;
+        }
+        applyScold();
+      });
       ui.pause.addEventListener("click", () => {
         state.paused = !state.paused;
         saveSoon();
@@ -2085,22 +3947,63 @@
       canvas.addEventListener("click", handleCanvasClick);
       window.addEventListener("resize", () => renderWorld(ctx, state));
       window.addEventListener("pagehide", () => {
+        if (voiceSession) cancelVoiceTeaching();
+        cancelCommandSpeech();
         if (saveTimeout) window.clearTimeout(saveTimeout);
         saveTimeout = 0;
         saveNow();
       });
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") saveNow();
+        if (document.visibilityState === "hidden") {
+          if (voiceSession) cancelVoiceTeaching();
+          cancelCommandSpeech();
+          saveNow();
+        }
+      });
+      window.addEventListener("pointerup", event => {
+        if (voiceSession && voiceSession.source === "pointer" && voiceSession.pointerId === event.pointerId) {
+          stopVoiceTeaching();
+        }
+      });
+      window.addEventListener("pointercancel", event => {
+        if (voiceSession && voiceSession.source === "pointer" && voiceSession.pointerId === event.pointerId) {
+          cancelVoiceTeaching("Voice teaching cancelled. Nothing was taught.");
+        }
+      });
+      window.addEventListener("blur", () => {
+        if (voiceSession && !voiceSession.released) {
+          cancelVoiceTeaching("Voice teaching stopped because the page lost focus. Nothing was taught.");
+        }
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && voiceSession) {
+          event.preventDefault();
+          cancelVoiceTeaching("Voice teaching cancelled. Nothing was taught.");
+        }
       });
       window.addEventListener("storage", handleStorageChange);
 
-      const restored = restoreSavedState();
-      if (!hasSafeLocking()) {
+      ui.benchmarkRule.addEventListener("click", () => startBenchmark("legacy"));
+      ui.benchmarkPilot.addEventListener("click", () => startBenchmark("pilot"));
+      ui.benchmarkSeed.addEventListener("change", () => {
+        ui.benchmarkSeedLabel.textContent = `Seed ${ui.benchmarkSeed.value} · simulation at 1×`;
+      });
+      const restored = BENCHMARK_MODE ? false : restoreSavedState();
+      if (BENCHMARK_MODE) {
+        document.body.classList.add("benchmark-mode");
+        ui.benchmarkPanel.hidden = false;
+        ui.exportSave.hidden = true;
+        setSaveStatus("unavailable", "Benchmark mode · browser saves disabled");
+      } else if (!hasSafeLocking()) {
         blockSaving("unavailable", "Autosave unavailable · browser locking required");
       }
       renderNornOptions();
+      if (!BENCHMARK_MODE) {
+        initializeVoiceTeaching();
+        initializeCommandVoiceReplies();
+      }
       renderUI();
-      if (!restored && !saveBlocked) saveNow();
+      if (!BENCHMARK_MODE && !restored && !saveBlocked) saveNow();
       window.requestAnimationFrame(frame);
     })();
   </script>
