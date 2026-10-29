@@ -2,8 +2,12 @@ extends SceneTree
 
 const Cognition = preload("res://scripts/norn_cognition.gd")
 const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
+const SAVE_PATH := "user://albia_norn_save.json"
 
 var _failures: Array[String] = []
+var _save_backup_available: bool = false
+var _save_backup_ok: bool = true
+var _original_save_text: String = ""
 
 
 func _initialize() -> void:
@@ -11,6 +15,7 @@ func _initialize() -> void:
 
 
 func _run_checks() -> void:
+	_save_backup_ok = _capture_original_save()
 	test_profiles_keep_independent_state()
 	await test_actor_approaches_peer_without_consuming_object()
 	await test_world_spawns_two_independent_norns()
@@ -24,6 +29,15 @@ func _run_checks() -> void:
 	await test_focus_routes_actions_only_to_selected_norn()
 	await test_invalid_focus_id_is_ignored()
 	await test_unfocused_norn_keeps_simulating()
+	if _save_backup_ok:
+		await test_version4_round_trip_preserves_both_profiles()
+		await test_v1_migration_preserves_mallow_and_seeds_moss()
+		await test_v2_migration_preserves_mallow_and_seeds_moss()
+		await test_v3_migration_preserves_mallow_and_seeds_moss()
+		await test_malformed_v4_save_uses_safe_reset()
+	else:
+		_expect(false, "save tests can preserve the existing local save")
+	_restore_original_save()
 	if _failures.is_empty():
 		print("SOCIAL_SLICE_CHECKS_OK")
 		quit(0)
@@ -495,6 +509,262 @@ func test_unfocused_norn_keeps_simulating() -> void:
 	_expect(after_compounds != before_compounds, "unfocused Mallow continues advancing chemistry")
 	_expect(world.call("focused_profile").get("actor_id") == "moss", "ongoing simulation does not change focus")
 	await _destroy_social_world(world)
+
+
+func test_version4_round_trip_preserves_both_profiles() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_cognition: Dictionary = mallow.get("cognition_state")
+	var moss_cognition: Dictionary = moss.get("cognition_state")
+	Cognition.record_outcome(mallow_cognition, {"eventType": "food", "actionId": "fruit", "targetId": "fruit", "time": 1.5, "text": "Mallow ate fruit"})
+	Cognition.record_outcome(moss_cognition, {"eventType": "toy", "actionId": "spinner", "targetId": "spinner", "time": 2.5, "text": "Moss played"})
+	var mallow_biochemistry: Dictionary = mallow.get("biochemistry_state")
+	var moss_biochemistry: Dictionary = moss.get("biochemistry_state")
+	Biochemistry.apply_event(mallow_biochemistry, "food")
+	Biochemistry.apply_event(moss_biochemistry, "toy")
+	Cognition.sync_chemistry(mallow_cognition, Biochemistry.read_signals(mallow_biochemistry))
+	Cognition.sync_chemistry(moss_cognition, Biochemistry.read_signals(moss_biochemistry))
+	var language: RefCounted = world.get("_language")
+	language.call("teach_word", mallow.get("language_state"), "mela", "fruit")
+	language.call("teach_word", moss.get("language_state"), "twirl", "spinner")
+	mallow.set("feedback_available", true)
+	mallow.set("feedback_action", "fruit")
+	mallow.set("feedback_target", "fruit")
+	mallow.set("feedback_time", 7.25)
+	moss.set("feedback_available", true)
+	moss.set("feedback_action", "spinner")
+	moss.set("feedback_target", "spinner")
+	moss.set("feedback_time", 9.5)
+	world.set("simulation_time", 10.0)
+	world.call("select_norn", "moss")
+	var expected_mallow_episodes: Array = mallow_cognition["episodes"].duplicate(true)
+	var expected_moss_episodes: Array = moss_cognition["episodes"].duplicate(true)
+	var expected_mallow_compounds := Biochemistry.read_compounds(mallow_biochemistry)
+	var expected_moss_compounds := Biochemistry.read_compounds(moss_biochemistry)
+	var expected_mallow_words: Dictionary = mallow.get("language_state")["words"].duplicate(true)
+	var expected_moss_words: Dictionary = moss.get("language_state")["words"].duplicate(true)
+	var spinner: Interactable = world.get("objects")["spinner"]
+	mallow.get("actor").set_action_target(spinner, "spinner", "Transient before load", "spinner")
+	moss.get("actor").set_action_target(spinner, "spinner", "Transient before load", "spinner")
+	world.call("save_game")
+	var saved := _read_save_record()
+	var saved_norns: Dictionary = saved.get("norns", {})
+	_expect(int(saved.get("version", -1)) == 4, "saving both profiles writes version 4")
+	_expect(saved_norns.has("mallow") and saved_norns.has("moss"), "version-4 save contains both stable profile IDs")
+	if saved_norns.has("mallow") and saved_norns.has("moss"):
+		for actor_id: String in ["mallow", "moss"]:
+			var saved_profile: Dictionary = saved_norns[actor_id]
+			_expect(saved_profile.has("cognition") and saved_profile.has("biochemistry") and saved_profile.has("language") and saved_profile.has("feedback"), "%s save contains cognition, biochemistry, language, and feedback" % actor_id.capitalize())
+	_expect(str(saved.get("focusedNornId", "")) == "moss", "version-4 save retains the focused Norn")
+	_expect(saved.get("seed", -1) == 4181996 and is_equal_approx(float(saved.get("simulationTime", -1.0)), 10.0), "version-4 save retains top-level seed and simulation time")
+	(mallow_cognition["episodes"] as Array).clear()
+	(moss_cognition["episodes"] as Array).clear()
+	(mallow.get("language_state")["words"] as Dictionary).clear()
+	(moss.get("language_state")["words"] as Dictionary).clear()
+	Biochemistry.apply_event(mallow_biochemistry, "scold")
+	Biochemistry.apply_event(moss_biochemistry, "scold")
+	mallow.set("feedback_available", false)
+	moss.set("feedback_available", false)
+	world.call("select_norn", "mallow")
+	world.call("load_game")
+	mallow = world.call("profile_for", "mallow")
+	moss = world.call("profile_for", "moss")
+	mallow_cognition = mallow.get("cognition_state")
+	moss_cognition = moss.get("cognition_state")
+	_expect(_deep_values_match(mallow_cognition["episodes"], expected_mallow_episodes) and _deep_values_match(moss_cognition["episodes"], expected_moss_episodes), "version-4 round trip preserves both Norns' episodes")
+	_expect(_number_maps_match(Biochemistry.read_compounds(mallow.get("biochemistry_state")), expected_mallow_compounds, Biochemistry.COMPOUND_IDS) and _number_maps_match(Biochemistry.read_compounds(moss.get("biochemistry_state")), expected_moss_compounds, Biochemistry.COMPOUND_IDS), "version-4 round trip preserves both Norns' compounds")
+	_expect(mallow.get("language_state")["words"] == expected_mallow_words and moss.get("language_state")["words"] == expected_moss_words, "version-4 round trip preserves both vocabularies")
+	_expect(world.get("focused_norn_id") == "moss", "version-4 round trip restores focus")
+	_expect(mallow.get("feedback_available") and mallow.get("feedback_action") == "fruit" and is_equal_approx(float(mallow.get("feedback_time")), 7.25), "version-4 round trip preserves Mallow's independent feedback window")
+	_expect(moss.get("feedback_available") and moss.get("feedback_action") == "spinner" and is_equal_approx(float(moss.get("feedback_time")), 9.5), "version-4 round trip preserves Moss's independent feedback window")
+	_expect(mallow.get("actor").target == null and moss.get("actor").target == null, "loading clears transient movement targets")
+	await _destroy_social_world(world)
+
+
+func test_v1_migration_preserves_mallow_and_seeds_moss() -> void:
+	await _verify_legacy_profile_migration(1)
+
+
+func test_v2_migration_preserves_mallow_and_seeds_moss() -> void:
+	await _verify_legacy_profile_migration(2)
+
+
+func test_v3_migration_preserves_mallow_and_seeds_moss() -> void:
+	await _verify_legacy_profile_migration(3)
+
+
+func _verify_legacy_profile_migration(save_version: int) -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var cognition: Dictionary = mallow.get("cognition_state")
+	Cognition.record_outcome(cognition, {"eventType": "food", "actionId": "fruit", "targetId": "fruit", "time": 3.0, "text": "Mallow legacy memory"})
+	var biochemistry: Dictionary = mallow.get("biochemistry_state")
+	Biochemistry.apply_event(biochemistry, "food")
+	Cognition.sync_chemistry(cognition, Biochemistry.read_signals(biochemistry))
+	var language: RefCounted = world.get("_language")
+	language.call("teach_word", mallow.get("language_state"), "legacy", "fruit")
+	var saved_cognition := Cognition.serialize_state(cognition)
+	var expected_episodes: Array = saved_cognition["episodes"].duplicate(true)
+	var expected_associations: Dictionary = saved_cognition["actionAssociations"].duplicate(true)
+	var expected_signals := Biochemistry.read_signals(biochemistry)
+	var expected_compounds := Biochemistry.read_compounds(biochemistry)
+	var expected_words: Dictionary = mallow.get("language_state")["words"].duplicate(true)
+	var legacy_record := {"version": save_version, "seed": 4181996, "simulationTime": 3.0, "cognition": saved_cognition}
+	if save_version >= 2:
+		legacy_record["language"] = language.call("serialize_state", mallow.get("language_state"))
+	if save_version >= 3:
+		legacy_record["biochemistry"] = Biochemistry.serialize_state(biochemistry)
+	_expect(_write_save_record(legacy_record), "version-%d migration fixture can be written" % save_version)
+	world.call("load_game")
+	mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var restored_cognition: Dictionary = mallow.get("cognition_state")
+	var restored_language: Dictionary = mallow.get("language_state")
+	var restored_biochemistry: Dictionary = mallow.get("biochemistry_state")
+	_expect(_deep_values_match(restored_cognition["episodes"], expected_episodes) and _deep_values_match(restored_cognition["actionAssociations"], expected_associations), "version-%d migration preserves Mallow's cognition" % save_version)
+	_expect(_number_maps_match(Biochemistry.read_signals(restored_biochemistry), expected_signals, Biochemistry.SIGNAL_IDS), "version-%d migration preserves Mallow's biochemical signals" % save_version)
+	if save_version >= 3:
+		_expect(_number_maps_match(Biochemistry.read_compounds(restored_biochemistry), expected_compounds, Biochemistry.COMPOUND_IDS), "version-3 migration preserves all Mallow compounds")
+	if save_version >= 2:
+		_expect(restored_language["words"] == expected_words, "version-%d migration preserves Mallow's vocabulary" % save_version)
+	else:
+		_expect(restored_language["words"].is_empty(), "version-1 migration starts Mallow with an empty vocabulary")
+	var moss_cognition: Dictionary = moss.get("cognition_state")
+	_expect(int(moss_cognition.get("seed", -1)) == 4181997 and moss_cognition["traits"] == {"curiosity": 0.5, "sociability": 0.85}, "version-%d migration creates Moss from deterministic seed and traits" % save_version)
+	_expect(moss_cognition["episodes"].is_empty() and moss.get("language_state")["words"].is_empty() and not moss.get("feedback_available"), "version-%d migration creates clean independent Moss state" % save_version)
+	var clean_moss_biochemistry := Biochemistry.create_state(moss_cognition["chemistry"])
+	_expect(_number_maps_match(Biochemistry.read_compounds(moss.get("biochemistry_state")), Biochemistry.read_compounds(clean_moss_biochemistry), Biochemistry.COMPOUND_IDS), "version-%d migration initializes Moss with reproducible compounds" % save_version)
+	_expect(world.get("focused_norn_id") == "mallow", "version-%d migration defaults focus to Mallow" % save_version)
+	await _destroy_social_world(world)
+
+
+func test_malformed_v4_save_uses_safe_reset() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var valid_record := _make_version4_fixture(world)
+	var invalid_records: Array[Dictionary] = []
+	var bad_ids: Dictionary = valid_record.duplicate(true)
+	(bad_ids["norns"] as Dictionary).erase("moss")
+	(bad_ids["norns"] as Dictionary)["stranger"] = (bad_ids["norns"] as Dictionary)["mallow"].duplicate(true)
+	invalid_records.append(bad_ids)
+	var bad_chemistry: Dictionary = valid_record.duplicate(true)
+	(((bad_chemistry["norns"] as Dictionary)["moss"] as Dictionary)["biochemistry"] as Dictionary)["compounds"]["ATP"] = -1.0
+	invalid_records.append(bad_chemistry)
+	var bad_feedback: Dictionary = valid_record.duplicate(true)
+	((bad_feedback["norns"] as Dictionary)["mallow"] as Dictionary)["feedback"]["action"] = "unknown"
+	invalid_records.append(bad_feedback)
+	var missing_data: Dictionary = valid_record.duplicate(true)
+	(((missing_data["norns"] as Dictionary)["moss"] as Dictionary).erase("language"))
+	invalid_records.append(missing_data)
+	for index: int in range(invalid_records.size()):
+		_expect(_write_save_record(invalid_records[index]), "malformed version-4 case %d can be written" % index)
+		world.call("load_game")
+		var mallow = world.call("profile_for", "mallow")
+		var moss = world.call("profile_for", "moss")
+		var mallow_cognition: Dictionary = mallow.get("cognition_state")
+		var moss_cognition: Dictionary = moss.get("cognition_state")
+		_expect(str(world.get("last_status")).contains("started a clean seeded"), "malformed version-4 case %d uses safe reset" % index)
+		_expect(mallow_cognition["episodes"].is_empty() and moss_cognition["episodes"].is_empty(), "malformed version-4 case %d does not partially restore learning" % index)
+		_expect(int(mallow_cognition.get("seed", -1)) == 4181996 and int(moss_cognition.get("seed", -1)) == 4181997 and world.get("focused_norn_id") == "mallow", "malformed version-4 case %d resets to both deterministic profiles" % index)
+	await _destroy_social_world(world)
+
+
+func _make_version4_fixture(world: Node) -> Dictionary:
+	var norns := {}
+	for actor_id: String in ["mallow", "moss"]:
+		var profile = world.call("profile_for", actor_id)
+		var serialized_cognition: Dictionary = Cognition.serialize_state(profile.get("cognition_state"))
+		var serialized_biochemistry: Dictionary = Biochemistry.serialize_state(profile.get("biochemistry_state"))
+		var serialized_language: Dictionary = world.get("_language").call("serialize_state", profile.get("language_state"))
+		norns[actor_id] = {
+			"actorId": actor_id,
+			"cognition": serialized_cognition,
+			"biochemistry": serialized_biochemistry,
+			"language": serialized_language,
+			"feedback": {"available": false, "action": "", "target": "", "time": -1000.0}
+		}
+	return {"version": 4, "seed": 4181996, "simulationTime": 1.0, "focusedNornId": "mallow", "norns": norns}
+
+
+func _capture_original_save() -> bool:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return true
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return false
+	_original_save_text = file.get_as_text()
+	file.close()
+	_save_backup_available = true
+	return true
+
+
+func _restore_original_save() -> void:
+	if not _save_backup_ok:
+		return
+	if _save_backup_available:
+		var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+		if file == null:
+			_failures.append("could not restore the original local save after persistence checks")
+			return
+		file.store_string(_original_save_text)
+		file.close()
+	elif FileAccess.file_exists(SAVE_PATH):
+		var absolute_path := ProjectSettings.globalize_path(SAVE_PATH)
+		if DirAccess.remove_absolute(absolute_path) != OK:
+			_failures.append("could not remove the persistence test save after restoring the original empty state")
+
+
+func _read_save_record() -> Dictionary:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return {}
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return {}
+	var parser := JSON.new()
+	var parse_error := parser.parse(file.get_as_text())
+	file.close()
+	return parser.data if parse_error == OK and parser.data is Dictionary else {}
+
+
+func _write_save_record(record: Dictionary) -> bool:
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(JSON.stringify(record, "\t"))
+	file.close()
+	return true
+
+
+func _number_maps_match(actual: Dictionary, expected: Dictionary, keys: Array[String]) -> bool:
+	if actual.size() != keys.size() or expected.size() != keys.size():
+		return false
+	for key: String in keys:
+		if not actual.has(key) or not expected.has(key) or not is_equal_approx(float(actual[key]), float(expected[key])):
+			return false
+	return true
+
+
+func _deep_values_match(actual: Variant, expected: Variant) -> bool:
+	if (actual is int or actual is float) and (expected is int or expected is float):
+		return is_equal_approx(float(actual), float(expected))
+	if actual is Dictionary and expected is Dictionary:
+		if actual.size() != expected.size():
+			return false
+		for key: Variant in expected:
+			if not actual.has(key) or not _deep_values_match(actual[key], expected[key]):
+				return false
+		return true
+	if actual is Array and expected is Array:
+		if actual.size() != expected.size():
+			return false
+		for index: int in range(expected.size()):
+			if not _deep_values_match(actual[index], expected[index]):
+				return false
+		return true
+	return actual == expected
 
 
 func _create_social_world() -> Node:

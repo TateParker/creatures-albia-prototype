@@ -104,6 +104,11 @@ func _run_scenario() -> void:
 	var expected_compounds: Dictionary = Biochemistry.read_compounds(world.get("biochemistry_state"))
 	var expected_signals: Dictionary = Biochemistry.read_signals(world.get("biochemistry_state"))
 	var expected_language_words: Dictionary = world.language_state["words"].duplicate(true)
+	moss_profile = world.profile_for("moss")
+	var expected_moss_compounds: Dictionary = Biochemistry.read_compounds(moss_profile.biochemistry_state)
+	var expected_moss_words: Dictionary = moss_profile.language_state["words"].duplicate(true)
+	var expected_moss_association := float(moss_profile.cognition_state["actionAssociations"]["spinner"])
+	var expected_moss_episodes: int = moss_profile.cognition_state["episodes"].size()
 	world.save_game()
 	var saved_file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	var valid_saved_text := saved_file.get_as_text() if saved_file != null else ""
@@ -113,18 +118,35 @@ func _run_scenario() -> void:
 	if not (saved_record is Dictionary):
 		_scenario_failures.append("save did not write a JSON object")
 		saved_record = {}
-	if int(saved_record.get("version", -1)) != 3 or not (saved_record.get("biochemistry", null) is Dictionary):
-		_scenario_failures.append("save did not write version-3 biochemical state")
-	else:
-		var saved_biochemistry: Dictionary = saved_record["biochemistry"]
+	var saved_norns: Dictionary = saved_record.get("norns", {})
+	if int(saved_record.get("version", -1)) != 4 or not saved_norns.has("mallow") or not saved_norns.has("moss"):
+		_scenario_failures.append("save did not write both Norns in version-4 format")
+		saved_norns = {}
+	var saved_mallow: Dictionary = saved_norns.get("mallow", {})
+	var saved_moss: Dictionary = saved_norns.get("moss", {})
+	if saved_mallow.is_empty() or saved_moss.is_empty() or str(saved_record.get("focusedNornId", "")) != "mallow":
+		_scenario_failures.append("version-4 save did not contain both profile records and focus")
+	if saved_mallow.has("biochemistry"):
+		var saved_biochemistry: Dictionary = saved_mallow["biochemistry"]
 		if not _number_maps_equal(saved_biochemistry.get("compounds", {}), expected_compounds, Biochemistry.COMPOUND_IDS):
-			_scenario_failures.append("version-3 save did not preserve all compound concentrations")
-	var version3_record: Dictionary = saved_record.duplicate(true)
-	version3_record["version"] = 3
-	if not (version3_record.get("biochemistry", null) is Dictionary):
-		version3_record["biochemistry"] = Biochemistry.serialize_state(world.get("biochemistry_state"))
-	if not _write_saved_record(version3_record):
-		_scenario_failures.append("could not prepare version-3 restore scenario")
+			_scenario_failures.append("version-4 save did not preserve all Mallow compound concentrations")
+	if saved_moss.has("biochemistry"):
+		var saved_moss_biochemistry: Dictionary = saved_moss["biochemistry"]
+		if not _number_maps_equal(saved_moss_biochemistry.get("compounds", {}), expected_moss_compounds, Biochemistry.COMPOUND_IDS):
+			_scenario_failures.append("version-4 save did not preserve all Moss compound concentrations")
+	var legacy_mallow: Dictionary = {
+		"cognition": saved_mallow.get("cognition", {}),
+		"language": saved_mallow.get("language", {}),
+		"biochemistry": saved_mallow.get("biochemistry", {})
+	}
+	var version3_record: Dictionary = {
+		"version": 3,
+		"seed": saved_record.get("seed", 4181996),
+		"simulationTime": saved_record.get("simulationTime", 0.0),
+		"cognition": legacy_mallow["cognition"],
+		"language": legacy_mallow["language"],
+		"biochemistry": legacy_mallow["biochemistry"]
+	}
 	var changed_bio: Dictionary = world.get("biochemistry_state")
 	var changed_compounds: Dictionary = Biochemistry.read_compounds(changed_bio)
 	changed_compounds["glucose"] = 1.0
@@ -132,26 +154,42 @@ func _run_scenario() -> void:
 	world.set("biochemistry_state", changed_bio)
 	world.cognition_state["actionAssociations"]["fruit"] = 0.99
 	world.language_state["words"].clear()
+	var moss_bio: Dictionary = moss_profile.biochemistry_state
+	var moss_compounds: Dictionary = Biochemistry.read_compounds(moss_bio)
+	moss_compounds["glucose"] = 2.0
+	moss_bio["compounds"] = moss_compounds
+	moss_profile.cognition_state["actionAssociations"]["spinner"] = 0.99
+	moss_profile.language_state["words"].clear()
+	if not _write_saved_record(saved_record):
+		_scenario_failures.append("could not restore the version-4 round-trip fixture")
 	world.load_game()
+	moss_profile = world.profile_for("moss")
 	var restored_compounds: Dictionary = Biochemistry.read_compounds(world.get("biochemistry_state"))
 	var restored_signals: Dictionary = Biochemistry.read_signals(world.get("biochemistry_state"))
 	var restored_words: Dictionary = world.language_state["words"]
+	var moss_restored_compounds: Dictionary = Biochemistry.read_compounds(moss_profile.biochemistry_state)
 	var compounds_round_trip: bool = _number_maps_equal(restored_compounds, expected_compounds, Biochemistry.COMPOUND_IDS)
 	var signals_round_trip: bool = _number_maps_equal(restored_signals, expected_signals, Biochemistry.SIGNAL_IDS)
 	if not compounds_round_trip or not signals_round_trip:
-		_scenario_failures.append("version-3 load did not round-trip all compounds and cognition signals")
-	if not is_equal_approx(float(world.cognition_state["actionAssociations"]["fruit"]), fruit_association_before_save):
-		_scenario_failures.append("version-3 load did not restore learned association")
-	if restored_words != expected_language_words:
-		_scenario_failures.append("version-3 load did not restore vocabulary")
-	print("VERSION-3 SAVE/LOAD: compounds=%s; signals=%s; words=%s; episodes=%d (before save %d)" % [
-		str(compounds_round_trip),
-		str(signals_round_trip),
-		str(restored_words == expected_language_words),
+		_scenario_failures.append("version-4 load did not round-trip Mallow's compounds and cognition signals")
+	if not _number_maps_equal(moss_restored_compounds, expected_moss_compounds, Biochemistry.COMPOUND_IDS):
+		_scenario_failures.append("version-4 load did not round-trip Moss's compounds")
+	if not is_equal_approx(float(world.cognition_state["actionAssociations"]["fruit"]), fruit_association_before_save) or not is_equal_approx(float(moss_profile.cognition_state["actionAssociations"]["spinner"]), expected_moss_association):
+		_scenario_failures.append("version-4 load did not restore both learned associations")
+	if restored_words != expected_language_words or moss_profile.language_state["words"] != expected_moss_words:
+		_scenario_failures.append("version-4 load did not restore both vocabularies")
+	if world.cognition_state["episodes"].size() != episodes_before_save or moss_profile.cognition_state["episodes"].size() != expected_moss_episodes:
+		_scenario_failures.append("version-4 load did not restore both episode histories")
+	print("VERSION-4 SAVE/LOAD: mallow=%s; moss=%s; focus=%s; episodes=%d/%d" % [
+		str(compounds_round_trip and signals_round_trip and restored_words == expected_language_words),
+		str(_number_maps_equal(moss_restored_compounds, expected_moss_compounds, Biochemistry.COMPOUND_IDS) and moss_profile.language_state["words"] == expected_moss_words),
+		str(world.get("focused_norn_id") == "mallow"),
 		world.cognition_state["episodes"].size(),
-		episodes_before_save
+		moss_profile.cognition_state["episodes"].size()
 	])
 
+	if not _write_saved_record(version3_record):
+		_scenario_failures.append("could not prepare version-3 migration scenario")
 	var version2_record: Dictionary = version3_record.duplicate(true)
 	version2_record["version"] = 2
 	version2_record.erase("biochemistry")

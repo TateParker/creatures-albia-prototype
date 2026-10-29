@@ -10,7 +10,8 @@ const NornProfile = preload("res://scripts/norn_profile.gd")
 const START_SEED := 4181996
 const MOSS_SEED := 4181997
 const SAVE_PATH := "user://albia_norn_save.json"
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
+const PROFILE_IDS: Array[String] = ["mallow", "moss"]
 const CHEMISTRY_STEP := 0.1
 const DECISION_STEP := 0.2
 const FEEDBACK_WINDOW := 12.0
@@ -288,23 +289,20 @@ func open_recordings_folder() -> void:
 
 
 func save_game() -> void:
-	var saved_language: Dictionary = _language.call("serialize_state", language_state)
-	if saved_language.is_empty():
-		last_status = "The local vocabulary could not be saved because it failed validation."
-		_refresh_ui()
-		return
-	var saved_biochemistry: Dictionary = Biochemistry.serialize_state(biochemistry_state)
-	if saved_biochemistry.is_empty():
-		last_status = "The biochemical state could not be saved because it failed validation."
-		_refresh_ui()
-		return
+	var saved_norns := {}
+	for actor_id: String in PROFILE_IDS:
+		var saved_profile := _serialize_profile(profile_for(actor_id))
+		if saved_profile.is_empty():
+			last_status = "The local %s profile failed validation and could not be saved." % actor_id.capitalize()
+			_refresh_ui()
+			return
+		saved_norns[actor_id] = saved_profile
 	var record := {
 		"version": SAVE_VERSION,
 		"seed": START_SEED,
 		"simulationTime": simulation_time,
-		"cognition": Cognition.serialize_state(cognition_state),
-		"language": saved_language,
-		"biochemistry": saved_biochemistry
+		"focusedNornId": focused_norn_id,
+		"norns": saved_norns
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -313,7 +311,7 @@ func save_game() -> void:
 		return
 	file.store_string(JSON.stringify(record, "\t"))
 	file.close()
-	last_status = "Saved this Norn locally to %s." % SAVE_PATH
+	last_status = "Saved Mallow and Moss locally to %s." % SAVE_PATH
 	_refresh_ui()
 
 
@@ -337,61 +335,62 @@ func load_game() -> void:
 	if not (record is Dictionary):
 		_fallback_from_invalid_save("The save format is not valid")
 		return
-	var save_version := int(record.get("version", -1))
-	if not [1, 2, SAVE_VERSION].has(save_version):
+	var version_value = record.get("version", null)
+	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, SAVE_VERSION].has(int(version_value)):
 		_fallback_from_invalid_save("The save format is not valid")
 		return
-	if int(record.get("seed", -1)) != START_SEED or not _is_finite_number(record.get("simulationTime", null)):
+	var save_version := int(version_value)
+	var simulation_value = record.get("simulationTime", null)
+	var saved_seed = record.get("seed", null)
+	if not _is_finite_number(saved_seed) or not is_equal_approx(float(saved_seed), float(START_SEED)) or not _is_finite_number(simulation_value) or float(simulation_value) < 0.0:
 		_fallback_from_invalid_save("The save metadata is not valid")
 		return
-	var saved_cognition = record.get("cognition", null)
-	if not (saved_cognition is Dictionary):
-		_fallback_from_invalid_save("The saved Norn state is missing")
-		return
-	var restored: Dictionary = Cognition.restore_state(saved_cognition)
-	if restored.is_empty() or int(restored.get("seed", -1)) != START_SEED:
-		_fallback_from_invalid_save("The saved Norn state failed validation")
-		return
-	var restored_biochemistry: Dictionary
+	var restored_profiles: Dictionary = {}
+	var restored_focus := "mallow"
 	if save_version == SAVE_VERSION:
-		restored_biochemistry = Biochemistry.restore_state(record.get("biochemistry", null))
-		if restored_biochemistry.is_empty():
-			_fallback_from_invalid_save("The saved biochemical state failed validation")
+		var saved_focus = record.get("focusedNornId", null)
+		var saved_norns = record.get("norns", null)
+		if not (saved_focus is String) or not PROFILE_IDS.has(saved_focus) or not (saved_norns is Dictionary) or saved_norns.size() != PROFILE_IDS.size():
+			_fallback_from_invalid_save("The saved Norn profile map failed validation")
 			return
+		for key: Variant in saved_norns:
+			if not (key is String) or not PROFILE_IDS.has(key):
+				_fallback_from_invalid_save("The saved Norn profile IDs failed validation")
+				return
+		for actor_id: String in PROFILE_IDS:
+			var restored_profile := _restore_profile(saved_norns.get(actor_id, null), actor_id, float(simulation_value))
+			if restored_profile.is_empty():
+				_fallback_from_invalid_save("The saved %s profile failed validation" % actor_id.capitalize())
+				return
+			restored_profiles[actor_id] = restored_profile
+		restored_focus = str(saved_focus)
 	else:
-		restored_biochemistry = Biochemistry.migrate_from_legacy_signals(restored["chemistry"])
-		if restored_biochemistry.is_empty():
-			_fallback_from_invalid_save("The legacy biochemical state failed migration")
+		var legacy_profile := _restore_legacy_mallow(record, save_version)
+		if legacy_profile.is_empty():
 			return
-	var restored_language: Dictionary = _language.call("create_state")
-	if save_version >= 2:
-		restored_language = _language.call("restore_state", record.get("language", null))
-		if restored_language.is_empty():
-			_fallback_from_invalid_save("The saved vocabulary failed validation")
+		restored_profiles["mallow"] = legacy_profile
+		restored_profiles["moss"] = _make_clean_profile_state("moss")
+	for actor_id: String in PROFILE_IDS:
+		var profile := profile_for(actor_id)
+		if profile == null:
+			_fallback_from_invalid_save("The %s profile is missing" % actor_id.capitalize())
 			return
-	if not Cognition.sync_chemistry(restored, Biochemistry.read_signals(restored_biochemistry)):
-		_fallback_from_invalid_save("The biochemical cognition signals failed validation")
-		return
-	var mallow_profile := profile_for("mallow")
-	if mallow_profile == null:
-		_fallback_from_invalid_save("The Mallow profile is missing")
-		return
-	mallow_profile.cognition_state = restored
-	mallow_profile.biochemistry_state = restored_biochemistry
-	mallow_profile.language_state = restored_language
-	mallow_profile.guidance.clear()
-	mallow_profile.current_decision.clear()
-	mallow_profile.recalled_moments.clear()
-	mallow_profile.feedback_available = false
-	mallow_profile.feedback_action = ""
-	mallow_profile.feedback_target = ""
-	mallow_profile.feedback_time = -1000.0
-	var moss_profile := _create_profile("moss", "Moss", moss, _new_moss_cognition_state())
-	norn_profiles["moss"] = moss_profile
+		var restored_profile: Dictionary = restored_profiles[actor_id]
+		profile.cognition_state = restored_profile["cognition"]
+		profile.biochemistry_state = restored_profile["biochemistry"]
+		profile.language_state = restored_profile["language"]
+		profile.feedback_available = bool(restored_profile["feedback"]["available"])
+		profile.feedback_action = str(restored_profile["feedback"]["action"])
+		profile.feedback_target = str(restored_profile["feedback"]["target"])
+		profile.feedback_time = float(restored_profile["feedback"]["time"])
+		profile.guidance.clear()
+		profile.current_decision.clear()
+		profile.recalled_moments.clear()
 	teaching_mode = false
 	if _ui != null:
 		_ui.clear_teaching_input()
-	simulation_time = maxf(0.0, float(record["simulationTime"]))
+	simulation_time = float(simulation_value)
+	focused_norn_id = restored_focus
 	_chemistry_accumulator = 0.0
 	_decision_accumulator = 0.0
 	norn.reset_position(Vector3(3.0, 0.0, 2.0))
@@ -400,10 +399,140 @@ func load_game() -> void:
 	for item: Interactable in objects.values():
 		item.set_available(true)
 	_sync_mallow_compatibility()
-	last_status = "Loaded Mallow's local learning and memories."
-	for profile: NornProfile in norn_profiles.values():
-		_run_decision(profile)
+	last_status = "Loaded Mallow and Moss's local learning and memories." if save_version == SAVE_VERSION else "Loaded Mallow's local learning; Moss began from the deterministic seed."
 	_refresh_ui()
+
+
+func _serialize_profile(profile: NornProfile) -> Dictionary:
+	if profile == null or not PROFILE_IDS.has(profile.actor_id):
+		return {}
+	var saved_cognition: Dictionary = Cognition.serialize_state(profile.cognition_state)
+	var saved_biochemistry: Dictionary = Biochemistry.serialize_state(profile.biochemistry_state)
+	var saved_language: Dictionary = _language.call("serialize_state", profile.language_state)
+	var saved_feedback := {
+		"available": profile.feedback_available,
+		"action": profile.feedback_action,
+		"target": profile.feedback_target,
+		"time": profile.feedback_time
+	}
+	if saved_cognition.is_empty() or saved_biochemistry.is_empty() or saved_language.is_empty() or _restore_profile({
+		"actorId": profile.actor_id,
+		"cognition": saved_cognition,
+		"biochemistry": saved_biochemistry,
+		"language": saved_language,
+		"feedback": saved_feedback
+	}, profile.actor_id, maxf(0.0, simulation_time)).is_empty():
+		return {}
+	return {
+		"actorId": profile.actor_id,
+		"cognition": saved_cognition,
+		"biochemistry": saved_biochemistry,
+		"language": saved_language,
+		"feedback": saved_feedback
+	}
+
+
+func _restore_profile(value: Variant, actor_id: String, saved_simulation_time: float) -> Dictionary:
+	if not (value is Dictionary) or not PROFILE_IDS.has(actor_id):
+		return {}
+	var saved: Dictionary = value
+	if saved.get("actorId", null) != actor_id:
+		return {}
+	var seed := START_SEED if actor_id == "mallow" else MOSS_SEED
+	var saved_cognition = saved.get("cognition", null)
+	if not (saved_cognition is Dictionary):
+		return {}
+	var restored_cognition: Dictionary = Cognition.restore_state(saved_cognition)
+	var restored_seed = restored_cognition.get("seed", null)
+	if restored_cognition.is_empty() or not _is_finite_number(restored_seed) or not is_equal_approx(float(restored_seed), float(seed)):
+		return {}
+	var restored_biochemistry: Dictionary = Biochemistry.restore_state(saved.get("biochemistry", null))
+	if restored_biochemistry.is_empty():
+		return {}
+	var restored_language: Dictionary = _language.call("restore_state", saved.get("language", null))
+	if restored_language.is_empty():
+		return {}
+	var restored_feedback := _restore_feedback(saved.get("feedback", null), saved_simulation_time)
+	if restored_feedback.is_empty():
+		return {}
+	if not Cognition.sync_chemistry(restored_cognition, Biochemistry.read_signals(restored_biochemistry)):
+		return {}
+	return {
+		"cognition": restored_cognition,
+		"biochemistry": restored_biochemistry,
+		"language": restored_language,
+		"feedback": restored_feedback
+	}
+
+
+func _restore_feedback(value: Variant, saved_simulation_time: float) -> Dictionary:
+	if not (value is Dictionary):
+		return {}
+	var saved: Dictionary = value
+	var available = saved.get("available", null)
+	var action = saved.get("action", null)
+	var target = saved.get("target", null)
+	var time = saved.get("time", null)
+	if not (available is bool) or not (action is String) or not (target is String) or not _is_finite_number(time):
+		return {}
+	if not ["", "fruit", "spinner"].has(action) or not ["", "fruit", "spinner"].has(target):
+		return {}
+	if float(time) < -1000.0 or float(time) > saved_simulation_time:
+		return {}
+	if (action.is_empty() and not target.is_empty()) or (not action.is_empty() and (action != target or float(time) < 0.0)):
+		return {}
+	if available and (not ["fruit", "spinner"].has(action) or not ["fruit", "spinner"].has(target) or action != target or float(time) < 0.0):
+		return {}
+	return {"available": available, "action": action, "target": target, "time": float(time)}
+
+
+func _restore_legacy_mallow(record: Dictionary, save_version: int) -> Dictionary:
+	var saved_cognition = record.get("cognition", null)
+	if not (saved_cognition is Dictionary):
+		_fallback_from_invalid_save("The saved Mallow state is missing")
+		return {}
+	var restored_cognition: Dictionary = Cognition.restore_state(saved_cognition)
+	if restored_cognition.is_empty() or int(restored_cognition.get("seed", -1)) != START_SEED:
+		_fallback_from_invalid_save("The saved Mallow state failed validation")
+		return {}
+	var restored_biochemistry: Dictionary
+	if save_version >= 3:
+		restored_biochemistry = Biochemistry.restore_state(record.get("biochemistry", null))
+		if restored_biochemistry.is_empty():
+			_fallback_from_invalid_save("The saved biochemical state failed validation")
+			return {}
+	else:
+		restored_biochemistry = Biochemistry.migrate_from_legacy_signals(restored_cognition["chemistry"])
+		if restored_biochemistry.is_empty():
+			_fallback_from_invalid_save("The legacy biochemical state failed migration")
+			return {}
+	var restored_language: Dictionary = _language.call("create_state")
+	if save_version >= 2:
+		restored_language = _language.call("restore_state", record.get("language", null))
+		if restored_language.is_empty():
+			_fallback_from_invalid_save("The saved vocabulary failed validation")
+			return {}
+	if not Cognition.sync_chemistry(restored_cognition, Biochemistry.read_signals(restored_biochemistry)):
+		_fallback_from_invalid_save("The biochemical cognition signals failed validation")
+		return {}
+	return {
+		"cognition": restored_cognition,
+		"biochemistry": restored_biochemistry,
+		"language": restored_language,
+		"feedback": {"available": false, "action": "", "target": "", "time": -1000.0}
+	}
+
+
+func _make_clean_profile_state(actor_id: String) -> Dictionary:
+	var cognition := _new_cognition_state() if actor_id == "mallow" else _new_moss_cognition_state()
+	var biochemistry := Biochemistry.create_state(cognition["chemistry"])
+	Cognition.sync_chemistry(cognition, Biochemistry.read_signals(biochemistry))
+	return {
+		"cognition": cognition,
+		"biochemistry": biochemistry,
+		"language": _language.call("create_state"),
+		"feedback": {"available": false, "action": "", "target": "", "time": -1000.0}
+	}
 
 
 func reset_run() -> void:
@@ -449,6 +578,7 @@ func select_norn(actor_id: String) -> void:
 
 func _create_profiles() -> void:
 	norn_profiles.clear()
+	focused_norn_id = "mallow"
 	var mallow_profile := _create_profile("mallow", "Mallow", norn, _new_cognition_state())
 	var moss_profile := _create_profile("moss", "Moss", moss, _new_moss_cognition_state())
 	moss_profile.actor.global_position = Vector3(6.2, 0.0, 1.6)

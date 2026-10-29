@@ -129,12 +129,32 @@ func _record_preview() -> void:
 	var fruit_association_before_save := float(cognition["actionAssociations"]["fruit"])
 	language_state = _world.get("language_state")
 	var expected_words: Dictionary = language_state["words"].duplicate(true)
+	var moss_profile = _world.call("profile_for", "moss")
+	var moss_cognition: Dictionary = moss_profile.get("cognition_state")
+	var moss_biochemistry: Dictionary = moss_profile.get("biochemistry_state")
+	var expected_moss_episodes: Array = moss_cognition["episodes"].duplicate(true)
+	var expected_moss_compounds := Biochemistry.read_compounds(moss_biochemistry)
+	var expected_moss_words: Dictionary = moss_profile.get("language_state")["words"].duplicate(true)
+	var expected_moss_associations: Dictionary = moss_cognition["actionAssociations"].duplicate(true)
+	if not _press_hud_button("Moss"):
+		return
+	if not await _teach_via_hud("fern", "spinner"):
+		return
+	expected_moss_episodes = moss_cognition["episodes"].duplicate(true)
+	expected_moss_compounds = Biochemistry.read_compounds(moss_profile.get("biochemistry_state"))
+	expected_moss_words = moss_profile.get("language_state")["words"].duplicate(true)
+	var expected_moss_vocabulary_size := expected_moss_words.size()
 	if not _press_hud_button("Save"):
 		return
 	cognition["actionAssociations"]["fruit"] = 0.99
 	var words_before_reload: Dictionary = language_state["words"]
 	words_before_reload["apple"]["confidence"] = 0.01
 	words_before_reload.erase("toy")
+	moss_cognition["actionAssociations"]["spinner"] = 0.99
+	(moss_profile.get("language_state")["words"] as Dictionary).clear()
+	var changed_moss_compounds: Dictionary = Biochemistry.read_compounds(moss_biochemistry)
+	changed_moss_compounds["glucose"] = 1.0
+	moss_biochemistry["compounds"] = changed_moss_compounds
 	if not _press_hud_button("Load"):
 		return
 	var restored_cognition: Dictionary = _world.get("cognition_state")
@@ -152,6 +172,21 @@ func _record_preview() -> void:
 		if str(restored_entry.get("word", "")) != str(expected_entry.get("word", "")) or str(restored_entry.get("targetId", "")) != str(expected_entry.get("targetId", "")) or not is_equal_approx(float(restored_entry.get("confidence", -1.0)), float(expected_entry.get("confidence", -2.0))):
 			_fail("The recorded save/load interaction did not restore %s exactly." % normalized_word)
 			return
+	moss_profile = _world.call("profile_for", "moss")
+	moss_cognition = moss_profile.get("cognition_state")
+	var restored_moss_words: Dictionary = moss_profile.get("language_state")["words"]
+	if _world.get("focused_norn_id") != "moss" or moss_profile.get("actor_id") != "moss":
+		_fail("The recorded save/load interaction did not restore Moss focus.")
+		return
+	if moss_cognition["episodes"].size() != expected_moss_episodes.size() or not _number_maps_match(moss_cognition["actionAssociations"], expected_moss_associations, Cognition.get_action_ids()):
+		_fail("The recorded save/load interaction did not restore Moss's independent cognition.")
+		return
+	if not _number_maps_match(Biochemistry.read_compounds(moss_profile.get("biochemistry_state")), expected_moss_compounds, Biochemistry.COMPOUND_IDS):
+		_fail("The recorded save/load interaction did not restore Moss's compounds.")
+		return
+	if restored_moss_words.size() != expected_moss_vocabulary_size or restored_moss_words != expected_moss_words:
+		_fail("The recorded save/load interaction did not restore Moss's vocabulary.")
+		return
 	for frame in range(30):
 		await process_frame
 
@@ -448,25 +483,59 @@ func _verify_legacy_save_migration(expected_fruit_association: float) -> bool:
 	var parse_error := parser.parse(file.get_as_text())
 	file.close()
 	if parse_error != OK or not (parser.data is Dictionary):
-		_fail("The saved version-2 language record was not valid JSON.")
+		_fail("The saved version-4 profile record was not valid JSON.")
 		return false
 	var record: Dictionary = parser.data
-	if int(record.get("version", -1)) != 3 or not (record.get("language", null) is Dictionary) or not (record.get("biochemistry", null) is Dictionary):
-		_fail("Save did not write version-3 vocabulary and biochemical data.")
+	var norns = record.get("norns", null)
+	if int(record.get("version", -1)) != 4 or not (norns is Dictionary) or not norns.has("mallow") or not norns.has("moss") or str(record.get("focusedNornId", "")) != "moss":
+		_fail("Save did not write version-4 records for both Norns.")
 		return false
-	var saved_biochemistry: Dictionary = record["biochemistry"]
+	var saved_mallow: Dictionary = norns["mallow"]
+	var saved_moss: Dictionary = norns["moss"]
+	var saved_biochemistry: Dictionary = saved_mallow.get("biochemistry", {})
 	var saved_compounds: Dictionary = saved_biochemistry.get("compounds", {})
 	var expected_compounds: Dictionary = Biochemistry.read_compounds(Biochemistry.restore_state(saved_biochemistry))
 	if not _number_maps_match(saved_compounds, expected_compounds, Biochemistry.COMPOUND_IDS):
-		_fail("The version-3 save did not contain all 18 compound concentrations.")
+		_fail("The version-4 Mallow record did not contain all 18 compound concentrations.")
 		return false
 	var expected_signals: Dictionary = Biochemistry.read_signals(Biochemistry.restore_state(saved_biochemistry))
-	var saved_cognition: Dictionary = record["cognition"]
-	var saved_language: Dictionary = record["language"]
+	var saved_cognition: Dictionary = saved_mallow.get("cognition", {})
+	var saved_language: Dictionary = saved_mallow.get("language", {})
 	var expected_word_count: int = saved_language["words"].size()
 	var expected_association := float(saved_cognition["actionAssociations"]["fruit"])
+	var expected_episode_count: int = saved_cognition["episodes"].size()
+	var moss_cognition: Dictionary = Cognition.restore_state(saved_moss.get("cognition", {}))
+	var moss_biochemistry: Dictionary = Biochemistry.restore_state(saved_moss.get("biochemistry", null))
+	var moss_language: Dictionary = saved_moss.get("language", {})
+	if moss_cognition.is_empty() or int(moss_cognition.get("seed", -1)) != 4181997 or moss_biochemistry.is_empty() or moss_language.get("words", {}).is_empty():
+		_fail("The version-4 Moss profile was incomplete or was not saved independently.")
+		return false
 
-	var version2_record: Dictionary = record.duplicate(true)
+	var version3_record := {
+		"version": 3,
+		"seed": record.get("seed", 4181996),
+		"simulationTime": record.get("simulationTime", 0.0),
+		"cognition": saved_cognition,
+		"language": saved_language,
+		"biochemistry": saved_biochemistry
+	}
+	if not _write_save_record(version3_record):
+		_fail("Could not prepare the version-3 migration scenario.")
+		return false
+	_world.call("load_game")
+	var version3_cognition: Dictionary = _world.get("cognition_state")
+	var version3_words: Dictionary = _world.get("language_state")["words"]
+	var version3_signals: Dictionary = Biochemistry.read_signals(_world.get("biochemistry_state"))
+	var migrated_moss = _world.call("profile_for", "moss")
+	var migrated_moss_cognition: Dictionary = migrated_moss.get("cognition_state")
+	if version3_words.size() != expected_word_count or not is_equal_approx(float(version3_cognition["actionAssociations"]["fruit"]), expected_association) or version3_cognition["episodes"].size() != expected_episode_count or not _number_maps_match(version3_signals, expected_signals, Biochemistry.SIGNAL_IDS):
+		_fail("Version-3 migration did not preserve Mallow's learning, vocabulary, and cognition signals.")
+		return false
+	if int(migrated_moss_cognition.get("seed", -1)) != 4181997 or not migrated_moss_cognition["episodes"].is_empty() or not migrated_moss.get("language_state")["words"].is_empty():
+		_fail("Version-3 migration did not initialize clean Moss from the deterministic seed.")
+		return false
+
+	var version2_record: Dictionary = version3_record.duplicate(true)
 	version2_record["version"] = 2
 	version2_record.erase("biochemistry")
 	if not _write_save_record(version2_record):
@@ -477,8 +546,8 @@ func _verify_legacy_save_migration(expected_fruit_association: float) -> bool:
 	var version2_cognition: Dictionary = _world.get("cognition_state")
 	var version2_words: Dictionary = version2_language.get("words", {})
 	var version2_signals: Dictionary = Biochemistry.read_signals(_world.get("biochemistry_state"))
-	if version2_words.size() != expected_word_count or not is_equal_approx(float(version2_cognition["actionAssociations"]["fruit"]), expected_association) or not _number_maps_match(version2_signals, expected_signals, Biochemistry.SIGNAL_IDS):
-		_fail("Version-2 migration did not preserve learning, vocabulary, and cognition signals.")
+	if version2_words.size() != expected_word_count or not is_equal_approx(float(version2_cognition["actionAssociations"]["fruit"]), expected_association) or version2_cognition["episodes"].size() != expected_episode_count or not _number_maps_match(version2_signals, expected_signals, Biochemistry.SIGNAL_IDS):
+		_fail("Version-2 migration did not preserve Mallow's learning, vocabulary, and cognition signals.")
 		return false
 
 	var version1_record: Dictionary = version2_record.duplicate(true)
@@ -495,7 +564,7 @@ func _verify_legacy_save_migration(expected_fruit_association: float) -> bool:
 	if not version1_words.is_empty():
 		_fail("A version-1 save did not initialize an empty vocabulary.")
 		return false
-	if not is_equal_approx(float(version1_cognition["actionAssociations"]["fruit"]), expected_fruit_association) or not _number_maps_match(version1_signals, expected_signals, Biochemistry.SIGNAL_IDS):
+	if not is_equal_approx(float(version1_cognition["actionAssociations"]["fruit"]), expected_fruit_association) or version1_cognition["episodes"].size() != expected_episode_count or not _number_maps_match(version1_signals, expected_signals, Biochemistry.SIGNAL_IDS):
 		_fail("Version-1 migration did not preserve learning and cognition signals.")
 		return false
 	return true

@@ -202,6 +202,7 @@ git commit -m "Add focused Norn controls"
 **Files:**
 - Modify: `godot/scripts/albia_world.gd`
 - Modify: `godot/tools/verify_social_slice.gd`
+- Modify: `godot/tools/run_habitat_scenario.gd`
 - Modify: `godot/tools/record_preview.gd`
 
 **Interfaces:**
@@ -209,19 +210,19 @@ git commit -m "Add focused Norn controls"
 - `norns` is keyed by `mallow` and `moss`; each profile stores serialized cognition, biochemistry, language, and feedback (`available`, `action`, `target`, `time`).
 - `load_game()` accepts versions 1–4. Versions 1–3 preserve Mallow through existing migrations and create Moss from its deterministic seed/traits.
 
-- [ ] **Step 1: Add failing save/load and migration assertions**
+- [x] **Step 1: Add failing save/load and migration assertions**
 
 Add `test_version4_round_trip_preserves_both_profiles`, `test_v1_migration_preserves_mallow_and_seeds_moss`, `test_v2_migration_preserves_mallow_and_seeds_moss`, `test_v3_migration_preserves_mallow_and_seeds_moss`, and `test_malformed_v4_save_uses_safe_reset`. Assert a version-4 round trip preserves both profiles' episodes, compounds, vocabularies, focus, and independent feedback windows; each legacy version preserves Mallow and adds reproducible Moss; invalid profile IDs, chemistry, feedback, or missing data safely reset.
 
-- [ ] **Step 2: Run the verifier and confirm persistence assertions fail**
+- [x] **Step 2: Run the verifier and confirm persistence assertions fail**
 
 Run the Task 2 Godot command. Expected: current version-3 single-Norn records cannot round-trip the new profile map.
 
-- [ ] **Step 3: Implement version-4 serialization, validation, and migrations**
+- [x] **Step 3: Implement version-4 serialization, validation, and migrations**
 
 Serialize and validate both profiles before applying restored data. Preserve Mallow with the existing migrations for versions 1–3, create a clean deterministic Moss for those records, and clear transient movement targets on load.
 
-- [ ] **Step 4: Run version-4 and legacy save checks**
+- [x] **Step 4: Run version-4 and legacy save checks**
 
 Run: `& 'C:\Users\Quad\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe' --headless --path godot --script res://tools/verify_social_slice.gd`
 
@@ -232,7 +233,7 @@ Expected: round-trip, v1/v2/v3 migration, and malformed-save reset checks pass.
 After the migration checks pass, run:
 
 ```powershell
-git add godot/scripts/albia_world.gd godot/tools/verify_social_slice.gd godot/tools/record_preview.gd
+git add godot/scripts/albia_world.gd godot/tools/verify_social_slice.gd godot/tools/run_habitat_scenario.gd godot/tools/record_preview.gd docs/superpowers/plans/2026-10-29-godot-two-norn-social-slice.md
 git commit -m "Persist both Norn profiles"
 ```
 
