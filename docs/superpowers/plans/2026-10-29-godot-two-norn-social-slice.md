@@ -286,6 +286,6 @@ git add godot/scripts/norn_profile.gd godot/scripts/norn_actor.gd godot/scripts/
 git commit -m "Add two-Norn social simulation"
 ```
 
-- [ ] **Step 7: Push and verify the branch**
+- [x] **Step 7: Push and verify the branch**
 
 Run `git push origin main`, fetch `origin`, then confirm `git status --short --branch` is clean and `git rev-list --left-right --count origin/main...main` returns `0 0`.

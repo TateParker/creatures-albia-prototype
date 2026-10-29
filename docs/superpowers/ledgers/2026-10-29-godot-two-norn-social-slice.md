@@ -25,3 +25,4 @@ Workspace: the existing main checkout, as previously authorized.
 - Independently parsed the recording's RIFF/AVI size, frame count, 1280×720 dimensions, all 227 `00dc` frame chunks, and matching `idx1` entries. Godot decoded every JPEG frame. Inspected sampled frames showing the habitat and both Norns, the chemistry inspector, Moss observing Mallow, and Moss's remembered fruit and Praise events.
 - The per-project recordings directory contained 10 completed AVI clips after capture, meeting the retention limit. The recorder restored the pre-run local save at the end of the rendered walkthrough.
 - `git diff --check` passed after the documentation update; generated capture files and temporary frame inspections are outside the repository.
+- The feature was committed as `e488892` (`Add two-Norn social simulation`) and pushed to `origin/main`.
