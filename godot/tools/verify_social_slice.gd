@@ -23,6 +23,7 @@ func _run_checks() -> void:
 	await test_shared_object_sensing_filters_distance_and_occlusion()
 	await test_peer_comfort_rises_and_decays()
 	test_social_attention_selects_observation_when_needs_are_settled()
+	await test_observer_stays_settled_inside_stop_distance()
 	await test_observation_requires_range_visibility_and_attention()
 	await test_observed_success_and_feedback_teach_matching_action()
 	await test_contested_object_completes_once()
@@ -309,6 +310,28 @@ func test_social_attention_selects_observation_when_needs_are_settled() -> void:
 	_expect(tired_decision.get("actionId", "") == "rest", "urgent rest need takes priority over social observation")
 
 
+func test_observer_stays_settled_inside_stop_distance() -> void:
+	var world = await _create_social_world()
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	var moss_cognition := Cognition.create_state(4181997, {"curiosity": 0.5, "sociability": 0.85}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 2.0})
+	var moss_biochemistry := Biochemistry.create_state(moss_cognition["chemistry"])
+	Cognition.sync_chemistry(moss_cognition, Biochemistry.read_signals(moss_biochemistry))
+	(moss_cognition["actionAssociations"] as Dictionary)["fruit"] = 0.0
+	(moss_cognition["actionAssociations"] as Dictionary)["spinner"] = 0.0
+	moss.set("cognition_state", moss_cognition)
+	moss.set("biochemistry_state", moss_biochemistry)
+	moss_actor.global_position = mallow_actor.global_position + Vector3(1.8, 0.0, 0.0)
+	await physics_frame
+	world.call("_run_decision", moss)
+	_expect(moss_actor.current_action == "observe_peer", "nearby settled Norn keeps the observation decision")
+	_expect(moss_actor.target == null and not moss_actor.is_walking, "nearby observer does not reacquire a movement target inside stop distance")
+	await _destroy_social_world(world)
+
+
 func test_observation_requires_range_visibility_and_attention() -> void:
 	var world = await _create_social_world()
 	if not world.has_method("_offer_observation") or not world.has_method("profile_for"):
@@ -370,6 +393,13 @@ func test_observed_success_and_feedback_teach_matching_action() -> void:
 		_expect(episodes[0].get("actionId", "") == "fruit" and episodes[0].get("targetId", "") == "fruit", "observation memory names the matching action and target")
 		_expect(float(episodes[0].get("time", -1.0)) == 12.5 and int(episodes[0]["observation"].get("peerCount", -1)) == 1, "observation memory records time and peer count")
 		_expect(absf(float(episodes[0].get("sociability", -1.0)) - 0.85) < 0.001, "observation memory records observer sociability")
+	world.call("_run_decision", moss)
+	var recalled_observation_found := false
+	for recalled: Dictionary in moss.get("recalled_moments"):
+		if recalled.get("eventType", "") == "observe" and recalled.get("text", "") == "Moss observed Mallow fruit":
+			recalled_observation_found = true
+			break
+	_expect(recalled_observation_found, "Norn decision exposes retrieved observation episodes to the remembered-moments HUD")
 	_expect(float(moss_state["actionAssociations"]["fruit"]) > initial_fruit, "successful witnessed fruit increases the fruit association")
 	_expect(is_equal_approx(float(moss_state["actionAssociations"]["spinner"]), initial_spinner), "successful witnessed fruit does not change the spinner association")
 	await _set_profile_attending(moss, mallow)

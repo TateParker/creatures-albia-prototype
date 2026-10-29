@@ -139,7 +139,7 @@ Also run the existing habitat scenario to verify autonomous fruit/spinner behavi
 
 Expected: independent decisions, peer comfort, observation gating, learning, and one-time object completion pass.
 
-- [ ] **Step 7: Commit the two-Norn simulation layer**
+- [x] **Step 7: Commit the two-Norn simulation layer**
 
 After the social verifier passes, run:
 
@@ -228,7 +228,7 @@ Run: `& 'C:\Users\Quad\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-sta
 
 Expected: round-trip, v1/v2/v3 migration, and malformed-save reset checks pass.
 
-- [ ] **Step 5: Commit version-4 saves**
+- [x] **Step 5: Commit version-4 saves**
 
 After the migration checks pass, run:
 
@@ -248,11 +248,11 @@ git commit -m "Persist both Norn profiles"
 - Modify: `docs/superpowers/plans/2026-10-29-godot-two-norn-social-slice.md`
 - Create: `docs/superpowers/ledgers/2026-10-29-godot-two-norn-social-slice.md`
 
-- [ ] **Step 1: Extend the rendered walkthrough assertions**
+- [x] **Step 1: Extend the rendered walkthrough assertions**
 
 Drive the actual focus controls and actions for both Norns, assert status/memory/chemistry evidence for observation, and preserve/restore the user's local save around the run.
 
-- [ ] **Step 2: Run targeted headless checks and scene startup**
+- [x] **Step 2: Run targeted headless checks and scene startup**
 
 Run each command and confirm it exits successfully with no parser/runtime errors:
 
@@ -265,21 +265,21 @@ Run each command and confirm it exits successfully with no parser/runtime errors
 & 'C:\Users\Quad\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe' --headless --path godot --quit-after 2
 ```
 
-- [ ] **Step 3: Capture a rendered walkthrough**
+- [x] **Step 3: Capture a rendered walkthrough**
 
 Run: `& 'C:\Users\Quad\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe' --path godot --script res://tools/record_preview.gd`
 
 Expected: the clip visibly shows both Norns, one approaching to observe the other's successful event, the observer's learning evidence, focused feedback, and restored save data.
 
-- [ ] **Step 4: Inspect the AVI and retention result**
+- [x] **Step 4: Inspect the AVI and retention result**
 
 Check the AVI header/index and decodable 1280×720 JPEG frames; inspect frames showing both actors and observation; confirm `user://recordings/` has no more than 10 completed clips; report the recording path.
 
-- [ ] **Step 5: Update documentation and review the final change set**
+- [x] **Step 5: Update documentation and review the final change set**
 
 Document controls, two-Norn behavior, observation, version-4 migration, and verification results in `godot/README.md` and the ledger. Mark completed steps, run `git diff --check`, and exclude generated Godot data from the change set.
 
-- [ ] **Step 6: Commit the completed feature**
+- [x] **Step 6: Commit the completed feature**
 
 ```powershell
 git add godot/scripts/norn_profile.gd godot/scripts/norn_actor.gd godot/scripts/norn_cognition.gd godot/scripts/norn_biochemistry.gd godot/scripts/norn_language.gd godot/scripts/albia_world.gd godot/scripts/habitat_ui.gd godot/tools/verify_social_slice.gd godot/tools/run_habitat_scenario.gd godot/tools/record_preview.gd godot/README.md docs/superpowers/specs/2026-10-29-godot-two-norn-social-slice-design.md docs/superpowers/plans/2026-10-29-godot-two-norn-social-slice.md docs/superpowers/ledgers/2026-10-29-godot-two-norn-social-slice.md

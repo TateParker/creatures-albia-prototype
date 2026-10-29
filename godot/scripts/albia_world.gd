@@ -822,9 +822,16 @@ func _run_decision(profile: NornProfile) -> void:
 	}
 	var decision: Dictionary = Cognition.decide(profile.cognition_state, observation)
 	profile.recalled_moments.clear()
-	for episode in decision.get("recalled", []):
-		if episode is Dictionary:
-			profile.recalled_moments.append(episode)
+	var episodes_by_id: Dictionary = {}
+	for episode_value: Variant in profile.cognition_state["episodes"]:
+		if episode_value is Dictionary:
+			var episode: Dictionary = episode_value
+			episodes_by_id[int(episode.get("id", -1))] = episode
+	var recalled_episode_ids: Array = decision.get("recalledEpisodeIds", [])
+	for episode_id_value: Variant in recalled_episode_ids:
+		var recalled_episode: Variant = episodes_by_id.get(int(episode_id_value), null)
+		if recalled_episode is Dictionary:
+			profile.recalled_moments.append((recalled_episode as Dictionary).duplicate(true))
 	var effective_action := str(decision.get("actionId", "idle"))
 	var reason := str(decision.get("reason", "Looking around the habitat"))
 	var target: Node3D
@@ -842,7 +849,7 @@ func _run_decision(profile: NornProfile) -> void:
 	elif effective_action == "observe_peer" and not nearby_norns.is_empty():
 		var peer_id := str(nearby_norns[0]["id"])
 		var peer := profile_for(peer_id)
-		if peer != null:
+		if peer != null and profile.actor.global_position.distance_to(peer.actor.global_position) > NornActor.OBSERVATION_STOP_DISTANCE:
 			target = peer.actor
 			target_id = peer.actor_id
 	profile.actor.set_action_target(target, effective_action, reason, target_id)

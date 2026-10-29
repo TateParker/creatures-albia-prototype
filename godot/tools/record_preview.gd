@@ -26,6 +26,9 @@ func _record_preview() -> void:
 	await process_frame
 	if not _verify_starting_layout(_world):
 		return
+	var moss_actor: NornActor = _world.get("moss")
+	if moss_actor != null:
+		moss_actor.set_physics_process(false)
 	if not _world.has_method("toggle_recording") or not _world.has_method("is_recording"):
 		_fail("The habitat recording controls are unavailable.")
 		return
@@ -50,6 +53,8 @@ func _record_preview() -> void:
 		await process_frame
 	if not _press_hud_button("Resume"):
 		return
+	if moss_actor != null:
+		moss_actor.set_physics_process(false)
 	for frame in range(12):
 		await process_frame
 	if not _press_hud_button("Guide to fruit"):
@@ -187,6 +192,8 @@ func _record_preview() -> void:
 	if restored_moss_words.size() != expected_moss_vocabulary_size or restored_moss_words != expected_moss_words:
 		_fail("The recorded save/load interaction did not restore Moss's vocabulary.")
 		return
+	if not await _run_social_observation_walkthrough():
+		return
 	for frame in range(30):
 		await process_frame
 
@@ -230,8 +237,136 @@ func _record_preview() -> void:
 	if not _verify_legacy_save_migration(fruit_association_before_save):
 		return
 	_restore_user_save()
-	print("VIDEO_CAPTURE_OK frames=%d path=%s flow=teach-fruit-food-spinner-activity-praise-scold-rest-inspector-pause-save-load-legacy" % [frame_count, video_path])
+	print("VIDEO_CAPTURE_OK frames=%d path=%s flow=teach-fruit-food-spinner-activity-praise-scold-rest-social-observation-save-load-migrations" % [frame_count, video_path])
 	quit()
+
+
+func _run_social_observation_walkthrough() -> bool:
+	var mallow = _world.call("profile_for", "mallow")
+	var moss = _world.call("profile_for", "moss")
+	if mallow == null or moss == null:
+		_fail("The social walkthrough could not find both Norn profiles.")
+		return false
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	moss_actor.set_physics_process(true)
+	var moss_cognition := Cognition.create_state(4181997, {"curiosity": 0.50, "sociability": 0.85}, {"hunger": 0.0, "curiosity": 0.0, "fatigue": 2.0})
+	var moss_biochemistry := Biochemistry.create_state(moss_cognition["chemistry"])
+	Cognition.sync_chemistry(moss_cognition, Biochemistry.read_signals(moss_biochemistry))
+	moss.set("cognition_state", moss_cognition)
+	moss.set("biochemistry_state", moss_biochemistry)
+	moss.set("language_state", _world.get("_language").call("create_state"))
+	moss.set("feedback_available", false)
+	moss.set("feedback_action", "")
+	moss.set("feedback_target", "")
+	moss.set("feedback_time", -1000.0)
+	moss.get("guidance").clear()
+	moss.get("current_decision").clear()
+	moss.get("recalled_moments").clear()
+	_settled_needs(moss)
+	_settled_needs(mallow)
+	mallow.get("guidance").clear()
+	mallow.set("feedback_available", false)
+	mallow_actor.reset_position(Vector3(1.75, 0.0, 1.8))
+	moss_actor.reset_position(Vector3(5.1, 0.0, 1.8))
+	var objects: Dictionary = _world.get("objects")
+	for item: Interactable in objects.values():
+		item.set_available(true)
+	(_world.get("_respawn_times") as Dictionary).clear()
+	await process_frame
+	await physics_frame
+	_world.call("_sync_mallow_compatibility")
+	_world.call("select_norn", "moss")
+	_world.call("_run_decision", moss)
+	if moss_actor.current_action != "observe_peer" or moss_actor.target != mallow_actor:
+		_fail("Moss did not decide to approach Mallow to observe.")
+		return false
+	var moss_start_position := moss_actor.global_position
+	var settled := false
+	for frame in range(90):
+		await physics_frame
+		await process_frame
+		if moss_actor.target == null and not moss_actor.is_walking and moss_actor.current_action == "observe_peer":
+			settled = true
+			break
+	if not settled or moss_actor.global_position.distance_to(moss_start_position) < 0.5 or moss_actor.global_position.distance_to(mallow_actor.global_position) > 2.2:
+		_fail("Moss did not visibly approach and settle near Mallow before the event.")
+		return false
+	moss_actor.global_position = mallow_actor.global_position + Vector3(1.8, 0.0, 0.0)
+	await physics_frame
+	_world.call("_run_decision", moss)
+	if moss_actor.target != null or moss_actor.is_walking:
+		_fail("Moss did not remain settled close enough to observe Mallow.")
+		return false
+	var social_comfort_before := float(Biochemistry.read_compounds(moss.get("biochemistry_state"))["socialComfort"])
+	var fruit_association_before := float(moss.get("cognition_state")["actionAssociations"]["fruit"])
+	if not _press_hud_button("Mallow") or not _press_hud_button("Guide to fruit"):
+		return false
+	if not await _wait_for_status("ate honey fruit", 240):
+		_fail("Mallow did not complete the observed fruit action: %s" % str(_world.get("last_status")))
+		return false
+	await process_frame
+	if not str(_world.get("last_status")).contains("Mallow ate honey fruit"):
+		_fail("The recorded observed fruit event did not name Mallow.")
+		return false
+	var observer_episodes: Array = moss.get("cognition_state")["episodes"]
+	var observation_episode: Dictionary = {}
+	for episode: Dictionary in observer_episodes:
+		if episode.get("eventType", "") == "observe" and episode.get("actorId", "") == "mallow" and episode.get("actionId", "") == "fruit":
+			observation_episode = episode
+			break
+	var social_comfort_after := float(Biochemistry.read_compounds(moss.get("biochemistry_state"))["socialComfort"])
+	var fruit_association_after := float(moss.get("cognition_state")["actionAssociations"]["fruit"])
+	if observation_episode.is_empty() or float(observation_episode.get("sociability", -1.0)) != 0.85:
+		_fail("Moss did not record the witnessed fruit event with its observer identity and sociability.")
+		return false
+	if social_comfort_after < social_comfort_before + 1.0 or fruit_association_after <= fruit_association_before:
+		_fail("The observed fruit action did not update Moss's social chemistry and fruit association.")
+		return false
+	if not _world.get("feedback_available") or not _press_hud_button("Praise") or not str(_world.get("last_status")).contains("Mallow was praised"):
+		_fail("Focused Praise was not applied to Mallow after the observed action.")
+		return false
+	if not _press_hud_button("Moss"):
+		return false
+	var recall_label := _world.find_child("RememberedMomentsLabel", true, false) as Label
+	var recall_contains_observation := false
+	for recalled: Dictionary in moss.get("recalled_moments"):
+		if str(recalled.get("text", "")).contains("observed Mallow fruit"):
+			recall_contains_observation = true
+			break
+	if recall_label == null or not recall_label.text.contains("Moss's remembered moments") or not recall_contains_observation:
+		_fail("Moss's observed fruit memory was not visible in the focused HUD.")
+		return false
+	for frame in range(45):
+		await process_frame
+	print("SOCIAL_OBSERVATION_OK approach=%.2f socialComfort=%.2f->%.2f fruitAssociation=%.2f->%.2f focusedFeedback=Mallow praised memoryVisible=true" % [moss_start_position.distance_to(moss_actor.global_position), social_comfort_before, social_comfort_after, fruit_association_before, fruit_association_after])
+	return true
+
+
+func _settled_needs(profile: Object) -> void:
+	var biochemistry: Dictionary = profile.get("biochemistry_state")
+	var compounds: Dictionary = Biochemistry.read_compounds(biochemistry)
+	compounds["hunger"] = 0.0
+	compounds["curiosity"] = 0.0
+	compounds["fatigue"] = 4.0
+	compounds["socialComfort"] = 20.0
+	compounds["glucose"] = 100.0
+	compounds["satiety"] = 100.0
+	biochemistry["compounds"] = compounds
+	Cognition.sync_chemistry(profile.get("cognition_state"), Biochemistry.read_signals(biochemistry))
+	var cognition: Dictionary = profile.get("cognition_state")
+	var associations: Dictionary = cognition["actionAssociations"]
+	associations["fruit"] = 0.0
+	associations["spinner"] = 0.0
+	cognition["actionAssociations"] = associations
+	var contexts: Dictionary = cognition["contextAssociations"]
+	for action_id: String in Cognition.ACTION_IDS:
+		contexts[action_id] = {}
+		for context_id: String in Cognition.CONTEXT_IDS:
+			contexts[action_id][context_id] = 0.5
+	cognition["contextAssociations"] = contexts
+	profile.set("biochemistry_state", biochemistry)
+	profile.set("cognition_state", cognition)
 
 
 func _show_resting_biochemistry() -> bool:
@@ -252,8 +387,10 @@ func _show_resting_biochemistry() -> bool:
 		_fail("Could not prepare the high-fatigue inspection scenario.")
 		return false
 	_world.set("cognition_state", cognition)
-	_world.set("guidance", {})
-	_world.call("_run_decision")
+	var mallow_profile = _world.call("profile_for", "mallow")
+	mallow_profile.guidance.clear()
+	_world.call("_sync_mallow_compatibility")
+	_world.call("_run_decision", mallow_profile)
 	if str(_world.get("current_decision").get("actionId", "")) != "rest" or str(_world.get("norn").get("current_action")) != "rest":
 		_fail("The high-fatigue inspection scenario did not choose rest.")
 		return false

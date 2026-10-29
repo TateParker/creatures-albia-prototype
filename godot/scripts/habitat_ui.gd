@@ -163,6 +163,7 @@ func _build_ui() -> void:
 	_action_label.add_theme_color_override("font_color", Color(0.87, 0.93, 0.76))
 	layout.add_child(_action_label)
 	_recall_label = Label.new()
+	_recall_label.name = "RememberedMomentsLabel"
 	_recall_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_recall_label.custom_minimum_size.y = 58.0
 	_recall_label.add_theme_font_size_override("font_size", 14)
