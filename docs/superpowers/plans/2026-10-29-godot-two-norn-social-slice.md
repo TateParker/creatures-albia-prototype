@@ -163,30 +163,30 @@ git commit -m "Simulate two Norns with social observation"
 - `AlbiaWorld.focused_profile() -> NornProfile`
 - `HabitatUi.update_view(view: Dictionary) -> void`, passing the focused Norn's identity, state, and language plus global pause/recording/status fields.
 
-- [ ] **Step 1: Add failing focus-isolation checks**
+- [x] **Step 1: Add failing focus-isolation checks**
 
 Add `test_focus_routes_actions_only_to_selected_norn`, `test_invalid_focus_id_is_ignored`, and `test_unfocused_norn_keeps_simulating`. Assert selecting Moss changes the focused display; guidance, teaching, Praise, and Scold change only Moss; an invalid ID does not change focus; and Mallow continues moving and advancing chemistry.
 
-- [ ] **Step 2: Run the verifier and confirm the focus assertions fail**
+- [x] **Step 2: Run the verifier and confirm the focus assertions fail**
 
 Run the Task 2 Godot command. Expected: the HUD/world still route actions through the single profile.
 
-- [ ] **Step 3: Add compact focus controls and selected-profile display**
+- [x] **Step 3: Add compact focus controls and selected-profile display**
 
 Add Mallow/Moss buttons to the existing habitat panel, mark the active button, and pass only that profile's chemistry, memory, language, and decision data to the focused HUD fields.
 
-- [ ] **Step 4: Route direct player actions through `focused_profile()`**
+- [x] **Step 4: Route direct player actions through `focused_profile()`**
 
 Route guidance, teaching, Praise, Scold, and feedback eligibility through the focused profile. Keep both profiles simulating and keep pause, speed, shared objects, and recording global.
 
-- [ ] **Step 5: Run the social verifier and existing habitat scenario**
+- [x] **Step 5: Run the social verifier and existing habitat scenario**
 
 Run the Task 2 Godot command and:
 `& 'C:\Users\Quad\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe' --headless --path godot --script res://tools/run_habitat_scenario.gd`
 
 Expected: focus isolation passes and the food, spinner, language, chemistry, and feedback scenario still passes.
 
-- [ ] **Step 6: Commit focused Norn controls**
+- [x] **Step 6: Commit focused Norn controls**
 
 After the verifier and habitat scenario pass, run:
 

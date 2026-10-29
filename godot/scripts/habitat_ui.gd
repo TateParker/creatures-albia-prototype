@@ -4,6 +4,9 @@ extends CanvasLayer
 const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
 
 var habitat: Node
+var _focus_name_label: Label
+var _mallow_focus_button: Button
+var _moss_focus_button: Button
 var _chemistry_label: Label
 var _action_label: Label
 var _recall_label: Label
@@ -31,9 +34,18 @@ func setup(world: Node) -> void:
 	_build_ui()
 
 
-func update_view(chemistry: Dictionary, decision: Dictionary, recalled: Array, status: String, paused: bool, speed: float, feedback_ready: bool, recording: bool, recording_elapsed: float, last_recording_path: String, recording_error: String, recorded_frame_count: int, teaching_mode: bool, language_state: Dictionary, compounds: Dictionary, reaction_fluxes: Dictionary) -> void:
+func update_view(view: Dictionary) -> void:
 	if _chemistry_label == null:
 		return
+	var display_name := str(view.get("displayName", "Mallow"))
+	var actor_id := str(view.get("actorId", "mallow"))
+	var chemistry: Dictionary = view.get("chemistry", {})
+	var decision: Dictionary = view.get("decision", {})
+	var recalled: Array = view.get("recalled", [])
+	var language_state: Dictionary = view.get("languageState", {})
+	var compounds: Dictionary = view.get("compounds", {})
+	var reaction_fluxes: Dictionary = view.get("reactionFluxes", {})
+	var teaching_mode := bool(view.get("teachingMode", false))
 	_chemistry_label.text = "Needs   Hunger %3.0f    Curiosity %3.0f    Fatigue %3.0f\nBody   Glucose %3.0f    Reward %3.0f    Stress %3.0f" % [
 		float(chemistry.get("hunger", 0.0)),
 		float(chemistry.get("curiosity", 0.0)),
@@ -44,24 +56,35 @@ func update_view(chemistry: Dictionary, decision: Dictionary, recalled: Array, s
 	]
 	var action := str(decision.get("actionId", "idle")).replace("_", " ").capitalize()
 	var reason := str(decision.get("reason", "Settling into the habitat"))
-	_action_label.text = "Mallow is %s.\n%s" % [action.to_lower(), reason]
+	_focus_name_label.text = "Focused: %s" % display_name
+	_mallow_focus_button.set_pressed_no_signal(actor_id == "mallow")
+	_moss_focus_button.set_pressed_no_signal(actor_id == "moss")
+	_action_label.text = "%s is %s.\n%s" % [display_name, action.to_lower(), reason]
 	var lines: PackedStringArray = []
 	for episode: Dictionary in recalled:
 		var text_value := str(episode.get("text", ""))
 		if text_value.is_empty():
 			text_value = str(episode.get("eventType", "experience")).capitalize()
 		lines.append("• %s" % text_value)
-	_recall_label.text = "Remembered moments\n%s" % ("\n".join(lines) if not lines.is_empty() else "• Nothing recalled yet")
+	_recall_label.text = "%s's remembered moments\n%s" % [display_name, "\n".join(lines) if not lines.is_empty() else "• Nothing recalled yet"]
 	_language_label.text = _format_language_words(language_state)
-	_status_label.text = status
+	_status_label.text = str(view.get("status", ""))
 	_fruit_button.text = "Teach fruit" if teaching_mode else "Guide to fruit"
 	_spinner_button.text = "Teach spinner" if teaching_mode else "Guide to spinner"
 	_praise_button.text = "Teach Praise" if teaching_mode else "Praise"
 	_scold_button.text = "Teach Scold" if teaching_mode else "Scold"
+	var feedback_ready := bool(view.get("feedbackReady", false))
 	_praise_button.disabled = not feedback_ready and not teaching_mode
 	_scold_button.disabled = not feedback_ready and not teaching_mode
 	_teach_mode_button.text = "Cancel teaching" if teaching_mode else "Teach word"
 	_biochemistry_button.text = "Hide biochemistry" if _biochemistry_panel.visible else "Biochemistry"
+	var paused := bool(view.get("paused", false))
+	var speed := float(view.get("speed", 1.0))
+	var recording := bool(view.get("recording", false))
+	var recording_elapsed := float(view.get("recordingElapsed", 0.0))
+	var last_recording_path := str(view.get("lastRecordingPath", ""))
+	var recording_error := str(view.get("recordingError", ""))
+	var recorded_frame_count := int(view.get("recordedFrameCount", 0))
 	_pause_button.text = "Resume" if paused else "Pause"
 	_speed_button.text = "Speed %.1f×" % speed
 	_record_button.text = "Stop recording" if recording else "Record video"
@@ -103,10 +126,29 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_color", Color(0.96, 0.84, 0.57))
 	layout.add_child(title)
 	var subtitle := Label.new()
-	subtitle.text = "Mallow — a local, learning Norn"
+	subtitle.text = "Two local, learning Norns"
 	subtitle.add_theme_font_size_override("font_size", 13)
 	subtitle.add_theme_color_override("font_color", Color(0.77, 0.86, 0.76))
 	layout.add_child(subtitle)
+	var focus_row := HBoxContainer.new()
+	focus_row.name = "FocusRow"
+	focus_row.add_theme_constant_override("separation", 5)
+	layout.add_child(focus_row)
+	_focus_name_label = Label.new()
+	_focus_name_label.name = "FocusNameLabel"
+	_focus_name_label.text = "Focused: Mallow"
+	_focus_name_label.add_theme_font_size_override("font_size", 12)
+	_focus_name_label.add_theme_color_override("font_color", Color(0.96, 0.84, 0.57))
+	_focus_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	focus_row.add_child(_focus_name_label)
+	_mallow_focus_button = _add_button(focus_row, "Mallow", func() -> void: habitat.call("select_norn", "mallow"))
+	_mallow_focus_button.name = "FocusMallowButton"
+	_mallow_focus_button.toggle_mode = true
+	_mallow_focus_button.custom_minimum_size = Vector2(74.0, 28.0)
+	_moss_focus_button = _add_button(focus_row, "Moss", func() -> void: habitat.call("select_norn", "moss"))
+	_moss_focus_button.name = "FocusMossButton"
+	_moss_focus_button.toggle_mode = true
+	_moss_focus_button.custom_minimum_size = Vector2(74.0, 28.0)
 	_chemistry_label = Label.new()
 	_chemistry_label.add_theme_font_size_override("font_size", 14)
 	_chemistry_label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.86))

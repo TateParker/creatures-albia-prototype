@@ -21,6 +21,9 @@ func _run_checks() -> void:
 	await test_observation_requires_range_visibility_and_attention()
 	await test_observed_success_and_feedback_teach_matching_action()
 	await test_contested_object_completes_once()
+	await test_focus_routes_actions_only_to_selected_norn()
+	await test_invalid_focus_id_is_ignored()
+	await test_unfocused_norn_keeps_simulating()
 	if _failures.is_empty():
 		print("SOCIAL_SLICE_CHECKS_OK")
 		quit(0)
@@ -404,6 +407,93 @@ func test_contested_object_completes_once() -> void:
 	var total_food_events := _event_count(mallow.get("cognition_state")["episodes"], "food") + _event_count(moss.get("cognition_state")["episodes"], "food")
 	_expect(total_food_events == 1, "shared fruit produces exactly one successful food event")
 	_expect(not fruit.available, "the first valid arrival consumes the shared object")
+	await _destroy_social_world(world)
+
+
+func test_focus_routes_actions_only_to_selected_norn() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("select_norn") or not world.has_method("focused_profile"):
+		_expect(false, "world exposes focus selection and focused profile")
+		await _destroy_social_world(world)
+		return
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	var mallow_state: Dictionary = mallow.get("cognition_state")
+	var moss_state: Dictionary = moss.get("cognition_state")
+	var mallow_chemistry_before := Biochemistry.read_compounds(mallow.get("biochemistry_state"))
+	var mallow_vocabulary_before: Dictionary = mallow.get("language_state")["words"].duplicate(true)
+	var mallow_guidance_before: Dictionary = mallow.get("guidance").duplicate(true)
+	var mallow_episode_count := (mallow_state["episodes"] as Array).size()
+	moss.set("feedback_available", true)
+	moss.set("feedback_action", "fruit")
+	moss.set("feedback_target", "fruit")
+	moss.set("feedback_time", float(world.get("simulation_time")))
+	world.call("select_norn", "moss")
+	_expect(world.call("focused_profile").get("actor_id") == "moss", "selecting Moss changes the focused profile")
+	var ui: Node = world.get("_ui")
+	var focus_label := ui.find_child("FocusNameLabel", true, false) as Label
+	var moss_button := ui.find_child("FocusMossButton", true, false) as Button
+	_expect(focus_label != null and focus_label.text == "Focused: Moss", "HUD identifies the focused Norn")
+	_expect(moss_button != null and moss_button.button_pressed, "HUD marks the active focus button")
+	world.call("guide_to", "spinner")
+	_expect(str(moss.get("guidance").get("objectId", "")) == "spinner", "guidance applies to the focused Norn")
+	_expect(mallow.get("guidance") == mallow_guidance_before, "guidance leaves the other Norn unchanged")
+	world.call("toggle_teaching_mode")
+	world.call("teach_word", "pine", "fruit")
+	world.call("toggle_teaching_mode")
+	_expect((moss.get("language_state")["words"] as Dictionary).has("pine"), "typed teaching updates the focused Norn's vocabulary")
+	_expect(mallow.get("language_state")["words"] == mallow_vocabulary_before, "typed teaching leaves the other Norn's vocabulary unchanged")
+	world.call("give_feedback", "praise")
+	_expect(str((moss_state["episodes"] as Array).back().get("eventType", "")) == "praise", "Praise updates the focused Norn")
+	moss.set("feedback_available", true)
+	moss.set("feedback_action", "fruit")
+	moss.set("feedback_target", "fruit")
+	moss.set("feedback_time", float(world.get("simulation_time")))
+	world.call("give_feedback", "scold")
+	var moss_episodes: Array = moss_state["episodes"]
+	_expect(moss_episodes.size() >= 3 and moss_episodes.back().get("eventType", "") == "scold", "Scold updates the focused Norn's independent feedback window")
+	_expect((mallow_state["episodes"] as Array).size() == mallow_episode_count, "focused feedback leaves the other Norn's memories unchanged")
+	_expect(Biochemistry.read_compounds(mallow.get("biochemistry_state")) == mallow_chemistry_before, "focused feedback leaves the other Norn's chemistry unchanged")
+	_expect(mallow_actor != moss_actor and world.get("norn") == mallow_actor, "Mallow remains the unfocused actor while Moss is selected")
+	await _destroy_social_world(world)
+
+
+func test_invalid_focus_id_is_ignored() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("select_norn") or not world.has_method("focused_profile"):
+		_expect(false, "world validates requested focus IDs")
+		await _destroy_social_world(world)
+		return
+	world.call("select_norn", "moss")
+	world.call("select_norn", "unknown")
+	_expect(world.call("focused_profile").get("actor_id") == "moss", "invalid focus ID leaves the previous Norn selected")
+	await _destroy_social_world(world)
+
+
+func test_unfocused_norn_keeps_simulating() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("select_norn") or not world.has_method("profile_for"):
+		_expect(false, "world keeps unfocused Norns in the simulation")
+		await _destroy_social_world(world)
+		return
+	world.set_process(false)
+	world.call("select_norn", "moss")
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var start_position := mallow_actor.global_position
+	var spinner: Interactable = world.get("objects")["spinner"]
+	mallow_actor.set_action_target(spinner, "spinner", "Testing autonomous movement", "spinner")
+	for _frame in range(8):
+		await physics_frame
+	_expect(mallow_actor.global_position.distance_to(start_position) > 0.1, "unfocused Mallow continues moving")
+	var before_compounds := Biochemistry.read_compounds(mallow.get("biochemistry_state"))
+	world.call("_step_profile_chemistry", mallow)
+	var after_compounds := Biochemistry.read_compounds(mallow.get("biochemistry_state"))
+	_expect(after_compounds != before_compounds, "unfocused Mallow continues advancing chemistry")
+	_expect(world.call("focused_profile").get("actor_id") == "moss", "ongoing simulation does not change focus")
 	await _destroy_social_world(world)
 
 

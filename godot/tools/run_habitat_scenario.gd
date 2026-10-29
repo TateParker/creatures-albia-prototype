@@ -52,8 +52,19 @@ func _run_scenario() -> void:
 			world.objects["spinner"].available,
 			str(world.cognition_state["chemistry"])
 		])
-	world.give_feedback("scold")
-	print("SCOLD: %s; spinner association=%.2f" % [world.last_status, float(world.cognition_state["actionAssociations"]["spinner"])])
+	var mallow_profile = world.profile_for("mallow")
+	var moss_profile = world.profile_for("moss")
+	var feedback_profile = mallow_profile if mallow_profile.feedback_available else moss_profile if moss_profile.feedback_available else null
+	var spinner_scold_applied := false
+	if feedback_profile != null:
+		world.select_norn(feedback_profile.actor_id)
+		world.give_feedback("scold")
+		spinner_scold_applied = world.last_status.contains("was scolded")
+	if not spinner_scold_applied:
+		_scenario_failures.append("Scold did not apply to the Norn that played with the spinner")
+	var spinner_association := float(feedback_profile.cognition_state["actionAssociations"]["spinner"]) if feedback_profile != null else -1.0
+	print("SCOLD: applied=%s; status=%s; spinner association=%.2f" % [spinner_scold_applied, world.last_status, spinner_association])
+	world.select_norn("mallow")
 
 	world.reset_run()
 	world.guide_to("fruit")
@@ -64,6 +75,18 @@ func _run_scenario() -> void:
 	var guided_spinner := await _wait_for_status(world, "played with the spinner", 600)
 	print("GUIDED SPINNER: reached=%s; status=%s" % [guided_spinner, world.last_status])
 	world.give_feedback("scold")
+
+	world.select_norn("moss")
+	world.toggle_teaching_mode()
+	world.teach_word("sprig", "spinner")
+	world.toggle_teaching_mode()
+	var moss_focus_has_word: bool = world.focused_profile().language_state["words"].has("sprig")
+	var mallow_vocabulary_isolated: bool = not world.profile_for("mallow").language_state["words"].has("sprig")
+	world.select_norn("mallow")
+	var mallow_focus_restored: bool = world.focused_profile().actor_id == "mallow"
+	if not moss_focus_has_word or not mallow_vocabulary_isolated or not mallow_focus_restored:
+		_scenario_failures.append("focus switching or per-Norn teaching failed")
+	print("FOCUS AND TEACHING: Moss=%s; Mallow isolated=%s; restored=%s" % [moss_focus_has_word, mallow_vocabulary_isolated, mallow_focus_restored])
 
 	world.toggle_pause()
 	var time_at_pause := world.simulation_time

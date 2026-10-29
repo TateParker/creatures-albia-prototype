@@ -20,6 +20,7 @@ const OBSERVATION_RADIUS := 3.0
 var norn: NornActor
 var moss: NornActor
 var norn_profiles: Dictionary = {}
+var focused_norn_id: String = "mallow"
 var objects: Dictionary = {}
 var cognition_state: Dictionary = {}
 var biochemistry_state: Dictionary = {}
@@ -105,13 +106,14 @@ func guide_to(object_id: String) -> void:
 		last_status = "%s is having a short rest." % item.display_name
 		_refresh_ui()
 		return
-	guidance = {"objectId": object_id, "expiresAt": simulation_time + 7.0}
-	var mallow_profile := profile_for("mallow")
-	if mallow_profile != null:
-		mallow_profile.guidance = guidance
-	last_status = "You pointed toward %s." % item.display_name
-	if mallow_profile != null:
-		_run_decision(mallow_profile)
+	var profile := focused_profile()
+	if profile == null:
+		return
+	profile.guidance = {"objectId": object_id, "expiresAt": simulation_time + 7.0}
+	if profile.actor_id == "mallow":
+		guidance = profile.guidance
+	last_status = "You pointed toward %s for %s." % [item.display_name, profile.display_name]
+	_run_decision(profile)
 	_refresh_ui()
 
 
@@ -122,11 +124,11 @@ func give_feedback(feedback: String) -> void:
 		return
 	if not ["praise", "scold"].has(feedback):
 		return
-	var profile := profile_for("mallow")
+	var profile := focused_profile()
 	if profile == null:
 		return
 	if not profile.feedback_available or simulation_time - profile.feedback_time > FEEDBACK_WINDOW:
-		last_status = "Wait for Mallow to eat or play, then respond within 12 seconds."
+		last_status = "Wait for %s to eat or play, then respond within 12 seconds." % profile.display_name
 		_refresh_ui()
 		return
 	var feedback_word: Dictionary = _language.call("word_for_target", profile.language_state, feedback)
@@ -137,7 +139,7 @@ func give_feedback(feedback: String) -> void:
 		"actorId": profile.actor_id,
 		"time": simulation_time,
 		"feedback": feedback,
-		"text": "You %s Mallow after %s." % [feedback, profile.feedback_action]
+		"text": "You %s %s after %s." % [feedback, profile.display_name, profile.feedback_action]
 	}
 	if not feedback_word.is_empty():
 		outcome["word"] = str(feedback_word["word"])
@@ -150,7 +152,8 @@ func give_feedback(feedback: String) -> void:
 	var feedback_result := "praised" if feedback == "praise" else "scolded"
 	var language_delta := 0.14 if feedback == "praise" else -0.14
 	var adjusted_words: Array = _language.call("adjust_target", profile.language_state, profile.feedback_action, language_delta)
-	last_status = "Mallow was %s. %s association %s%.2f." % [
+	last_status = "%s was %s. %s association %s%.2f." % [
+		profile.display_name,
 		feedback_result,
 		profile.feedback_action.capitalize(),
 		"+" if amount >= 0.0 else "",
@@ -160,7 +163,7 @@ func give_feedback(feedback: String) -> void:
 		var changed_word: Dictionary = adjusted_words[0]
 		last_status += " %s confidence %.2f." % [str(changed_word["word"]), float(changed_word["confidence"])]
 	if not feedback_word.is_empty():
-		last_status += " Mallow said “%s”." % str(feedback_word["word"])
+		last_status += " %s said “%s”." % [profile.display_name, str(feedback_word["word"])]
 	_refresh_ui()
 
 
@@ -190,7 +193,7 @@ func teach_word(input_word: String, target_id: String) -> void:
 		last_status = "Choose Teach word before pairing a word with a target."
 		_refresh_ui()
 		return
-	var profile := profile_for("mallow")
+	var profile := focused_profile()
 	if profile == null:
 		return
 	var result: Dictionary = _language.call("teach_word", profile.language_state, input_word, target_id)
@@ -201,15 +204,15 @@ func teach_word(input_word: String, target_id: String) -> void:
 	var word := str(result.get("word", ""))
 	var confidence := float(result.get("confidence", 0.0))
 	var target_name := _language_target_name(target_id)
-	var readiness := " Mallow can now use it." if confidence >= 0.60 else " Teach again or praise correct use to build confidence."
-	last_status = "Taught “%s” to %s (%.2f confidence).%s" % [word, target_name, confidence, readiness]
+	var readiness := " %s can now use it." % profile.display_name if confidence >= 0.60 else " Teach again or praise correct use to build confidence."
+	last_status = "Taught “%s” to %s for %s (%.2f confidence).%s" % [word, target_name, profile.display_name, confidence, readiness]
 	_apply_profile_biochemistry_event(profile, "teach-word", {
 		"eventType": "teach-word",
 		"targetId": target_id,
 		"time": simulation_time,
 		"word": word,
 		"actorId": profile.actor_id,
-		"text": "Mallow learned “%s” for %s." % [word, target_name]
+		"text": "%s learned “%s” for %s." % [profile.display_name, word, target_name]
 	})
 	_sync_mallow_compatibility()
 	_refresh_ui()
@@ -428,6 +431,20 @@ func _new_moss_cognition_state() -> Dictionary:
 func profile_for(actor_id: String) -> NornProfile:
 	var profile = norn_profiles.get(actor_id, null)
 	return profile as NornProfile if profile is NornProfile else null
+
+
+func focused_profile() -> NornProfile:
+	var profile := profile_for(focused_norn_id)
+	return profile if profile != null else profile_for("mallow")
+
+
+func select_norn(actor_id: String) -> void:
+	var profile := profile_for(actor_id)
+	if profile == null:
+		return
+	focused_norn_id = profile.actor_id
+	last_status = "Focused on %s. Player actions will go to %s." % [profile.display_name, profile.display_name]
+	_refresh_ui()
 
 
 func _create_profiles() -> void:
@@ -737,15 +754,14 @@ func _on_action_completed(actor_id: String, action_id: String, target_id: String
 	profile.feedback_time = simulation_time
 	profile.feedback_available = true
 	_offer_observation(profile, outcome)
-	if actor_id == "mallow":
-		last_status = "%s. Learned association: %s %.2f (Δ %.2f)." % [
-			outcome_text,
-			action_id,
-			float(result.get("association", 0.0)),
-			float(result.get("learningDelta", 0.0))
-		]
-		if not spoken_word.is_empty():
-			last_status += " %s said “%s”." % [actor_name, str(spoken_word["word"])]
+	last_status = "%s. Learned association: %s %.2f (Δ %.2f)." % [
+		outcome_text,
+		action_id,
+		float(result.get("association", 0.0)),
+		float(result.get("learningDelta", 0.0))
+	]
+	if not spoken_word.is_empty():
+		last_status += " %s said “%s”." % [actor_name, str(spoken_word["word"])]
 	_sync_mallow_compatibility()
 	for current_profile: NornProfile in norn_profiles.values():
 		_run_decision(current_profile)
@@ -839,26 +855,29 @@ func _reset_state(write_save: bool) -> void:
 
 
 func _refresh_ui() -> void:
-	if _ui == null or cognition_state.is_empty():
+	var profile := focused_profile()
+	if _ui == null or profile == null or profile.cognition_state.is_empty():
 		return
-	_ui.update_view(
-		cognition_state["chemistry"],
-		current_decision,
-		recalled_moments,
-		last_status,
-		paused,
-		simulation_speed,
-		feedback_available,
-		video_recorder != null and video_recorder.is_recording(),
-		video_recorder.recording_time() if video_recorder != null else 0.0,
-		last_recording_path,
-		video_recorder.last_error if video_recorder != null else "",
-		recorded_frame_count,
-		teaching_mode,
-		language_state,
-		Biochemistry.read_compounds(biochemistry_state),
-		Biochemistry.read_fluxes(biochemistry_state)
-	)
+	_ui.update_view({
+		"actorId": profile.actor_id,
+		"displayName": profile.display_name,
+		"chemistry": profile.cognition_state["chemistry"],
+		"decision": profile.current_decision,
+		"recalled": profile.recalled_moments,
+		"languageState": profile.language_state,
+		"compounds": Biochemistry.read_compounds(profile.biochemistry_state),
+		"reactionFluxes": Biochemistry.read_fluxes(profile.biochemistry_state),
+		"status": last_status,
+		"paused": paused,
+		"speed": simulation_speed,
+		"feedbackReady": profile.feedback_available and simulation_time - profile.feedback_time <= FEEDBACK_WINDOW,
+		"recording": video_recorder != null and video_recorder.is_recording(),
+		"recordingElapsed": video_recorder.recording_time() if video_recorder != null else 0.0,
+		"lastRecordingPath": last_recording_path,
+		"recordingError": video_recorder.last_error if video_recorder != null else "",
+		"recordedFrameCount": recorded_frame_count,
+		"teachingMode": teaching_mode
+	})
 
 
 func _unhandled_input(event: InputEvent) -> void:
