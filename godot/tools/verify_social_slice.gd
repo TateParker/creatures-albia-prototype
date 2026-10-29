@@ -1,5 +1,8 @@
 extends SceneTree
 
+const Cognition = preload("res://scripts/norn_cognition.gd")
+const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
+
 var _failures: Array[String] = []
 
 
@@ -10,6 +13,14 @@ func _initialize() -> void:
 func _run_checks() -> void:
 	test_profiles_keep_independent_state()
 	await test_actor_approaches_peer_without_consuming_object()
+	await test_world_spawns_two_independent_norns()
+	await test_peer_perception_filters_distance_and_occlusion()
+	await test_shared_object_sensing_filters_distance_and_occlusion()
+	await test_peer_comfort_rises_and_decays()
+	test_social_attention_selects_observation_when_needs_are_settled()
+	await test_observation_requires_range_visibility_and_attention()
+	await test_observed_success_and_feedback_teach_matching_action()
+	await test_contested_object_completes_once()
 	if _failures.is_empty():
 		print("SOCIAL_SLICE_CHECKS_OK")
 		quit(0)
@@ -112,6 +123,324 @@ func test_actor_approaches_peer_without_consuming_object() -> void:
 	habitat.queue_free()
 	await process_frame
 	await physics_frame
+
+
+func test_world_spawns_two_independent_norns() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("profile_for"):
+		_expect(false, "world exposes profiles for both Norns")
+		await _destroy_social_world(world)
+		return
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	_expect(mallow != null and moss != null, "world creates Mallow and Moss profiles")
+	if mallow == null or moss == null:
+		await _destroy_social_world(world)
+		return
+	_expect(mallow.get("actor_id") == "mallow" and moss.get("actor_id") == "moss", "world profiles have stable IDs")
+	_expect(mallow.get("actor") != moss.get("actor"), "each profile owns a different actor")
+	var mallow_cognition: Dictionary = mallow.get("cognition_state")
+	var moss_cognition: Dictionary = moss.get("cognition_state")
+	var moss_hunger := float(moss_cognition["chemistry"]["hunger"])
+	var mallow_hunger := float(mallow_cognition["chemistry"]["hunger"])
+	mallow_cognition["chemistry"]["hunger"] = 12.0
+	_expect(float(moss_cognition["chemistry"]["hunger"]) == moss_hunger, "each profile owns separate cognition")
+	mallow_cognition["chemistry"]["hunger"] = mallow_hunger
+	var mallow_biochemistry: Dictionary = mallow.get("biochemistry_state")
+	var moss_biochemistry: Dictionary = moss.get("biochemistry_state")
+	var moss_atp := float(moss_biochemistry["compounds"]["ATP"])
+	var mallow_atp := float(mallow_biochemistry["compounds"]["ATP"])
+	mallow_biochemistry["compounds"]["ATP"] = 1.0
+	_expect(float(moss_biochemistry["compounds"]["ATP"]) == moss_atp, "each profile owns separate biochemistry")
+	mallow_biochemistry["compounds"]["ATP"] = mallow_atp
+	var mallow_language: Dictionary = mallow.get("language_state")
+	var moss_language: Dictionary = moss.get("language_state")
+	mallow_language["words"]["fruit"] = {"word": "fruit", "targetId": "fruit", "confidence": 0.38}
+	_expect((moss_language["words"] as Dictionary).is_empty(), "each profile owns separate language")
+	mallow_language["words"].clear()
+	_expect(int(mallow_cognition.get("seed", -1)) == 4181996 and int(moss_cognition.get("seed", -1)) == 4181997, "profiles use their deterministic seeds")
+	_expect(float(mallow_cognition["traits"]["sociability"]) == 0.55 and float(moss_cognition["traits"]["sociability"]) == 0.85, "profiles use distinct sociability traits")
+	_expect((moss.get("actor") as Node3D).global_position.distance_to(Vector3(6.2, 0.0, 1.6)) < 0.05, "Moss starts at the planned habitat position")
+	var initial_peers: Array = world.call("_sense_peers", mallow)
+	_expect(initial_peers.size() == 1 and initial_peers[0].get("id", "") == "moss", "the starting habitat positions produce visible peer input")
+	world.call("toggle_pause")
+	_expect(not (mallow.get("actor") as NornActor).is_physics_processing() and not (moss.get("actor") as NornActor).is_physics_processing(), "global pause stops both Norns")
+	world.call("toggle_pause")
+	_expect((mallow.get("actor") as NornActor).is_physics_processing() and (moss.get("actor") as NornActor).is_physics_processing(), "global resume restarts both Norns")
+	await _destroy_social_world(world)
+
+
+func test_peer_perception_filters_distance_and_occlusion() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("_sense_peers") or not world.has_method("profile_for"):
+		_expect(false, "world provides bounded line-of-sight peer perception")
+		await _destroy_social_world(world)
+		return
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	mallow_actor.global_position = Vector3.ZERO
+	moss_actor.global_position = Vector3(8.0, 0.0, 0.0)
+	await physics_frame
+	var peers: Array = world.call("_sense_peers", mallow)
+	_expect(peers.size() == 1 and peers[0].get("id", "") == "moss", "visible peer inside the sense radius is perceived")
+	moss_actor.global_position = Vector3(11.0, 0.0, 0.0)
+	await physics_frame
+	peers = world.call("_sense_peers", mallow)
+	_expect(peers.is_empty(), "peer outside the ten-unit sense radius is excluded")
+	moss_actor.global_position = Vector3(5.0, 0.0, 0.0)
+	var wall := StaticBody3D.new()
+	wall.name = "PeerOccluder"
+	wall.collision_layer = 1
+	wall.collision_mask = 0
+	var wall_shape := CollisionShape3D.new()
+	var wall_box := BoxShape3D.new()
+	wall_box.size = Vector3(0.35, 2.0, 2.0)
+	wall_shape.shape = wall_box
+	wall.position = Vector3(2.5, 1.25, 0.0)
+	wall.add_child(wall_shape)
+	world.add_child(wall)
+	await physics_frame
+	peers = world.call("_sense_peers", mallow)
+	_expect(peers.is_empty(), "occluded peer is excluded from perception")
+	wall.queue_free()
+	await _destroy_social_world(world)
+
+
+func test_shared_object_sensing_filters_distance_and_occlusion() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("_sense_objects") or not world.has_method("profile_for"):
+		_expect(false, "world builds visible-object input independently of Area overlap caches")
+		await _destroy_social_world(world)
+		return
+	world.set_process(false)
+	var mallow = world.call("profile_for", "mallow")
+	var mallow_actor: NornActor = mallow.get("actor")
+	mallow_actor.set_physics_process(false)
+	var moss_actor: NornActor = world.call("profile_for", "moss").get("actor")
+	moss_actor.set_physics_process(false)
+	mallow_actor.global_position = Vector3.ZERO
+	moss_actor.global_position = Vector3(4.0, 0.0, -1.2)
+	mallow_actor.get_node("LocalSensor").monitoring = false
+	var visible_objects: Array = world.call("_sense_objects", mallow)
+	_expect(visible_objects.any(func(entry: Dictionary) -> bool: return entry.get("id", "") == "fruit"), "available fruit inside the sense radius is perceived")
+	_expect(visible_objects.any(func(entry: Dictionary) -> bool: return entry.get("id", "") == "spinner"), "available spinner inside the sense radius is perceived without the Area cache")
+	_expect(mallow_actor.can_see_interactable(world.get("objects")["spinner"]), "a peer standing in front of an object does not block object perception")
+	var spinner: Interactable = world.get("objects")["spinner"]
+	spinner.global_position = Vector3(11.0, 0.0, 0.0)
+	visible_objects = world.call("_sense_objects", mallow)
+	_expect(not visible_objects.any(func(entry: Dictionary) -> bool: return entry.get("id", "") == "spinner"), "object outside the ten-unit sense radius is excluded")
+	spinner.global_position = Vector3(6.0, 0.0, 0.0)
+	var wall := StaticBody3D.new()
+	wall.collision_layer = 1
+	wall.collision_mask = 0
+	var wall_shape := CollisionShape3D.new()
+	var wall_box := BoxShape3D.new()
+	wall_box.size = Vector3(0.35, 2.0, 2.0)
+	wall_shape.shape = wall_box
+	wall.position = Vector3(3.0, 1.2, 0.0)
+	wall.add_child(wall_shape)
+	world.add_child(wall)
+	await physics_frame
+	visible_objects = world.call("_sense_objects", mallow)
+	_expect(not visible_objects.any(func(entry: Dictionary) -> bool: return entry.get("id", "") == "spinner"), "object occluded by habitat geometry is excluded")
+	await _destroy_social_world(world)
+
+
+func test_peer_comfort_rises_and_decays() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("_step_profile_chemistry") or not world.has_method("profile_for"):
+		_expect(false, "each profile advances chemistry using sensed peers")
+		await _destroy_social_world(world)
+		return
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var moss_actor: NornActor = moss.get("actor")
+	var mallow_profile: Object = mallow
+	var mallow_compounds := Biochemistry.read_compounds(mallow_profile.get("biochemistry_state"))
+	var starting_comfort := float(mallow_compounds["socialComfort"])
+	for _step in range(40):
+		world.call("_step_profile_chemistry", mallow_profile)
+	var nearby_compounds := Biochemistry.read_compounds(mallow_profile.get("biochemistry_state"))
+	var nearby_comfort := float(nearby_compounds["socialComfort"])
+	_expect(nearby_comfort > starting_comfort, "peer proximity raises the observer's social comfort")
+	moss_actor.global_position = Vector3(30.0, 0.0, 30.0)
+	await physics_frame
+	for _step in range(100):
+		world.call("_step_profile_chemistry", mallow_profile)
+	var separated_compounds := Biochemistry.read_compounds(mallow_profile.get("biochemistry_state"))
+	_expect(float(separated_compounds["socialComfort"]) < nearby_comfort, "social comfort decays after the peer leaves")
+	await _destroy_social_world(world)
+
+
+func test_social_attention_selects_observation_when_needs_are_settled() -> void:
+	var low_state := Cognition.create_state(431, {"curiosity": 0.5, "sociability": 0.0}, {"hunger": 10.0, "curiosity": 5.0, "fatigue": 5.0})
+	var high_state := Cognition.create_state(431, {"curiosity": 0.5, "sociability": 0.85}, {"hunger": 10.0, "curiosity": 5.0, "fatigue": 5.0})
+	var peer := [{"id": "mallow", "distance": 2.0}]
+	var settled_observation := {"time": 1.0, "nearbyNorns": peer}
+	var low_decision: Dictionary = Cognition.preview(low_state, settled_observation)
+	var high_decision: Dictionary = Cognition.preview(high_state, settled_observation)
+	_expect(float(high_decision["actionScores"]["observe_peer"]) > float(low_decision["actionScores"]["observe_peer"]), "higher sociability increases the observe-peer need")
+	_expect(high_decision.get("actionId", "") == "observe_peer", "social attention wins when needs are settled")
+	var hungry_state := Cognition.create_state(431, {"curiosity": 0.5, "sociability": 0.85}, {"hunger": 90.0, "curiosity": 5.0, "fatigue": 5.0})
+	var food_observation := {"time": 1.0, "nearbyNorns": peer, "nearbyObjects": [{"id": "fruit", "distance": 1.0}]}
+	var hungry_decision: Dictionary = Cognition.preview(hungry_state, food_observation)
+	_expect(hungry_decision.get("actionId", "") == "fruit", "urgent food need takes priority over social observation")
+	var tired_state := Cognition.create_state(431, {"curiosity": 0.5, "sociability": 0.85}, {"hunger": 5.0, "curiosity": 5.0, "fatigue": 100.0})
+	var tired_decision: Dictionary = Cognition.preview(tired_state, settled_observation)
+	_expect(tired_decision.get("actionId", "") == "rest", "urgent rest need takes priority over social observation")
+
+
+func test_observation_requires_range_visibility_and_attention() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("_offer_observation") or not world.has_method("profile_for"):
+		_expect(false, "world gates witnessed events through social attention")
+		await _destroy_social_world(world)
+		return
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	var outcome := {"eventType": "food", "actionId": "fruit", "targetId": "fruit", "actorId": "mallow", "time": 10.0}
+	world.call("_offer_observation", mallow, outcome)
+	_expect((moss.get("cognition_state")["episodes"] as Array).is_empty(), "unattending Norn does not learn from an event")
+	await _set_profile_attending(moss, mallow)
+	moss_actor.global_position = mallow_actor.global_position + Vector3(3.2, 0.0, 0.0)
+	world.call("_offer_observation", mallow, outcome)
+	_expect((moss.get("cognition_state")["episodes"] as Array).is_empty(), "observer outside the three-unit radius does not learn")
+	moss_actor.global_position = mallow_actor.global_position + Vector3(2.0, 0.0, 0.0)
+	var wall := StaticBody3D.new()
+	wall.collision_layer = 1
+	wall.collision_mask = 0
+	var wall_shape := CollisionShape3D.new()
+	var wall_box := BoxShape3D.new()
+	wall_box.size = Vector3(0.35, 2.0, 2.0)
+	wall_shape.shape = wall_box
+	wall.position = (mallow_actor.global_position + moss_actor.global_position) * 0.5 + Vector3(0.0, 1.25, 0.0)
+	wall.add_child(wall_shape)
+	world.add_child(wall)
+	await physics_frame
+	world.call("_offer_observation", mallow, outcome)
+	_expect((moss.get("cognition_state")["episodes"] as Array).is_empty(), "occluded observer does not learn")
+	wall.queue_free()
+	await physics_frame
+	moss_actor.set_action_target(null, "idle", "Not attending")
+	world.call("_offer_observation", mallow, outcome)
+	_expect((moss.get("cognition_state")["episodes"] as Array).is_empty(), "visible nearby observer learns only while attending")
+	await _destroy_social_world(world)
+
+
+func test_observed_success_and_feedback_teach_matching_action() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("_offer_observation") or not world.has_method("profile_for"):
+		_expect(false, "world records successful actions and eligible feedback for observers")
+		await _destroy_social_world(world)
+		return
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var moss_actor: NornActor = moss.get("actor")
+	await _set_profile_attending(moss, mallow)
+	var moss_state: Dictionary = moss.get("cognition_state")
+	var initial_fruit := float(moss_state["actionAssociations"]["fruit"])
+	var initial_spinner := float(moss_state["actionAssociations"]["spinner"])
+	var food_outcome := {"eventType": "food", "actionId": "fruit", "targetId": "fruit", "actorId": "mallow", "time": 12.5, "eventId": 9, "text": "Mallow ate honey fruit"}
+	world.call("_offer_observation", mallow, food_outcome)
+	var episodes: Array = moss_state["episodes"]
+	_expect(episodes.size() == 1, "attentive observer remembers a successful food action")
+	if episodes.size() == 1:
+		_expect(episodes[0].get("eventType", "") == "observe" and episodes[0].get("actorId", "") == "mallow", "observation memory names its source")
+		_expect(episodes[0].get("actionId", "") == "fruit" and episodes[0].get("targetId", "") == "fruit", "observation memory names the matching action and target")
+		_expect(float(episodes[0].get("time", -1.0)) == 12.5 and int(episodes[0]["observation"].get("peerCount", -1)) == 1, "observation memory records time and peer count")
+		_expect(absf(float(episodes[0].get("sociability", -1.0)) - 0.85) < 0.001, "observation memory records observer sociability")
+	_expect(float(moss_state["actionAssociations"]["fruit"]) > initial_fruit, "successful witnessed fruit increases the fruit association")
+	_expect(is_equal_approx(float(moss_state["actionAssociations"]["spinner"]), initial_spinner), "successful witnessed fruit does not change the spinner association")
+	await _set_profile_attending(moss, mallow)
+	var praise_outcome := {"eventType": "praise", "actionId": "spinner", "targetId": "spinner", "actorId": "mallow", "time": 13.0, "eventId": 10, "feedback": "praise", "text": "Mallow was praised after spinner"}
+	world.call("_offer_observation", mallow, praise_outcome)
+	episodes = moss_state["episodes"]
+	_expect(episodes.size() == 2, "attentive observer remembers eligible praise")
+	if episodes.size() == 2:
+		_expect(episodes[1].get("eventType", "") == "observe-feedback" and episodes[1].get("feedback", "") == "praise", "feedback memory keeps its praise outcome")
+		_expect(episodes[1].get("actionId", "") == "spinner", "feedback learning remains tied to the praised action")
+	_expect(float(moss_state["actionAssociations"]["spinner"]) > initial_spinner, "witnessed praise changes only the matching spinner association")
+	_expect(Biochemistry.read_compounds(moss.get("biochemistry_state"))["socialComfort"] > 50.0, "witnessing a social event applies observer biochemistry")
+	await _set_profile_attending(moss, mallow)
+	var fruit_before_scold := float(moss_state["actionAssociations"]["fruit"])
+	var scold_outcome := {"eventType": "scold", "actionId": "fruit", "targetId": "fruit", "actorId": "mallow", "time": 13.5, "eventId": 11, "feedback": "scold", "text": "Mallow was scolded after fruit"}
+	world.call("_offer_observation", mallow, scold_outcome)
+	episodes = moss_state["episodes"]
+	_expect(episodes.size() == 3, "attentive observer remembers eligible scolding")
+	if episodes.size() == 3:
+		_expect(episodes[2].get("eventType", "") == "observe-feedback" and episodes[2].get("feedback", "") == "scold", "feedback memory keeps its scold outcome")
+		_expect(episodes[2].get("actionId", "") == "fruit", "scolding remains tied to the matching fruit action")
+	_expect(float(moss_state["actionAssociations"]["fruit"]) < fruit_before_scold, "witnessed scolding lowers only the matching fruit association")
+	await _destroy_social_world(world)
+
+
+func test_contested_object_completes_once() -> void:
+	var world = await _create_social_world()
+	if not world.has_method("profile_for"):
+		_expect(false, "world routes shared interactable completion by actor")
+		await _destroy_social_world(world)
+		return
+	var mallow = world.call("profile_for", "mallow")
+	var moss = world.call("profile_for", "moss")
+	var mallow_actor: NornActor = mallow.get("actor")
+	var moss_actor: NornActor = moss.get("actor")
+	var fruit: Interactable = world.get("objects")["fruit"]
+	fruit.global_position = Vector3.ZERO
+	mallow_actor.global_position = Vector3(-2.0, 0.0, 0.0)
+	moss_actor.global_position = Vector3(2.0, 0.0, 0.0)
+	mallow_actor.set_action_target(fruit, "fruit", "Eating honey fruit", "fruit")
+	moss_actor.set_action_target(fruit, "fruit", "Eating honey fruit", "fruit")
+	for _frame in range(90):
+		await physics_frame
+		var mallow_episodes: Array = mallow.get("cognition_state")["episodes"]
+		var moss_episodes: Array = moss.get("cognition_state")["episodes"]
+		if _event_count(mallow_episodes, "food") + _event_count(moss_episodes, "food") > 0 and not fruit.available:
+			break
+	await physics_frame
+	var total_food_events := _event_count(mallow.get("cognition_state")["episodes"], "food") + _event_count(moss.get("cognition_state")["episodes"], "food")
+	_expect(total_food_events == 1, "shared fruit produces exactly one successful food event")
+	_expect(not fruit.available, "the first valid arrival consumes the shared object")
+	await _destroy_social_world(world)
+
+
+func _create_social_world() -> Node:
+	var world_script: Script = load("res://scripts/albia_world.gd")
+	var world: Node = world_script.new()
+	world.name = "SocialWorldFixture"
+	root.add_child(world)
+	await process_frame
+	await physics_frame
+	return world
+
+
+func _destroy_social_world(world: Node) -> void:
+	if is_instance_valid(world):
+		world.queue_free()
+	await process_frame
+	await physics_frame
+
+
+func _set_profile_attending(observer: Object, source: Object) -> void:
+	var observer_actor: NornActor = observer.get("actor")
+	var source_actor: NornActor = source.get("actor")
+	observer_actor.global_position = source_actor.global_position + Vector3(2.0, 0.0, 0.0)
+	observer_actor.set_action_target(source_actor, "observe_peer", "Observing %s" % source.get("display_name"), str(source.get("actor_id")))
+	await process_frame
+	await physics_frame
+	if is_instance_valid(observer_actor):
+		observer_actor.set_action_target(null, "observe_peer", "Watching %s" % source.get("display_name"), str(source.get("actor_id")))
+
+
+func _event_count(episodes: Array, event_type: String) -> int:
+	var total := 0
+	for episode: Variant in episodes:
+		if episode is Dictionary and episode.get("eventType", "") == event_type:
+			total += 1
+	return total
 
 
 func _method_argument_count(object: Object, method_name: String) -> int:

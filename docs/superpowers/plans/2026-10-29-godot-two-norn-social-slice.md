@@ -98,8 +98,10 @@ git commit -m "Add Norn profiles and peer navigation"
 
 **Files:**
 - Modify: `godot/scripts/albia_world.gd`
+- Modify: `godot/scripts/norn_actor.gd` to expose line-of-sight checks for shared objects.
 - Modify: `godot/scripts/norn_cognition.gd`
 - Modify: `godot/tools/verify_social_slice.gd`
+- Modify: `godot/tools/run_habitat_scenario.gd` to account for peer-driven chemistry during the existing catch-up check.
 
 **Interfaces:**
 - `AlbiaWorld.norn_profiles: Dictionary`, keyed by stable IDs `"mallow"` and `"moss"`
@@ -109,29 +111,31 @@ git commit -m "Add Norn profiles and peer navigation"
 - Sense radius `10.0`, observation radius `3.0`, approach stop distance `2.1` world units.
 - `NornCognition.decide` receives visible peers in `observation["nearbyNorns"]`. When a peer is visible, observe need is `8.0 + max(0.0, 50.0 - socialComfort) * 0.12 + sociability * 20.0`; otherwise it is zero. This makes Moss's higher existing sociability trait produce a visible observation tendency without overriding urgent food/rest priorities.
 
-- [ ] **Step 1: Add failing two-Norn and event-gating assertions**
+- [x] **Step 1: Add failing two-Norn and event-gating assertions**
 
-Add these named assertions to `verify_social_slice.gd`: `test_world_spawns_two_independent_norns`, `test_peer_perception_filters_distance_and_occlusion`, `test_peer_comfort_rises_and_decays`, `test_social_attention_selects_observation_when_needs_are_settled`, `test_observation_requires_range_visibility_and_attention`, `test_observed_success_and_feedback_teach_matching_action`, and `test_contested_object_completes_once`. The tests must also confirm urgent food/rest still wins over observation.
+Add these named assertions to `verify_social_slice.gd`: `test_world_spawns_two_independent_norns`, `test_peer_perception_filters_distance_and_occlusion`, `test_shared_object_sensing_filters_distance_and_occlusion`, `test_peer_comfort_rises_and_decays`, `test_social_attention_selects_observation_when_needs_are_settled`, `test_observation_requires_range_visibility_and_attention`, `test_observed_success_and_feedback_teach_matching_action`, and `test_contested_object_completes_once`. The tests must also confirm urgent food/rest still wins over observation.
 
-- [ ] **Step 2: Run the social verifier and confirm the expected failures**
+- [x] **Step 2: Run the social verifier and confirm the expected failures**
 
 Run the Task 1 Godot command. Expected: the two-Norn, peer perception, and observation checks fail against the single-Norn world.
 
-- [ ] **Step 3: Create and advance both independent profiles in `AlbiaWorld`**
+- [x] **Step 3: Create and advance both independent profiles in `AlbiaWorld`**
 
 Create Mallow with seed `4181996`, curiosity `0.65`, sociability `0.55`; create Moss with seed `4181997`, curiosity `0.50`, sociability `0.85`. Start Moss at `(6.2, 0.0, 1.6)`. Give each profile its own cognition, biochemistry, language, decision, and feedback state; advance both chemistry states at 10 Hz and both decisions at 5 Hz against shared objects.
 
-- [ ] **Step 4: Implement peer perception, attention, and approach**
+- [x] **Step 4: Implement peer perception, attention, and approach**
 
-Build each profile's visible peer list independently. Target the nearest visible peer for `observe_peer`; stop within `2.1` units. Keep current fruit/play and rest priority. Use the `3.0`-unit observation radius and require settled `observe_peer` action plus line of sight for attention.
+Build each profile's visible peer list and available-object list independently, filtering both by the 10-unit sense radius and line of sight. Target the nearest visible peer for `observe_peer`; stop within `2.1` units. Keep current fruit/play and rest priority. Use the `3.0`-unit observation radius and require settled `observe_peer` action plus line of sight for attention.
 
-- [ ] **Step 5: Route witnessed events through existing cognition and chemistry**
+- [x] **Step 5: Route witnessed events through existing cognition and chemistry**
 
 After a profile completes food/play or receives eligible Praise/Scold, offer the event to the other profile only if it meets the attention gate. Record `observe` or `observe-feedback` with source actor, action/target, feedback, time, peer count, and the observer's sociability; apply the existing `social` biochemical event to the observer and synchronize its chemistry.
 
-- [ ] **Step 6: Run the social verifier**
+- [x] **Step 6: Run the social verifier**
 
 Run: `& 'C:\Users\Quad\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe' --headless --path godot --script res://tools/verify_social_slice.gd`
+
+Also run the existing habitat scenario to verify autonomous fruit/spinner behavior, chemistry integration, and save compatibility.
 
 Expected: independent decisions, peer comfort, observation gating, learning, and one-time object completion pass.
 
@@ -140,7 +144,7 @@ Expected: independent decisions, peer comfort, observation gating, learning, and
 After the social verifier passes, run:
 
 ```powershell
-git add godot/scripts/albia_world.gd godot/scripts/norn_cognition.gd godot/tools/verify_social_slice.gd
+git add godot/scripts/albia_world.gd godot/scripts/norn_actor.gd godot/scripts/norn_cognition.gd godot/tools/verify_social_slice.gd godot/tools/run_habitat_scenario.gd docs/superpowers/plans/2026-10-29-godot-two-norn-social-slice.md
 git commit -m "Simulate two Norns with social observation"
 ```
 

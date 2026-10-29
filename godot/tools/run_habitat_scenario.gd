@@ -331,8 +331,12 @@ func _verify_world_biochemistry(world: AlbiaWorld) -> bool:
 
 	var before_long_step: Dictionary = Biochemistry.read_compounds(world.get("biochemistry_state"))
 	var expected: Dictionary = world.get("biochemistry_state").duplicate(true)
+	var mallow_profile = world.profile_for("mallow")
+	var mallow_peers: Array = world.call("_sense_peers", mallow_profile)
+	var nearby_peer_stimulus := 1.0 if not mallow_peers.is_empty() else 0.0
+	print("WORLD_CATCHUP_PEER_INPUT: count=%d; nearbyPeer=%.1f" % [mallow_peers.size(), nearby_peer_stimulus])
 	for _tick in range(5):
-		Biochemistry.advance(expected, {"active": 0.0, "resting": 1.0, "nearbyPeer": 0.0}, 0.1)
+		Biochemistry.advance(expected, {"active": 0.0, "resting": 1.0, "nearbyPeer": nearby_peer_stimulus}, 0.1)
 	var time_before_long_step: float = world.simulation_time
 	world.set("_chemistry_accumulator", 0.0)
 	world.set("_decision_accumulator", 0.0)

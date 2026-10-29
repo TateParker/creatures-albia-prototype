@@ -5,6 +5,7 @@ signal action_completed(actor_id: String, action_id: String, target_id: String)
 
 const WALK_SPEED := 2.8
 const ARRIVAL_DISTANCE := 1.05
+const OBSERVATION_STOP_DISTANCE := 2.1
 
 var current_action: String = "idle"
 var action_reason: String = "Looking around the habitat"
@@ -18,6 +19,7 @@ var _sensor: Area3D
 
 
 func _ready() -> void:
+	add_to_group("norn_actors")
 	collision_layer = 1
 	collision_mask = 1
 	_build_collision()
@@ -77,6 +79,10 @@ func can_see_peer(peer: NornActor) -> bool:
 	return not result.is_empty() and result.get("collider") == peer
 
 
+func can_see_interactable(item: Interactable) -> bool:
+	return item != null and item.available and item.is_inside_tree() and _has_line_of_sight(item)
+
+
 func reset_position(position_value: Vector3) -> void:
 	global_position = position_value
 	velocity = Vector3.ZERO
@@ -100,7 +106,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	var direction := target.global_position - global_position
 	direction.y = 0.0
-	var arrival_distance := 2.1 if current_action == "observe_peer" else ARRIVAL_DISTANCE
+	var arrival_distance := OBSERVATION_STOP_DISTANCE if current_action == "observe_peer" else ARRIVAL_DISTANCE
 	if direction.length() <= arrival_distance:
 		var completed_target := target
 		var completed_action := current_action
@@ -184,7 +190,12 @@ func _build_sensor() -> void:
 func _has_line_of_sight(item: Interactable) -> bool:
 	var from := global_position + Vector3(0.0, 1.35, 0.0)
 	var to := item.global_position + Vector3(0.0, 0.55, 0.0)
-	var query := PhysicsRayQueryParameters3D.create(from, to, 2, [get_rid()])
+	var excluded: Array[RID] = [get_rid()]
+	if is_inside_tree():
+		for node: Node in get_tree().get_nodes_in_group("norn_actors"):
+			if node != self and node is NornActor:
+				excluded.append((node as NornActor).get_rid())
+	var query := PhysicsRayQueryParameters3D.create(from, to, 3, excluded)
 	query.collide_with_areas = false
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
 	return not result.is_empty() and result.get("collider") == item

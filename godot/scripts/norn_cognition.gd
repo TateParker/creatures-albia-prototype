@@ -235,6 +235,8 @@ static func record_outcome(state: Dictionary, outcome: Dictionary = {}, external
 		"chemicalsAfter": chemistry.duplicate(true),
 		"outcome": event_type,
 		"eventType": event_type,
+		"feedback": str(outcome.get("feedback", "")).left(16),
+		"sociability": clampf(float(outcome["sociability"]), 0.0, 1.0) if _is_finite_number(outcome.get("sociability", null)) else null,
 		"linkedEventId": int(outcome.get("eventId", 0)) if int(outcome.get("eventId", 0)) > 0 else null,
 		"salience": clampf(_finite_or(outcome.get("salience", salience_default), salience_default), 0.0, 1.0),
 		"valence": int(valence),
@@ -555,7 +557,8 @@ static func _score_decision(state: Dictionary, observation: Dictionary) -> Dicti
 	var fruit_score := fruit_need + fruit_habit + fruit_context
 	var spinner_score := spinner_need + spinner_habit + spinner_context
 	var rest_need := float(chemistry["fatigue"]) * 0.3 + maxf(0.0, 28.0 - float(chemistry["glucose"])) * 0.2
-	var observe_need := 8.0 + maxf(0.0, 50.0 - float(chemistry["socialComfort"])) * 0.12 if not nearby_norns.is_empty() else 0.0
+	var sociability := clampf(float(state["traits"].get("sociability", 0.5)), 0.0, 1.0)
+	var observe_need := 8.0 + maxf(0.0, 50.0 - float(chemistry["socialComfort"])) * 0.12 + sociability * 20.0 if not nearby_norns.is_empty() else 0.0
 	var action_scores := {
 		"fruit": fruit_score,
 		"spinner": spinner_score,
@@ -774,6 +777,12 @@ static func _valid_episode(episode: Dictionary) -> bool:
 		return false
 	var word = episode.get("word", null)
 	if word != null and (not (word is String) or word.length() > 24):
+		return false
+	var feedback = episode.get("feedback", "")
+	if not (feedback is String) or not ["", "praise", "scold"].has(feedback):
+		return false
+	var sociability = episode.get("sociability", null)
+	if sociability != null and not _bounded_number(sociability, 0.0, 1.0):
 		return false
 	return true
 

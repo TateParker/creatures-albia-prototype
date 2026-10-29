@@ -6,14 +6,20 @@ const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
 const HabitatUi = preload("res://scripts/habitat_ui.gd")
 const NornLanguageScript = preload("res://scripts/norn_language.gd")
 const VideoRecorder = preload("res://scripts/local_video_recorder.gd")
+const NornProfile = preload("res://scripts/norn_profile.gd")
 const START_SEED := 4181996
+const MOSS_SEED := 4181997
 const SAVE_PATH := "user://albia_norn_save.json"
 const SAVE_VERSION := 3
 const CHEMISTRY_STEP := 0.1
 const DECISION_STEP := 0.2
 const FEEDBACK_WINDOW := 12.0
+const SENSE_RADIUS := 10.0
+const OBSERVATION_RADIUS := 3.0
 
 var norn: NornActor
+var moss: NornActor
+var norn_profiles: Dictionary = {}
 var objects: Dictionary = {}
 var cognition_state: Dictionary = {}
 var biochemistry_state: Dictionary = {}
@@ -56,11 +62,8 @@ func _ready() -> void:
 	_build_camera()
 	_build_creature()
 	_build_objects()
-	cognition_state = _new_cognition_state()
-	biochemistry_state = Biochemistry.create_state(cognition_state["chemistry"])
-	Cognition.sync_chemistry(cognition_state, Biochemistry.read_signals(biochemistry_state))
 	_language = NornLanguageScript.new()
-	language_state = _language.call("create_state")
+	_create_profiles()
 	video_recorder = VideoRecorder.new()
 	video_recorder.name = "LocalVideoRecorder"
 	add_child(video_recorder)
@@ -80,20 +83,16 @@ func _process(delta: float) -> void:
 	_decision_accumulator = minf(_decision_accumulator + step_delta, DECISION_STEP * 3.0)
 	var chemistry_steps := 0
 	while _chemistry_accumulator >= CHEMISTRY_STEP and chemistry_steps < 5:
-		var chemistry_signals: Dictionary = Biochemistry.advance_and_read_signals(biochemistry_state, {
-			"active": 1.0 if norn != null and norn.is_walking else 0.0,
-			"resting": 1.0 if norn != null and norn.current_action == "rest" else 0.0,
-			"nearbyPeer": 0.0
-		}, CHEMISTRY_STEP)
-		if not chemistry_signals.is_empty():
-			Cognition.sync_chemistry(cognition_state, chemistry_signals)
+		for profile: NornProfile in norn_profiles.values():
+			_step_profile_chemistry(profile)
 		_chemistry_accumulator -= CHEMISTRY_STEP
 		chemistry_steps += 1
 	var decision_steps := 0
 	while _decision_accumulator >= DECISION_STEP and decision_steps < 3:
 		_decision_accumulator -= DECISION_STEP
 		decision_steps += 1
-		_run_decision()
+		for profile: NornProfile in norn_profiles.values():
+			_run_decision(profile)
 	_update_timed_state()
 	_refresh_ui()
 
@@ -107,8 +106,12 @@ func guide_to(object_id: String) -> void:
 		_refresh_ui()
 		return
 	guidance = {"objectId": object_id, "expiresAt": simulation_time + 7.0}
+	var mallow_profile := profile_for("mallow")
+	if mallow_profile != null:
+		mallow_profile.guidance = guidance
 	last_status = "You pointed toward %s." % item.display_name
-	_run_decision()
+	if mallow_profile != null:
+		_run_decision(mallow_profile)
 	_refresh_ui()
 
 
@@ -119,30 +122,37 @@ func give_feedback(feedback: String) -> void:
 		return
 	if not ["praise", "scold"].has(feedback):
 		return
-	if not feedback_available or simulation_time - feedback_time > FEEDBACK_WINDOW:
+	var profile := profile_for("mallow")
+	if profile == null:
+		return
+	if not profile.feedback_available or simulation_time - profile.feedback_time > FEEDBACK_WINDOW:
 		last_status = "Wait for Mallow to eat or play, then respond within 12 seconds."
 		_refresh_ui()
 		return
-	var feedback_word: Dictionary = _language.call("word_for_target", language_state, feedback)
+	var feedback_word: Dictionary = _language.call("word_for_target", profile.language_state, feedback)
 	var outcome := {
 		"eventType": feedback,
-		"actionId": feedback_action,
-		"targetId": feedback_target if not feedback_target.is_empty() else feedback,
-		"actorId": "Mallow",
+		"actionId": profile.feedback_action,
+		"targetId": profile.feedback_target if not profile.feedback_target.is_empty() else feedback,
+		"actorId": profile.actor_id,
 		"time": simulation_time,
-		"text": "You %s Mallow after %s." % [feedback, feedback_action]
+		"feedback": feedback,
+		"text": "You %s Mallow after %s." % [feedback, profile.feedback_action]
 	}
 	if not feedback_word.is_empty():
 		outcome["word"] = str(feedback_word["word"])
-	var result: Dictionary = _apply_biochemistry_event(feedback, outcome)
-	feedback_available = false
+	var result: Dictionary = _apply_profile_biochemistry_event(profile, feedback, outcome)
+	outcome["eventId"] = int(result.get("episodeId", 0))
+	profile.feedback_available = false
+	_offer_observation(profile, outcome)
+	_sync_mallow_compatibility()
 	var amount := float(result.get("learningDelta", 0.0))
 	var feedback_result := "praised" if feedback == "praise" else "scolded"
 	var language_delta := 0.14 if feedback == "praise" else -0.14
-	var adjusted_words: Array = _language.call("adjust_target", language_state, feedback_action, language_delta)
+	var adjusted_words: Array = _language.call("adjust_target", profile.language_state, profile.feedback_action, language_delta)
 	last_status = "Mallow was %s. %s association %s%.2f." % [
 		feedback_result,
-		feedback_action.capitalize(),
+		profile.feedback_action.capitalize(),
 		"+" if amount >= 0.0 else "",
 		amount
 	]
@@ -180,7 +190,10 @@ func teach_word(input_word: String, target_id: String) -> void:
 		last_status = "Choose Teach word before pairing a word with a target."
 		_refresh_ui()
 		return
-	var result: Dictionary = _language.call("teach_word", language_state, input_word, target_id)
+	var profile := profile_for("mallow")
+	if profile == null:
+		return
+	var result: Dictionary = _language.call("teach_word", profile.language_state, input_word, target_id)
 	if not bool(result.get("ok", false)):
 		last_status = str(result.get("error", "That word could not be taught."))
 		_refresh_ui()
@@ -190,13 +203,15 @@ func teach_word(input_word: String, target_id: String) -> void:
 	var target_name := _language_target_name(target_id)
 	var readiness := " Mallow can now use it." if confidence >= 0.60 else " Teach again or praise correct use to build confidence."
 	last_status = "Taught “%s” to %s (%.2f confidence).%s" % [word, target_name, confidence, readiness]
-	_apply_biochemistry_event("teach-word", {
+	_apply_profile_biochemistry_event(profile, "teach-word", {
 		"eventType": "teach-word",
 		"targetId": target_id,
 		"time": simulation_time,
 		"word": word,
+		"actorId": profile.actor_id,
 		"text": "Mallow learned “%s” for %s." % [word, target_name]
 	})
+	_sync_mallow_compatibility()
 	_refresh_ui()
 
 
@@ -215,8 +230,9 @@ func _language_target_name(target_id: String) -> String:
 
 func toggle_pause() -> void:
 	paused = not paused
-	if norn != null:
-		norn.set_physics_process(not paused)
+	for profile: NornProfile in norn_profiles.values():
+		if profile.actor != null:
+			profile.actor.set_physics_process(not paused)
 	last_status = "Simulation paused." if paused else "Simulation resumed."
 	_refresh_ui()
 
@@ -353,23 +369,37 @@ func load_game() -> void:
 	if not Cognition.sync_chemistry(restored, Biochemistry.read_signals(restored_biochemistry)):
 		_fallback_from_invalid_save("The biochemical cognition signals failed validation")
 		return
-	cognition_state = restored
-	biochemistry_state = restored_biochemistry
-	language_state = restored_language
+	var mallow_profile := profile_for("mallow")
+	if mallow_profile == null:
+		_fallback_from_invalid_save("The Mallow profile is missing")
+		return
+	mallow_profile.cognition_state = restored
+	mallow_profile.biochemistry_state = restored_biochemistry
+	mallow_profile.language_state = restored_language
+	mallow_profile.guidance.clear()
+	mallow_profile.current_decision.clear()
+	mallow_profile.recalled_moments.clear()
+	mallow_profile.feedback_available = false
+	mallow_profile.feedback_action = ""
+	mallow_profile.feedback_target = ""
+	mallow_profile.feedback_time = -1000.0
+	var moss_profile := _create_profile("moss", "Moss", moss, _new_moss_cognition_state())
+	norn_profiles["moss"] = moss_profile
 	teaching_mode = false
 	if _ui != null:
 		_ui.clear_teaching_input()
 	simulation_time = maxf(0.0, float(record["simulationTime"]))
 	_chemistry_accumulator = 0.0
 	_decision_accumulator = 0.0
-	guidance.clear()
-	feedback_available = false
+	norn.reset_position(Vector3(3.0, 0.0, 2.0))
+	moss.reset_position(Vector3(6.2, 0.0, 1.6))
 	_respawn_times.clear()
 	for item: Interactable in objects.values():
 		item.set_available(true)
-	norn.reset_position(Vector3(3.0, 0.0, 2.0))
+	_sync_mallow_compatibility()
 	last_status = "Loaded Mallow's local learning and memories."
-	_run_decision()
+	for profile: NornProfile in norn_profiles.values():
+		_run_decision(profile)
 	_refresh_ui()
 
 
@@ -387,17 +417,74 @@ func _new_cognition_state() -> Dictionary:
 	})
 
 
+func _new_moss_cognition_state() -> Dictionary:
+	return Cognition.create_state(MOSS_SEED, {"curiosity": 0.50, "sociability": 0.85}, {
+		"hunger": 45.0,
+		"curiosity": 45.0,
+		"fatigue": 18.0
+	})
+
+
+func profile_for(actor_id: String) -> NornProfile:
+	var profile = norn_profiles.get(actor_id, null)
+	return profile as NornProfile if profile is NornProfile else null
+
+
+func _create_profiles() -> void:
+	norn_profiles.clear()
+	var mallow_profile := _create_profile("mallow", "Mallow", norn, _new_cognition_state())
+	var moss_profile := _create_profile("moss", "Moss", moss, _new_moss_cognition_state())
+	moss_profile.actor.global_position = Vector3(6.2, 0.0, 1.6)
+	norn_profiles["mallow"] = mallow_profile
+	norn_profiles["moss"] = moss_profile
+	_sync_mallow_compatibility()
+	for profile: NornProfile in norn_profiles.values():
+		_run_decision(profile)
+
+
+func _create_profile(actor_id: String, display_name: String, actor: NornActor, cognition: Dictionary) -> NornProfile:
+	var biochemistry := Biochemistry.create_state(cognition["chemistry"])
+	Cognition.sync_chemistry(cognition, Biochemistry.read_signals(biochemistry))
+	var language: Dictionary = _language.call("create_state")
+	var profile := NornProfile.new()
+	profile.initialize(actor_id, display_name, actor, cognition, biochemistry, language)
+	return profile
+
+
+func _sync_mallow_compatibility() -> void:
+	var mallow_profile := profile_for("mallow")
+	if mallow_profile == null:
+		return
+	cognition_state = mallow_profile.cognition_state
+	biochemistry_state = mallow_profile.biochemistry_state
+	language_state = mallow_profile.language_state
+	guidance = mallow_profile.guidance
+	current_decision = mallow_profile.current_decision
+	recalled_moments = mallow_profile.recalled_moments
+	feedback_available = mallow_profile.feedback_available
+	feedback_action = mallow_profile.feedback_action
+	feedback_target = mallow_profile.feedback_target
+	feedback_time = mallow_profile.feedback_time
+
+
 func _apply_biochemistry_event(event_id: String, outcome: Dictionary) -> Dictionary:
-	if cognition_state.is_empty() or biochemistry_state.is_empty():
+	return _apply_profile_biochemistry_event(profile_for("mallow"), event_id, outcome)
+
+
+func _apply_profile_biochemistry_event(profile: NornProfile, event_id: String, outcome: Dictionary) -> Dictionary:
+	if profile == null or profile.cognition_state.is_empty() or profile.biochemistry_state.is_empty():
 		return {}
-	var before: Dictionary = Biochemistry.read_signals(biochemistry_state)
-	var applied: Dictionary = Biochemistry.apply_event(biochemistry_state, event_id)
+	var before: Dictionary = Biochemistry.read_signals(profile.biochemistry_state)
+	var applied: Dictionary = Biochemistry.apply_event(profile.biochemistry_state, event_id)
 	if applied.is_empty():
 		return {}
-	var after: Dictionary = Biochemistry.read_signals(biochemistry_state)
-	if not Cognition.sync_chemistry(cognition_state, after):
+	var after: Dictionary = Biochemistry.read_signals(profile.biochemistry_state)
+	if not Cognition.sync_chemistry(profile.cognition_state, after):
 		return {}
-	return Cognition.record_outcome(cognition_state, outcome, {"before": before, "after": after})
+	var result: Dictionary = Cognition.record_outcome(profile.cognition_state, outcome, {"before": before, "after": after})
+	if profile.actor_id == "mallow":
+		_sync_mallow_compatibility()
+	return result
 
 
 func _build_environment() -> void:
@@ -468,6 +555,11 @@ func _build_creature() -> void:
 	norn.position = Vector3(3.0, 0.0, 2.0)
 	norn.action_completed.connect(_on_action_completed)
 	add_child(norn)
+	moss = NornActor.new()
+	moss.configure_identity("moss", "Moss", Color(0.24, 0.42, 0.34))
+	moss.position = Vector3(6.2, 0.0, 1.6)
+	moss.action_completed.connect(_on_action_completed)
+	add_child(moss)
 
 
 func _build_objects() -> void:
@@ -518,66 +610,115 @@ func _build_objects() -> void:
 	_add_label("Wind-up spinner", spinner.global_position + Vector3(0.0, 1.55, 0.0), 20, Color(0.72, 0.87, 1.0))
 
 
-func _run_decision() -> void:
-	if cognition_state.is_empty() or norn == null:
+func _step_profile_chemistry(profile: NornProfile) -> void:
+	if profile == null or profile.actor == null:
 		return
-	var nearby_objects: Array[Dictionary] = []
-	for item: Interactable in norn.sensed_interactables():
-		nearby_objects.append({
+	var chemistry_signals: Dictionary = Biochemistry.advance_and_read_signals(profile.biochemistry_state, {
+		"active": 1.0 if profile.actor.is_walking else 0.0,
+		"resting": 1.0 if profile.actor.current_action == "rest" else 0.0,
+		"nearbyPeer": 1.0 if not _sense_peers(profile).is_empty() else 0.0
+	}, CHEMISTRY_STEP)
+	if not chemistry_signals.is_empty():
+		Cognition.sync_chemistry(profile.cognition_state, chemistry_signals)
+		if profile.actor_id == "mallow":
+			_sync_mallow_compatibility()
+
+
+func _sense_peers(profile: NornProfile) -> Array[Dictionary]:
+	var sensed: Array[Dictionary] = []
+	if profile == null or profile.actor == null or not profile.actor.is_inside_tree():
+		return sensed
+	for other: NornProfile in norn_profiles.values():
+		if other == profile or other.actor == null or not other.actor.is_inside_tree():
+			continue
+		var distance := profile.actor.global_position.distance_to(other.actor.global_position)
+		if distance <= SENSE_RADIUS and profile.actor.can_see_peer(other.actor):
+			sensed.append({"id": other.actor_id, "name": other.display_name, "distance": distance})
+	sensed.sort_custom(func(left: Dictionary, right: Dictionary) -> bool: return float(left["distance"]) < float(right["distance"]))
+	return sensed
+
+
+func _sense_objects(profile: NornProfile) -> Array[Dictionary]:
+	var sensed: Array[Dictionary] = []
+	if profile == null or profile.actor == null or not profile.actor.is_inside_tree():
+		return sensed
+	for item: Interactable in objects.values():
+		if not item.available:
+			continue
+		var distance := profile.actor.global_position.distance_to(item.global_position)
+		if distance > SENSE_RADIUS or not profile.actor.can_see_interactable(item):
+			continue
+		sensed.append({
 			"id": item.object_id,
 			"kind": item.kind,
 			"label": item.display_name,
-			"distance": norn.global_position.distance_to(item.global_position) * 90.0,
+			"distance": distance * 90.0,
 			"affordances": item.affordances.duplicate()
 		})
-	var active_guidance: Variant = guidance if not guidance.is_empty() and simulation_time <= float(guidance["expiresAt"]) else null
+	sensed.sort_custom(func(left: Dictionary, right: Dictionary) -> bool: return float(left["distance"]) < float(right["distance"]))
+	return sensed
+
+
+func _run_decision(profile: NornProfile) -> void:
+	if profile == null or profile.cognition_state.is_empty() or profile.actor == null:
+		return
+	var nearby_objects := _sense_objects(profile)
+	var nearby_norns := _sense_peers(profile)
+	var active_guidance: Variant = profile.guidance if not profile.guidance.is_empty() and simulation_time <= float(profile.guidance.get("expiresAt", 0.0)) else null
 	var observation := {
 		"time": simulation_time,
-		"chemistry": cognition_state["chemistry"],
+		"chemistry": profile.cognition_state["chemistry"],
 		"nearbyObjects": nearby_objects,
-		"nearbyNorns": [],
+		"nearbyNorns": nearby_norns,
 		"guidance": active_guidance,
 		"languageSignals": {}
 	}
-	var decision: Dictionary = Cognition.decide(cognition_state, observation)
-	recalled_moments.clear()
+	var decision: Dictionary = Cognition.decide(profile.cognition_state, observation)
+	profile.recalled_moments.clear()
 	for episode in decision.get("recalled", []):
 		if episode is Dictionary:
-			recalled_moments.append(episode)
+			profile.recalled_moments.append(episode)
 	var effective_action := str(decision.get("actionId", "idle"))
 	var reason := str(decision.get("reason", "Looking around the habitat"))
-	var target: Interactable
-	if active_guidance is Dictionary and objects.has(active_guidance["objectId"]):
+	var target: Node3D
+	var target_id := ""
+	if active_guidance is Dictionary and objects.has(active_guidance.get("objectId", "")):
 		effective_action = str(active_guidance["objectId"])
 		target = objects[effective_action]
+		target_id = effective_action
 		reason = "Following your guidance to %s" % target.display_name.to_lower()
 	elif ["fruit", "spinner"].has(effective_action) and objects.has(effective_action):
-		target = objects[effective_action]
-		if not target.available or not nearby_objects.any(func(entry: Dictionary) -> bool: return entry["id"] == effective_action):
-			target = null
-	if target == null:
-		norn.set_action_target(null, effective_action, reason)
-	else:
-		norn.set_action_target(target, effective_action, reason)
-	current_decision = decision.duplicate(true)
-	current_decision["actionId"] = effective_action
-	current_decision["reason"] = reason
+		var item: Interactable = objects[effective_action]
+		if item.available and nearby_objects.any(func(entry: Dictionary) -> bool: return entry["id"] == effective_action):
+			target = item
+			target_id = effective_action
+	elif effective_action == "observe_peer" and not nearby_norns.is_empty():
+		var peer_id := str(nearby_norns[0]["id"])
+		var peer := profile_for(peer_id)
+		if peer != null:
+			target = peer.actor
+			target_id = peer.actor_id
+	profile.actor.set_action_target(target, effective_action, reason, target_id)
+	profile.current_decision = decision.duplicate(true)
+	profile.current_decision["actionId"] = effective_action
+	profile.current_decision["reason"] = reason
+	if profile.actor_id == "mallow":
+		_sync_mallow_compatibility()
 
 
 func _on_action_completed(actor_id: String, action_id: String, target_id: String) -> void:
-	if norn == null or actor_id != norn.actor_id:
-		return
-	if not objects.has(target_id):
+	var profile := profile_for(actor_id)
+	if profile == null or not objects.has(target_id) or not ["fruit", "spinner"].has(action_id):
 		return
 	var item: Interactable = objects[target_id]
 	if not item.available:
 		return
 	var event_type := "food" if action_id == "fruit" else "toy"
-	var actor_name := norn.display_name
+	var actor_name := profile.display_name
 	var outcome_text := "%s ate honey fruit" % actor_name if event_type == "food" else "%s played with the spinner" % actor_name
 	item.activate()
 	_respawn_times[target_id] = simulation_time + (6.0 if event_type == "food" else 4.0)
-	var spoken_word: Dictionary = _language.call("word_for_target", language_state, target_id)
+	var spoken_word: Dictionary = _language.call("word_for_target", profile.language_state, target_id)
 	var outcome := {
 		"eventType": event_type,
 		"actionId": action_id,
@@ -589,31 +730,89 @@ func _on_action_completed(actor_id: String, action_id: String, target_id: String
 	if not spoken_word.is_empty():
 		outcome["word"] = str(spoken_word["word"])
 		outcome["text"] += " and said “%s”." % str(spoken_word["word"])
-	var result: Dictionary = _apply_biochemistry_event(event_type, outcome)
-	feedback_action = action_id
-	feedback_target = target_id
-	feedback_time = simulation_time
-	feedback_available = true
-	last_status = "%s. Learned association: %s %.2f (Δ %.2f)." % [
-		outcome_text,
-		action_id,
-		float(result.get("association", 0.0)),
-		float(result.get("learningDelta", 0.0))
-	]
-	if not spoken_word.is_empty():
-		last_status += " %s said “%s”." % [actor_name, str(spoken_word["word"])]
-	_run_decision()
+	var result: Dictionary = _apply_profile_biochemistry_event(profile, event_type, outcome)
+	outcome["eventId"] = int(result.get("episodeId", 0))
+	profile.feedback_action = action_id
+	profile.feedback_target = target_id
+	profile.feedback_time = simulation_time
+	profile.feedback_available = true
+	_offer_observation(profile, outcome)
+	if actor_id == "mallow":
+		last_status = "%s. Learned association: %s %.2f (Δ %.2f)." % [
+			outcome_text,
+			action_id,
+			float(result.get("association", 0.0)),
+			float(result.get("learningDelta", 0.0))
+		]
+		if not spoken_word.is_empty():
+			last_status += " %s said “%s”." % [actor_name, str(spoken_word["word"])]
+	_sync_mallow_compatibility()
+	for current_profile: NornProfile in norn_profiles.values():
+		_run_decision(current_profile)
+
+
+func _offer_observation(source: NornProfile, outcome: Dictionary) -> void:
+	if source == null:
+		return
+	var source_event := str(outcome.get("eventType", ""))
+	var feedback_event := ["praise", "scold"].has(source_event)
+	if not feedback_event and not ["food", "toy"].has(source_event):
+		return
+	var action_id := str(outcome.get("actionId", ""))
+	if not ["fruit", "spinner"].has(action_id):
+		return
+	for observer: NornProfile in norn_profiles.values():
+		if observer == source or not _is_attending(observer, source):
+			continue
+		var observed_event := "observe-feedback" if feedback_event else "observe"
+		var observed := {
+			"eventType": observed_event,
+			"actorId": source.actor_id,
+			"actionId": action_id,
+			"targetId": str(outcome.get("targetId", action_id)),
+			"feedback": str(outcome.get("feedback", source_event if feedback_event else "")),
+			"time": maxf(0.0, float(outcome.get("time", simulation_time))),
+			"peerCount": _sense_peers(observer).size(),
+			"sociability": float(observer.cognition_state["traits"].get("sociability", 0.5)),
+			"eventId": int(outcome.get("eventId", 0)),
+			"text": "%s observed %s %s" % [observer.display_name, source.display_name, action_id]
+		}
+		if feedback_event:
+			observed["text"] += " and was %s" % observed["feedback"]
+		var before: Dictionary = Biochemistry.read_signals(observer.biochemistry_state)
+		if Biochemistry.apply_event(observer.biochemistry_state, "social").is_empty():
+			continue
+		var after: Dictionary = Biochemistry.read_signals(observer.biochemistry_state)
+		if not Cognition.sync_chemistry(observer.cognition_state, after):
+			continue
+		Cognition.record_outcome(observer.cognition_state, observed, {"before": before, "after": after})
+		if observer.actor_id == "mallow":
+			_sync_mallow_compatibility()
+
+
+func _is_attending(observer: NornProfile, source: NornProfile) -> bool:
+	if observer == null or source == null or observer.actor == null or source.actor == null:
+		return false
+	if not observer.actor.is_inside_tree() or not source.actor.is_inside_tree():
+		return false
+	if observer.actor.current_action != "observe_peer" or observer.actor.is_walking or observer.actor.target != null:
+		return false
+	if observer.actor.global_position.distance_to(source.actor.global_position) > OBSERVATION_RADIUS:
+		return false
+	return observer.actor.can_see_peer(source.actor)
 
 
 func _update_timed_state() -> void:
-	if not guidance.is_empty() and simulation_time > float(guidance.get("expiresAt", 0.0)):
-		guidance.clear()
+	for profile: NornProfile in norn_profiles.values():
+		if not profile.guidance.is_empty() and simulation_time > float(profile.guidance.get("expiresAt", 0.0)):
+			profile.guidance.clear()
+		if profile.feedback_available and simulation_time - profile.feedback_time > FEEDBACK_WINDOW:
+			profile.feedback_available = false
 	for object_id: String in _respawn_times.keys():
 		if simulation_time >= float(_respawn_times[object_id]):
 			(objects[object_id] as Interactable).set_available(true)
 			_respawn_times.erase(object_id)
-	if feedback_available and simulation_time - feedback_time > FEEDBACK_WINDOW:
-		feedback_available = false
+	_sync_mallow_compatibility()
 
 
 func _fallback_from_invalid_save(reason: String) -> void:
@@ -623,27 +822,18 @@ func _fallback_from_invalid_save(reason: String) -> void:
 
 
 func _reset_state(write_save: bool) -> void:
-	cognition_state = _new_cognition_state()
-	biochemistry_state = Biochemistry.create_state(cognition_state["chemistry"])
-	Cognition.sync_chemistry(cognition_state, Biochemistry.read_signals(biochemistry_state))
-	language_state = _language.call("create_state")
+	norn.reset_position(Vector3(3.0, 0.0, 2.0))
+	moss.reset_position(Vector3(6.2, 0.0, 1.6))
 	teaching_mode = false
 	if _ui != null:
 		_ui.clear_teaching_input()
 	simulation_time = 0.0
 	_chemistry_accumulator = 0.0
 	_decision_accumulator = 0.0
-	guidance.clear()
-	feedback_available = false
-	feedback_action = ""
-	feedback_target = ""
 	_respawn_times.clear()
 	for item: Interactable in objects.values():
 		item.set_available(true)
-	norn.reset_position(Vector3(3.0, 0.0, 2.0))
-	current_decision.clear()
-	recalled_moments.clear()
-	_run_decision()
+	_create_profiles()
 	if write_save:
 		save_game()
 
