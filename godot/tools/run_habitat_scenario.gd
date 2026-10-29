@@ -134,11 +134,12 @@ func _run_scenario() -> void:
 		var founder_name := "Mallow" if founder_id == "mallow" else "Moss"
 		var founder_color := [0.43, 0.27, 0.16, 1.0] if founder_id == "mallow" else [0.24, 0.42, 0.34, 1.0]
 		var expected_seed := 4181996 if founder_id == "mallow" else 4181997
-		var expected_life: Dictionary = NornLifecycle.create_state(expected_seed, 600.0)
+		var saved_age := 600.0 + float(saved_record.get("simulationTime", 0.0))
+		var expected_life: Dictionary = NornLifecycle.create_state(expected_seed, saved_age)
 		var founder_life: Dictionary = founder.get("lifeState", {})
 		if str(founder.get("displayName", "")) != founder_name or int(founder.get("generation", -1)) != 0 or not (founder.get("parentIds", []) as Array).is_empty():
 			_scenario_failures.append("version-5 save lost %s identity or founder ancestry" % founder_id)
-		if not _number_arrays_equal(founder.get("bodyColor", []), founder_color) or not is_equal_approx(float(founder_life.get("ageSeconds", -1.0)), 600.0) or not is_equal_approx(float(founder_life.get("lifespanSeconds", -1.0)), float(expected_life["lifespanSeconds"])):
+		if not _number_arrays_equal(founder.get("bodyColor", []), founder_color) or not is_equal_approx(float(founder_life.get("ageSeconds", -1.0)), saved_age) or not is_equal_approx(float(founder_life.get("lifespanSeconds", -1.0)), float(expected_life["lifespanSeconds"])):
 			_scenario_failures.append("version-5 save lost %s appearance or deterministic adult lifespan" % founder_id)
 	if saved_mallow.has("biochemistry"):
 		var saved_biochemistry: Dictionary = saved_mallow["biochemistry"]
@@ -205,7 +206,7 @@ func _run_scenario() -> void:
 	v5_round_trip_ok = v5_round_trip_ok and is_equal_approx(float(world.cognition_state["actionAssociations"]["fruit"]), fruit_association_before_save)
 	v5_round_trip_ok = v5_round_trip_ok and is_equal_approx(float(moss_profile.cognition_state["actionAssociations"]["spinner"]), expected_moss_association)
 	v5_round_trip_ok = v5_round_trip_ok and world.cognition_state["episodes"].size() == episodes_before_save and moss_profile.cognition_state["episodes"].size() == expected_moss_episodes
-	v5_round_trip_ok = v5_round_trip_ok and _founder_defaults_are_valid(world) and world.focused_norn_id == "mallow"
+	v5_round_trip_ok = v5_round_trip_ok and _founder_defaults_are_valid(world, 600.0 + world.simulation_time) and world.focused_norn_id == "mallow"
 	if not v5_round_trip_ok:
 		_scenario_failures.append("version-5 round trip did not preserve both Norns' learning, biochemistry, and family defaults")
 	print("VERSION-5 ROUND TRIP: both profiles=%s; focus=%s" % [v5_round_trip_ok, world.focused_norn_id])
@@ -227,6 +228,23 @@ func _run_scenario() -> void:
 	if not egg_round_trip_ok:
 		_scenario_failures.append("version-5 save/load did not preserve partial incubation and realized inheritance")
 	print("VERSION-5 EGG ROUND TRIP: restored=%s; remaining=%.1f" % [egg_round_trip_ok, float(world.eggs[0].get("remainingSeconds", -1.0)) if not world.eggs.is_empty() else -1.0])
+	var lifecycle_round_trip_ok := false
+	var mallow_lifecycle: NornProfile = world.profile_for("mallow")
+	mallow_lifecycle.life_state = NornLifecycle.create_state(int(mallow_lifecycle.cognition_state["seed"]), float(mallow_lifecycle.life_state["lifespanSeconds"]) - 0.1)
+	world._process(0.2)
+	var died_of_old_age: bool = not bool(mallow_lifecycle.life_state.get("alive", true)) and mallow_lifecycle.life_state.get("death", {}).get("cause", "") == "old-age"
+	var archived_before_load: bool = world.norn_profiles.has("mallow") and mallow_lifecycle.actor == null
+	var focus_after_death: bool = world.focused_norn_id == "moss"
+	var egg_after_parent_death: bool = world.eggs.size() == 1 and float(world.eggs[0].get("remainingSeconds", -1.0)) < 32.5
+	world.load_game()
+	mallow_lifecycle = world.profile_for("mallow")
+	moss_profile = world.profile_for("moss")
+	lifecycle_round_trip_ok = died_of_old_age and archived_before_load and focus_after_death and egg_after_parent_death
+	lifecycle_round_trip_ok = lifecycle_round_trip_ok and not bool(mallow_lifecycle.life_state.get("alive", true)) and mallow_lifecycle.life_state.get("death", {}).get("cause", "") == "old-age"
+	lifecycle_round_trip_ok = lifecycle_round_trip_ok and mallow_lifecycle.actor == null and world.focused_norn_id == "moss" and world.eggs.size() == 1
+	if not lifecycle_round_trip_ok:
+		_scenario_failures.append("old-age death, archived profile, focus, and parentless egg did not survive version-5 save/load")
+	print("LIFECYCLE SAVE/LOAD: deceased=%s; archived=%s; focus=%s; egg=%s" % [died_of_old_age and not bool(mallow_lifecycle.life_state.get("alive", true)), world.norn_profiles.has("mallow") and mallow_lifecycle.actor == null, world.focused_norn_id, world.eggs.size() == 1])
 	var changed_bio: Dictionary = world.get("biochemistry_state")
 	var changed_compounds: Dictionary = Biochemistry.read_compounds(changed_bio)
 	changed_compounds["glucose"] = 1.0
@@ -400,7 +418,7 @@ func _write_saved_record(record: Dictionary) -> bool:
 	return true
 
 
-func _founder_defaults_are_valid(world: AlbiaWorld) -> bool:
+func _founder_defaults_are_valid(world: AlbiaWorld, expected_age: float = 600.0) -> bool:
 	if not world.has_method("ordered_profile_ids"):
 		return false
 	var ordered_ids: Variant = world.call("ordered_profile_ids")
@@ -415,7 +433,6 @@ func _founder_defaults_are_valid(world: AlbiaWorld) -> bool:
 		var life_value: Variant = profile.get("life_state")
 		if int(profile.get("generation")) != 0 or not (parents_value is Array) or not (parents_value as Array).is_empty() or not (life_value is Dictionary):
 			return false
-		var expected_age := 600.0
 		var expected_lifespan: Dictionary = NornLifecycle.create_state(int(profile.cognition_state.get("seed", -1)), expected_age)
 		var profile_life: Dictionary = life_value
 		if not is_equal_approx(float(profile_life.get("ageSeconds", -1.0)), expected_age) or not is_equal_approx(float(profile_life.get("lifespanSeconds", -1.0)), float(expected_lifespan.get("lifespanSeconds", -2.0))):

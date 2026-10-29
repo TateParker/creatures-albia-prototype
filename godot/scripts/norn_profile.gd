@@ -1,6 +1,8 @@
 class_name NornProfile
 extends RefCounted
 
+const NornLifecycle = preload("res://scripts/norn_lifecycle.gd")
+
 var actor_id: String = ""
 var display_name: String = ""
 var generation: int = 0
@@ -18,6 +20,10 @@ var feedback_available: bool = false
 var feedback_action: String = ""
 var feedback_target: String = ""
 var feedback_time: float = -1000.0
+
+var life_stage: String:
+	get:
+		return NornLifecycle.stage_for_age(float(life_state.get("ageSeconds", 0.0)))
 
 
 func initialize(profile_actor_id: String, profile_display_name: String, actor_node: NornActor, cognition: Dictionary, biochemistry: Dictionary, language: Dictionary) -> void:

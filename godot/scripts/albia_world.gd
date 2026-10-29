@@ -90,12 +90,13 @@ func _process(delta: float) -> void:
 		_refresh_ui()
 		return
 	var step_delta := minf(maxf(0.0, delta * simulation_speed), 0.5)
+	var tick_profiles := living_profiles()
 	simulation_time += step_delta
 	_chemistry_accumulator = minf(_chemistry_accumulator + step_delta, CHEMISTRY_STEP * 5.0)
 	_decision_accumulator = minf(_decision_accumulator + step_delta, DECISION_STEP * 3.0)
 	var chemistry_steps := 0
 	while _chemistry_accumulator >= CHEMISTRY_STEP and chemistry_steps < 5:
-		for profile: NornProfile in norn_profiles.values():
+		for profile: NornProfile in tick_profiles:
 			_step_profile_chemistry(profile)
 		_chemistry_accumulator -= CHEMISTRY_STEP
 		chemistry_steps += 1
@@ -103,10 +104,12 @@ func _process(delta: float) -> void:
 	while _decision_accumulator >= DECISION_STEP and decision_steps < 3:
 		_decision_accumulator -= DECISION_STEP
 		decision_steps += 1
-		for profile: NornProfile in norn_profiles.values():
+		for profile: NornProfile in tick_profiles:
 			_run_decision(profile)
 	_tick_eggs(step_delta)
 	_update_timed_state()
+	for profile: NornProfile in tick_profiles:
+		_step_lifecycle(profile, step_delta)
 	_refresh_ui()
 
 
@@ -823,6 +826,7 @@ func _apply_restored_world(candidate: Dictionary, saved_simulation_time: float) 
 			profile.parent_ids.append(parent_id)
 		profile.body_color = restored["bodyColor"]
 		profile.life_state = restored["lifeState"].duplicate(true)
+		_sync_profile_life_stage(profile)
 		profile.feedback_available = bool(restored["feedback"]["available"])
 		profile.feedback_action = str(restored["feedback"]["action"])
 		profile.feedback_target = str(restored["feedback"]["target"])
@@ -915,6 +919,78 @@ func _new_moss_cognition_state() -> Dictionary:
 		"curiosity": 45.0,
 		"fatigue": 18.0
 	})
+
+
+func _step_lifecycle(profile: NornProfile, delta_seconds: float) -> void:
+	if profile == null or not bool(profile.life_state.get("alive", false)):
+		return
+	var transition: Dictionary = NornLifecycle.advance(profile.life_state, delta_seconds, simulation_time)
+	if not bool(transition.get("ok", false)):
+		return
+	if bool(transition.get("stageChanged", false)):
+		_sync_profile_life_stage(profile)
+	if bool(transition.get("died", false)):
+		_handle_norn_death(profile, profile.life_state.get("death", {}))
+	elif bool(transition.get("stageChanged", false)):
+		save_game()
+
+
+func _handle_norn_death(profile: NornProfile, death: Dictionary) -> void:
+	if profile == null or profile.actor == null or bool(profile.life_state.get("alive", true)):
+		return
+	var actor := profile.actor
+	actor.set_action_target(null, "dead", "Reached the end of its natural lifespan.")
+	actor.set_physics_process(false)
+	if actor == norn:
+		norn = null
+	if actor == moss:
+		moss = null
+	actor.free()
+	profile.actor = null
+	profile.guidance.clear()
+	profile.current_decision.clear()
+	profile.recalled_moments.clear()
+	profile.feedback_available = false
+	profile.feedback_action = ""
+	profile.feedback_target = ""
+	profile.feedback_time = -1000.0
+	var death_time := float(death.get("simulationTime", simulation_time))
+	Cognition.record_outcome(profile.cognition_state, {
+		"eventType": "death",
+		"actorId": profile.actor_id,
+		"time": death_time,
+		"learningDelta": 0.0,
+		"reward": 0.0,
+		"salience": 1.0,
+		"text": "%s reached old age and died." % profile.display_name
+	})
+	if focused_norn_id == profile.actor_id:
+		focused_norn_id = _next_living_profile_id(profile.actor_id)
+	last_status = "%s reached old age and died." % profile.display_name
+	_sync_mallow_compatibility()
+	save_game()
+	_refresh_ui()
+
+
+func _next_living_profile_id(after_actor_id: String) -> String:
+	var ordered_ids := ordered_profile_ids()
+	if ordered_ids.is_empty():
+		return ""
+	var start_index := ordered_ids.find(after_actor_id)
+	for offset in range(1, ordered_ids.size() + 1):
+		var candidate_id := ordered_ids[posmod(start_index + offset, ordered_ids.size())]
+		var candidate := profile_for(candidate_id)
+		if candidate != null and bool(candidate.life_state.get("alive", false)) and candidate.actor != null:
+			return candidate_id
+	return ""
+
+
+func _sync_profile_life_stage(profile: NornProfile) -> void:
+	if profile == null or profile.actor == null:
+		return
+	profile.actor.set_meta("life_stage", profile.life_stage)
+	if profile.actor.has_method("set_life_stage"):
+		profile.actor.call("set_life_stage", profile.life_stage)
 
 
 func profile_for(actor_id: String) -> NornProfile:
@@ -1110,6 +1186,7 @@ func _hatch_egg(egg_id: String) -> void:
 		child.parent_ids.append(parent_id)
 	child.body_color = child_color
 	child.life_state = NornLifecycle.create_state(child_seed, 0.0)
+	_sync_profile_life_stage(child)
 	norn_profiles[child_id] = child
 	var birth_outcome := {
 		"eventType": "birth",
@@ -1155,7 +1232,7 @@ func focused_profile() -> NornProfile:
 
 func select_norn(actor_id: String) -> void:
 	var profile := profile_for(actor_id)
-	if profile == null:
+	if profile == null or profile.actor == null or not bool(profile.life_state.get("alive", false)):
 		return
 	focused_norn_id = profile.actor_id
 	last_status = "Focused on %s. Player actions will go to %s." % [profile.display_name, profile.display_name]
@@ -1188,6 +1265,7 @@ func _create_profile(actor_id: String, display_name: String, actor: NornActor, c
 	profile.parent_ids.clear()
 	profile.body_color = MALLOW_COLOR if actor_id == "mallow" else MOSS_COLOR
 	profile.life_state = NornLifecycle.create_state(int(cognition["seed"]), 600.0)
+	_sync_profile_life_stage(profile)
 	return profile
 
 

@@ -3,6 +3,7 @@ extends SceneTree
 const HabitatScene = preload("res://scenes/main.tscn")
 const Lifecycle = preload("res://scripts/norn_lifecycle.gd")
 const Cognition = preload("res://scripts/norn_cognition.gd")
+const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
 
 var _failures: Array[String] = []
 var _lifecycle_script: Script
@@ -170,6 +171,12 @@ func test_family_system() -> void:
 	test_family_events_record_neutral_memories()
 	test_child_ids_are_monotonic()
 	test_hatch_creates_fresh_independent_profile()
+	test_world_age_obeys_speed_and_pause()
+	test_stage_transition_saves_once()
+	test_old_age_death_frees_population_slot_once()
+	test_focus_moves_after_death()
+	test_dead_parent_egg_hatches()
+	test_extinction_keeps_archive()
 	if previous_exists and not previous_text.is_empty():
 		var restore_file := FileAccess.open(save_path, FileAccess.WRITE)
 		if restore_file != null:
@@ -360,6 +367,145 @@ func test_hatch_creates_fresh_independent_profile() -> void:
 		_expect(moss_episode.get("eventType", "") == "family" and int(moss_episode.get("valence", 9)) == 0 and moss_episode.get("relatedNornIds", []) == ["mallow", "norn-1"], "Moss remembers the hatch neutrally with linked family IDs")
 		_expect(world.focused_norn_id == expected_focus, "hatching leaves focus unchanged while living profiles remain")
 	world.free()
+
+
+func test_world_age_obeys_speed_and_pause() -> void:
+	var world := _new_family_world()
+	var mallow: NornProfile = world.profile_for("mallow")
+	world.call("start_egg", "moss")
+	var egg_node: Node3D = world.get_node_or_null("egg-1") as Node3D
+	var initial_age := float(mallow.life_state["ageSeconds"])
+	var initial_egg_time := float(world.eggs[0].get("remainingSeconds", -1.0))
+	world.paused = true
+	world._process(0.4)
+	_expect(is_equal_approx(float(mallow.life_state["ageSeconds"]), initial_age), "paused simulation holds Norn age")
+	_expect(world.eggs.size() == 1 and is_equal_approx(float(world.eggs[0].get("remainingSeconds", -1.0)), initial_egg_time), "paused simulation holds egg incubation")
+	world.paused = false
+	world.simulation_speed = 0.5
+	world._process(0.2)
+	_expect(is_equal_approx(float(mallow.life_state["ageSeconds"]), initial_age + 0.1), "half speed advances age at half the frame delta")
+	world.simulation_speed = 1.0
+	world._process(0.2)
+	_expect(is_equal_approx(float(mallow.life_state["ageSeconds"]), initial_age + 0.3), "normal speed advances age at the frame delta")
+	world.simulation_speed = 2.0
+	world._process(0.2)
+	_expect(is_equal_approx(float(mallow.life_state["ageSeconds"]), initial_age + 0.7), "double speed advances age at twice the frame delta")
+	world._process(5.0)
+	_expect(is_equal_approx(float(mallow.life_state["ageSeconds"]), initial_age + 1.2), "large rendered-frame delta respects the 0.5-second world cap")
+	_expect(egg_node != null and is_equal_approx(float(world.eggs[0].get("remainingSeconds", -1.0)), initial_egg_time - 1.2), "egg and lifespan use the same capped in-game time")
+	world.free()
+
+
+func test_stage_transition_saves_once() -> void:
+	var world := _new_family_world()
+	var mallow: NornProfile = world.profile_for("mallow")
+	mallow.life_state = Lifecycle.create_state(int(mallow.cognition_state["seed"]), 59.9)
+	world.save_game()
+	world._process(0.2)
+	var transition_save_file := FileAccess.open("user://albia_norn_save.json", FileAccess.READ)
+	var transition_save_text := transition_save_file.get_as_text() if transition_save_file != null else ""
+	if transition_save_file != null:
+		transition_save_file.close()
+	var transition_save: Variant = JSON.parse_string(transition_save_text)
+	var saved_profiles: Dictionary = transition_save.get("norns", {}) if transition_save is Dictionary else {}
+	var saved_mallow: Dictionary = saved_profiles.get("mallow", {})
+	_expect(float(mallow.life_state.get("ageSeconds", -1.0)) >= 60.0 and float(saved_mallow.get("lifeState", {}).get("ageSeconds", -1.0)) >= 60.0, "crossing a life-stage boundary persists the new age")
+	var post_transition_age := float(mallow.life_state.get("ageSeconds", -1.0))
+	world._process(0.1)
+	var steady_save_file := FileAccess.open("user://albia_norn_save.json", FileAccess.READ)
+	var steady_save_text := steady_save_file.get_as_text() if steady_save_file != null else ""
+	if steady_save_file != null:
+		steady_save_file.close()
+	_expect(float(mallow.life_state.get("ageSeconds", -1.0)) > post_transition_age and steady_save_text == transition_save_text, "ordinary age frames do not repeatedly rewrite the stage-transition save")
+	world.free()
+
+
+func test_old_age_death_frees_population_slot_once() -> void:
+	var world := _new_family_world()
+	var mallow: NornProfile = world.profile_for("mallow")
+	var moss: NornProfile = world.profile_for("moss")
+	var lifespan := float(mallow.life_state["lifespanSeconds"])
+	mallow.life_state = Lifecycle.create_state(int(mallow.cognition_state["seed"]), lifespan - 0.1)
+	world._process(0.2)
+	_expect(not bool(mallow.life_state.get("alive", true)) and mallow.life_state.get("death", {}).get("cause", "") == "old-age", "world age limit records old-age death")
+	_expect(mallow.actor == null and world.norn_profiles.has("mallow") and not world.living_profiles().has(mallow), "death removes the actor but preserves its family profile")
+	_expect(int(world.call("population_count")) == 1, "old-age death releases one population slot")
+	var death_episodes := _count_event_episodes(mallow, "death")
+	var dead_cognition: Dictionary = mallow.cognition_state.duplicate(true)
+	var dead_compounds: Dictionary = Biochemistry.read_compounds(mallow.biochemistry_state)
+	var living_compounds: Dictionary = Biochemistry.read_compounds(moss.biochemistry_state)
+	world.set("_chemistry_accumulator", 0.0)
+	world.set("_decision_accumulator", 0.0)
+	world._process(0.1)
+	_expect(_count_event_episodes(mallow, "death") == death_episodes and death_episodes == 1, "world emits the old-age event exactly once")
+	_expect(Biochemistry.read_compounds(mallow.biochemistry_state) == dead_compounds, "deceased profiles no longer receive chemistry updates")
+	_expect(mallow.cognition_state == dead_cognition, "deceased profiles no longer receive cognition updates")
+	_expect(Biochemistry.read_compounds(moss.biochemistry_state) != living_compounds, "living profiles continue receiving chemistry updates")
+	world.free()
+
+
+func test_focus_moves_after_death() -> void:
+	var world := _new_family_world()
+	var mallow: NornProfile = world.profile_for("mallow")
+	var moss: NornProfile = world.profile_for("moss")
+	mallow.life_state = Lifecycle.create_state(int(mallow.cognition_state["seed"]), float(mallow.life_state["lifespanSeconds"]) - 0.1)
+	world._process(0.2)
+	_expect(world.focused_norn_id == "moss", "focused death selects the next living profile in stable order")
+	world.select_norn("mallow")
+	_expect(world.focused_norn_id == "moss", "deceased family members cannot be selected as the live focus")
+	moss.life_state = Lifecycle.create_state(int(moss.cognition_state["seed"]), float(moss.life_state["lifespanSeconds"]) - 0.1)
+	world._process(0.2)
+	_expect(world.focused_norn_id.is_empty(), "focus clears when no living Norn remains")
+	world.free()
+
+
+func test_dead_parent_egg_hatches() -> void:
+	var world := _new_family_world()
+	_expect(bool(world.call("start_egg", "moss")), "a living pair creates an egg before a parent dies")
+	var mallow: NornProfile = world.profile_for("mallow")
+	mallow.life_state = Lifecycle.create_state(int(mallow.cognition_state["seed"]), float(mallow.life_state["lifespanSeconds"]) - 0.1)
+	world._process(0.2)
+	_expect(not bool(mallow.life_state.get("alive", true)) and world.eggs.size() == 1, "incubating egg survives the death of a parent")
+	var egg_node: Node3D = world.get_node_or_null("egg-1") as Node3D
+	if egg_node != null:
+		var egg_record: Dictionary = egg_node.get("record")
+		egg_record["remainingSeconds"] = 0.0
+		egg_node.set("record", egg_record)
+	world._process(0.0)
+	var child: NornProfile = world.profile_for("norn-1")
+	_expect(child != null and child.parent_ids == ["mallow", "moss"] and world.eggs.is_empty(), "parentless-to-the-living-roster egg still hatches with its lineage")
+	world.free()
+
+
+func test_extinction_keeps_archive() -> void:
+	var world := _new_family_world()
+	world.call("start_egg", "moss")
+	var mallow: NornProfile = world.profile_for("mallow")
+	var moss: NornProfile = world.profile_for("moss")
+	mallow.life_state = Lifecycle.create_state(int(mallow.cognition_state["seed"]), float(mallow.life_state["lifespanSeconds"]) - 0.1)
+	moss.life_state = Lifecycle.create_state(int(moss.cognition_state["seed"]), float(moss.life_state["lifespanSeconds"]) - 0.1)
+	world._process(0.2)
+	var remaining_before := float(world.eggs[0].get("remainingSeconds", -1.0)) if not world.eggs.is_empty() else -1.0
+	world._process(0.2)
+	_expect(world.living_profiles().is_empty() and world.focused_norn_id.is_empty(), "empty living roster has no focused Norn while an egg remains")
+	_expect(world.norn_profiles.has("mallow") and world.norn_profiles.has("moss"), "extinction preserves both deceased profiles as family history")
+	_expect(world.eggs.size() == 1 and float(world.eggs[0].get("remainingSeconds", -1.0)) < remaining_before, "eggs continue incubating without living parents")
+	var egg_node: Node3D = world.get_node_or_null("egg-1") as Node3D
+	if egg_node != null:
+		var egg_record: Dictionary = egg_node.get("record")
+		egg_record["remainingSeconds"] = 0.0
+		egg_node.set("record", egg_record)
+	world._process(0.0)
+	_expect(world.profile_for("norn-1") != null and world.focused_norn_id == "norn-1", "a hatch restarts the living lineage and receives focus after extinction")
+	world.free()
+
+
+func _count_event_episodes(profile: NornProfile, event_type: String) -> int:
+	var count := 0
+	for episode_value: Variant in profile.cognition_state.get("episodes", []):
+		if episode_value is Dictionary and str((episode_value as Dictionary).get("eventType", "")) == event_type:
+			count += 1
+	return count
 
 
 func _new_family_world() -> AlbiaWorld:
