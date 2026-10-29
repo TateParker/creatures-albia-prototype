@@ -467,8 +467,8 @@ func _run_family_lifespan_walkthrough() -> bool:
 	var saved_mallow: Dictionary = saved_norns.get("mallow", {})
 	var saved_child: Dictionary = saved_norns.get("norn-1", {})
 	var saved_death: Dictionary = saved_mallow.get("lifeState", {}).get("death", {})
-	if int(saved_record.get("version", -1)) != 5:
-		_fail("The rendered family sequence did not save version-5 lineage state.")
+	if int(saved_record.get("version", -1)) != 6:
+		_fail("The rendered family sequence did not save version-6 lineage state.")
 		return false
 	if saved_death.get("cause", "") != "old-age" or saved_child.get("parentIds", []) != ["mallow", "moss"] or str(saved_record.get("focusedNornId", "")) != "moss":
 		_fail("The saved family did not retain Mallow's death, the child's parents, and focus fallback.")
@@ -1215,31 +1215,31 @@ func _verify_legacy_save_migration() -> bool:
 	var parse_error := parser.parse(file.get_as_text())
 	file.close()
 	if parse_error != OK or not (parser.data is Dictionary):
-		_fail("The saved version-5 family record was not valid JSON.")
+		_fail("The saved version-6 family record was not valid JSON.")
 		return false
-	var version5_record: Dictionary = parser.data
-	var version5_norns: Variant = version5_record.get("norns", null)
-	if int(version5_record.get("version", -1)) != 5 or not (version5_norns is Dictionary):
-		_fail("The rendered family sequence did not leave a version-5 family save.")
+	var version6_record: Dictionary = parser.data
+	var version6_norns: Variant = version6_record.get("norns", null)
+	if int(version6_record.get("version", -1)) != 6 or not (version6_norns is Dictionary):
+		_fail("The rendered family sequence did not leave a version-6 family save.")
 		return false
 	var legacy_norns: Dictionary = {}
 	for founder_id: String in ["mallow", "moss"]:
-		var founder_value: Variant = (version5_norns as Dictionary).get(founder_id, null)
+		var founder_value: Variant = (version6_norns as Dictionary).get(founder_id, null)
 		if not (founder_value is Dictionary):
-			_fail("The version-5 family save is missing founder %s." % founder_id)
+			_fail("The version-6 family save is missing founder %s." % founder_id)
 			return false
 		var founder_record: Dictionary = (founder_value as Dictionary).duplicate(true)
 		for metadata_key: String in ["displayName", "generation", "parentIds", "bodyColor", "lifeState"]:
 			founder_record.erase(metadata_key)
 		legacy_norns[founder_id] = founder_record
-	var record: Dictionary = version5_record.duplicate(true)
+	var record: Dictionary = version6_record.duplicate(true)
 	record["version"] = 4
 	record["norns"] = legacy_norns
 	record.erase("nextNornNumber")
 	record.erase("eggs")
 	var norns = record.get("norns", null)
 	if int(record.get("version", -1)) != 4 or not (norns is Dictionary) or norns.size() != 2 or not norns.has("mallow") or not norns.has("moss") or str(record.get("focusedNornId", "")) != "moss":
-		_fail("The version-5 family save could not be reduced to a version-4 founder migration fixture.")
+		_fail("The version-6 family save could not be reduced to a version-4 founder migration fixture.")
 		return false
 	var saved_mallow: Dictionary = norns["mallow"]
 	var saved_moss: Dictionary = norns["moss"]

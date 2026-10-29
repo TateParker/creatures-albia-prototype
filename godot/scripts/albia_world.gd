@@ -9,10 +9,11 @@ const VideoRecorder = preload("res://scripts/local_video_recorder.gd")
 const NornProfile = preload("res://scripts/norn_profile.gd")
 const NornLifecycle = preload("res://scripts/norn_lifecycle.gd")
 const NornEggScript = preload("res://scripts/norn_egg.gd")
+const DrawingSurfaceScript = preload("res://scripts/drawing_surface.gd")
 const START_SEED := 4181996
 const MOSS_SEED := 4181997
 const SAVE_PATH := "user://albia_norn_save.json"
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 const STARTER_PROFILE_IDS: Array[String] = ["mallow", "moss"]
 const MALLOW_COLOR := Color(0.43, 0.27, 0.16)
 const MOSS_COLOR := Color(0.24, 0.42, 0.34)
@@ -23,6 +24,10 @@ const DECISION_STEP := 0.2
 const FEEDBACK_WINDOW := 12.0
 const SENSE_RADIUS := 10.0
 const OBSERVATION_RADIUS := 3.0
+const DRAWING_SURFACE_ID := "drawing_surface"
+const DRAWING_TOOL_ID := "charcoal"
+const DRAWING_SURFACE_WIDTH := 2.2
+const DRAWING_SURFACE_HEIGHT := 1.45
 
 var norn: NornActor
 var moss: NornActor
@@ -47,6 +52,7 @@ var feedback_target: String = ""
 var feedback_time: float = -1000.0
 var last_status: String = "A new Norn is exploring the habitat."
 var video_recorder: LocalVideoRecorder
+var drawing_surface: RefCounted
 
 var last_recording_path: String:
 	get:
@@ -65,10 +71,12 @@ var _chemistry_accumulator: float = 0.0
 var _decision_accumulator: float = 0.0
 var _respawn_times: Dictionary = {}
 var _egg_nodes: Dictionary = {}
+var _drawing_panel: MeshInstance3D
 var _nest_position := Vector3(-1.5, 0.0, -2.8)
 
 
 func _ready() -> void:
+	drawing_surface = DrawingSurfaceScript.new() as RefCounted
 	_build_environment()
 	_build_habitat()
 	_build_camera()
@@ -333,9 +341,10 @@ func save_game() -> void:
 		"focusedNornId": focused_norn_id,
 		"nextNornNumber": next_norn_number,
 		"norns": saved_norns,
-		"eggs": saved_eggs
+		"eggs": saved_eggs,
+		"drawingSurface": drawing_surface.call("serialize_state") if drawing_surface != null else DrawingSurfaceScript.new().call("serialize_state")
 	}
-	if _restore_version5_record(record, maxf(0.0, simulation_time)).is_empty():
+	if _restore_version6_record(record, maxf(0.0, simulation_time)).is_empty():
 		last_status = "The local Norn family failed validation and could not be saved."
 		_refresh_ui()
 		return
@@ -371,7 +380,7 @@ func load_game() -> void:
 		_fallback_from_invalid_save("The save format is not valid")
 		return
 	var version_value = record.get("version", null)
-	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, 4, SAVE_VERSION].has(int(version_value)):
+	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, 4, 5, SAVE_VERSION].has(int(version_value)):
 		_fallback_from_invalid_save("The save format is not valid")
 		return
 	var save_version := int(version_value)
@@ -382,6 +391,8 @@ func load_game() -> void:
 		return
 	var candidate: Dictionary
 	if save_version == SAVE_VERSION:
+		candidate = _restore_version6_record(record, float(simulation_value))
+	elif save_version == 5:
 		candidate = _restore_version5_record(record, float(simulation_value))
 	elif save_version == 4:
 		candidate = _restore_version4_record(record, float(simulation_value))
@@ -580,6 +591,20 @@ func _restore_version5_record(record: Dictionary, saved_simulation_time: float) 
 		"nextNornNumber": int(saved_next_number),
 		"eggs": restored_eggs
 	}
+
+
+func _restore_version6_record(record: Dictionary, saved_simulation_time: float) -> Dictionary:
+	var record_version: Variant = record.get("version", null)
+	if not _is_finite_number(record_version) or not is_equal_approx(float(record_version), float(SAVE_VERSION)):
+		return {}
+	var candidate := _restore_version5_record(record, saved_simulation_time)
+	if candidate.is_empty():
+		return {}
+	var surface_candidate: RefCounted = DrawingSurfaceScript.new() as RefCounted
+	if not bool(surface_candidate.call("restore_state", record.get("drawingSurface", null))):
+		return {}
+	candidate["drawingSurface"] = surface_candidate.call("serialize_state")
+	return candidate
 
 
 func _restore_egg_record(value: Variant, restored_profiles: Dictionary) -> Dictionary:
@@ -839,6 +864,12 @@ func _apply_restored_world(candidate: Dictionary, saved_simulation_time: float) 
 	for egg: Variant in candidate["eggs"]:
 		eggs.append(egg)
 	_rebuild_egg_nodes()
+	var surface_record: Variant = candidate.get("drawingSurface", null)
+	if not (surface_record is Dictionary):
+		surface_record = DrawingSurfaceScript.new().call("serialize_state")
+	if drawing_surface == null:
+		drawing_surface = DrawingSurfaceScript.new() as RefCounted
+	drawing_surface.call("restore_state", surface_record)
 	_sync_mallow_compatibility()
 
 
@@ -1449,6 +1480,74 @@ func _build_objects() -> void:
 	add_child(spinner)
 	objects["spinner"] = spinner
 	_add_label("Wind-up spinner", spinner.global_position + Vector3(0.0, 1.55, 0.0), 20, Color(0.72, 0.87, 1.0))
+	_build_drawing_station()
+
+
+func _build_drawing_station() -> void:
+	var surface := Interactable.new()
+	surface.name = "DrawingSurface"
+	surface.configure(DRAWING_SURFACE_ID, "surface", "Marking board", ["draw"])
+	surface.position = Vector3(4.0, 0.0, -5.6)
+	surface.collision_layer = 2
+	surface.collision_mask = 0
+	var visuals := Node3D.new()
+	visuals.name = "DrawingStationVisuals"
+	_add_box_mesh(visuals, "WoodenFrame", Vector3(0.0, 1.58, -0.055), Vector3(2.5, 1.75, 0.16), _material(Color(0.48, 0.31, 0.18)))
+	_drawing_panel = MeshInstance3D.new()
+	_drawing_panel.name = "MarkingPanel"
+	var panel_mesh := QuadMesh.new()
+	panel_mesh.size = Vector2(DRAWING_SURFACE_WIDTH, DRAWING_SURFACE_HEIGHT)
+	_drawing_panel.mesh = panel_mesh
+	_drawing_panel.position = Vector3(0.0, 1.58, 0.035)
+	var panel_material := StandardMaterial3D.new()
+	panel_material.albedo_texture = drawing_surface.get("texture") as Texture2D
+	panel_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	panel_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	panel_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_drawing_panel.material_override = panel_material
+	visuals.add_child(_drawing_panel)
+	_add_box_mesh(visuals, "LowerShelf", Vector3(0.0, 0.62, 0.14), Vector3(2.65, 0.12, 0.45), _material(Color(0.42, 0.28, 0.16)))
+	surface.set_visual_root(visuals)
+	var surface_collision := CollisionShape3D.new()
+	var surface_shape := BoxShape3D.new()
+	surface_shape.size = Vector3(2.55, 2.25, 0.3)
+	surface_collision.shape = surface_shape
+	surface_collision.position.y = 1.28
+	surface.set_collision(surface_collision)
+	add_child(surface)
+	objects[DRAWING_SURFACE_ID] = surface
+	_add_label("Marking board", surface.position + Vector3(-0.8, 2.72, 0.0), 18, Color(0.96, 0.88, 0.7))
+
+	var charcoal := Interactable.new()
+	charcoal.name = "CharcoalTool"
+	charcoal.configure(DRAWING_TOOL_ID, "tool", "Charcoal", ["draw"])
+	charcoal.position = surface.position + Vector3(-1.02, 0.0, 0.34)
+	charcoal.collision_layer = 2
+	charcoal.collision_mask = 0
+	var charcoal_visuals := Node3D.new()
+	_add_box_mesh(charcoal_visuals, "ToolRest", Vector3(0.0, 0.3, 0.0), Vector3(0.62, 0.12, 0.42), _material(Color(0.57, 0.4, 0.23)))
+	var stick := MeshInstance3D.new()
+	stick.name = "CharcoalStick"
+	var stick_mesh := CylinderMesh.new()
+	stick_mesh.top_radius = 0.045
+	stick_mesh.bottom_radius = 0.045
+	stick_mesh.height = 0.54
+	stick_mesh.radial_segments = 8
+	stick.mesh = stick_mesh
+	stick.position = Vector3(0.0, 0.44, 0.0)
+	stick.rotation.z = PI * 0.5
+	stick.material_override = _material(Color(0.09, 0.075, 0.065))
+	charcoal_visuals.add_child(stick)
+	charcoal.set_visual_root(charcoal_visuals)
+	var charcoal_collision := CollisionShape3D.new()
+	var charcoal_shape := SphereShape3D.new()
+	charcoal_shape.radius = 0.34
+	charcoal_collision.shape = charcoal_shape
+	charcoal_collision.position.y = 0.4
+	charcoal.set_collision(charcoal_collision)
+	add_child(charcoal)
+	objects[DRAWING_TOOL_ID] = charcoal
+	_add_label("Charcoal", charcoal.position + Vector3(-0.1, 0.85, 0.0), 14, Color(0.88, 0.82, 0.72))
 
 
 func _step_profile_chemistry(profile: NornProfile) -> void:
@@ -1529,17 +1628,29 @@ func _sense_objects(profile: NornProfile) -> Array[Dictionary]:
 	return sensed
 
 
+func _sensed_object_exists(sensed: Array[Dictionary], object_id: String) -> bool:
+	for entry: Dictionary in sensed:
+		if str(entry.get("id", "")) == object_id and bool(entry.get("available", true)):
+			return true
+	return false
+
+
 func _run_decision(profile: NornProfile) -> void:
 	if profile == null or profile.cognition_state.is_empty() or profile.actor == null:
 		return
 	var nearby_objects := _sense_objects(profile)
 	var nearby_norns := _sense_peers(profile)
+	var surface_marks := PackedFloat32Array()
+	if drawing_surface != null and _sensed_object_exists(nearby_objects, DRAWING_SURFACE_ID):
+		var cursor_uv: Vector2 = drawing_surface.call("get_last_uv", profile.actor_id)
+		surface_marks = drawing_surface.call("sample_mark_grid", cursor_uv, 16)
 	var active_guidance: Variant = profile.guidance if not profile.guidance.is_empty() and simulation_time <= float(profile.guidance.get("expiresAt", 0.0)) else null
 	var observation := {
 		"time": simulation_time,
 		"chemistry": profile.cognition_state["chemistry"],
 		"nearbyObjects": nearby_objects,
 		"nearbyNorns": nearby_norns,
+		"surfaceMarks": surface_marks,
 		"guidance": active_guidance,
 		"languageSignals": {}
 	}
@@ -1569,6 +1680,21 @@ func _run_decision(profile: NornProfile) -> void:
 		if item.available and nearby_objects.any(func(entry: Dictionary) -> bool: return entry["id"] == effective_action):
 			target = item
 			target_id = effective_action
+	elif effective_action == "draw" and objects.has(DRAWING_SURFACE_ID) and objects.has(DRAWING_TOOL_ID):
+		var surface_item: Interactable = objects[DRAWING_SURFACE_ID]
+		var charcoal_item: Interactable = objects[DRAWING_TOOL_ID]
+		if surface_item.available and charcoal_item.available and _sensed_object_exists(nearby_objects, DRAWING_SURFACE_ID) and _sensed_object_exists(nearby_objects, DRAWING_TOOL_ID):
+			target = surface_item
+			target_id = DRAWING_SURFACE_ID
+			if profile.actor.global_position.distance_to(surface_item.global_position) <= NornActor.ARRIVAL_DISTANCE:
+				reason = "Making a short exploratory mark"
+				_execute_draw_step(profile, decision.get("drawMotorCommand", {}))
+			else:
+				reason = "Approaching the marking board"
+				profile.actor.set_drawing_effector_pose(Vector3.ZERO, false)
+		else:
+			effective_action = "idle"
+			reason = "Looking around the habitat"
 	elif effective_action == "observe_peer" and not nearby_norns.is_empty():
 		var peer: NornProfile
 		var peer_selection: Dictionary = {}
@@ -1613,6 +1739,83 @@ func _run_decision(profile: NornProfile) -> void:
 	profile.current_decision["reason"] = reason
 	if profile.actor_id == "mallow":
 		_sync_mallow_compatibility()
+
+
+func _execute_draw_step(profile: NornProfile, motor_command: Variant) -> bool:
+	if profile == null or profile.actor == null or drawing_surface == null or not (motor_command is Dictionary):
+		return false
+	var command: Dictionary = motor_command
+	for field: String in ["dx", "dy", "pressure"]:
+		if not _is_finite_number(command.get(field, null)):
+			return false
+	if not (command.get("contact", null) is bool):
+		return false
+	var surface_item_value: Variant = objects.get(DRAWING_SURFACE_ID, null)
+	var tool_item_value: Variant = objects.get(DRAWING_TOOL_ID, null)
+	if not (surface_item_value is Interactable) or not (tool_item_value is Interactable):
+		return false
+	var surface_item: Interactable = surface_item_value
+	var tool_item: Interactable = tool_item_value
+	if not surface_item.available or not tool_item.available or profile.actor.global_position.distance_to(surface_item.global_position) > NornActor.ARRIVAL_DISTANCE:
+		return false
+	var cursor_uv: Vector2 = drawing_surface.call("get_last_uv", profile.actor_id)
+	var next_uv := Vector2(
+		clampf(cursor_uv.x + clampf(float(command["dx"]), -0.08, 0.08), 0.03, 0.97),
+		clampf(cursor_uv.y + clampf(float(command["dy"]), -0.08, 0.08), 0.03, 0.97)
+	)
+	var pressure := clampf(float(command["pressure"]), 0.05, 0.85)
+	var contact := bool(command["contact"])
+	if not bool(drawing_surface.call("append_point", profile.actor_id, next_uv, pressure, contact)):
+		return false
+	if contact:
+		profile.actor.set_drawing_effector_pose(_drawing_surface_world_point(next_uv), true)
+	else:
+		profile.actor.set_drawing_effector_pose(Vector3.ZERO, false)
+	var completed_value: Variant = drawing_surface.call("pop_completed_stroke", profile.actor_id)
+	if completed_value is Dictionary and not (completed_value as Dictionary).is_empty():
+		_record_draw_outcome(profile, completed_value)
+	return true
+
+
+func _drawing_surface_world_point(uv: Vector2) -> Vector3:
+	var surface_value: Variant = objects.get(DRAWING_SURFACE_ID, null)
+	if not (surface_value is Node3D):
+		return Vector3.ZERO
+	var local_position := Vector3(
+		(uv.x - 0.5) * DRAWING_SURFACE_WIDTH,
+		1.58 + (0.5 - uv.y) * DRAWING_SURFACE_HEIGHT,
+		0.12
+	)
+	return (surface_value as Node3D).to_global(local_position)
+
+
+func _record_draw_outcome(profile: NornProfile, stroke: Dictionary) -> void:
+	var points_value: Variant = stroke.get("points", null)
+	if not (points_value is Array) or (points_value as Array).is_empty():
+		return
+	var points: Array = points_value
+	var outcome := {
+		"eventType": "draw-mark",
+		"actionId": "draw",
+		"targetId": DRAWING_SURFACE_ID,
+		"actorId": profile.actor_id,
+		"surfaceId": DRAWING_SURFACE_ID,
+		"toolId": DRAWING_TOOL_ID,
+		"time": simulation_time,
+		"learningDelta": 0.0,
+		"reward": 0.0,
+		"salience": 0.25,
+		"strokeData": {
+			"pointCount": points.size(),
+			"start": (points[0] as Dictionary).duplicate(true),
+			"end": (points[points.size() - 1] as Dictionary).duplicate(true)
+		},
+		"text": "%s made a short mark on the board." % profile.display_name
+	}
+	var result: Dictionary = Cognition.record_outcome(profile.cognition_state, outcome)
+	if result.is_empty():
+		return
+	last_status = str(outcome["text"])
 
 
 func _on_action_completed(actor_id: String, action_id: String, target_id: String) -> void:
@@ -1734,6 +1937,10 @@ func _reset_state(write_save: bool) -> void:
 	teaching_mode = false
 	if _ui != null:
 		_ui.clear_teaching_input()
+	if drawing_surface == null:
+		drawing_surface = DrawingSurfaceScript.new() as RefCounted
+	var empty_surface: Dictionary = DrawingSurfaceScript.new().call("serialize_state")
+	drawing_surface.call("restore_state", empty_surface)
 	simulation_time = 0.0
 	_chemistry_accumulator = 0.0
 	_decision_accumulator = 0.0
@@ -1809,7 +2016,9 @@ func _refresh_ui() -> void:
 		"lastRecordingPath": last_recording_path,
 		"recordingError": video_recorder.last_error if video_recorder != null else "",
 		"recordedFrameCount": recorded_frame_count,
-		"teachingMode": teaching_mode
+		"teachingMode": teaching_mode,
+		"drawingStrokeCount": drawing_surface.call("get_stroke_count") if drawing_surface != null else 0,
+		"drawingSurfaceTexture": drawing_surface.get("texture") as Texture2D if drawing_surface != null else null
 	})
 
 

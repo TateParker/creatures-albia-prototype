@@ -23,6 +23,12 @@ var _visual_root: Node3D
 var _name_label: Label3D
 var _life_stage_label: Label3D
 var _life_stage: String = "adult"
+var _drawing_effector: Node3D
+var _drawing_arm: MeshInstance3D
+var _drawing_hand: Node3D
+var _drawing_target_local := Vector3(0.45, 0.88, -0.76)
+var _drawing_rest_local := Vector3(0.45, 0.88, -0.76)
+var _drawing_tip_material: StandardMaterial3D
 
 
 func _ready() -> void:
@@ -91,6 +97,26 @@ func set_action_target(target_node: Node3D, action_id: String, reason: String, t
 	if target == null:
 		velocity = Vector3.ZERO
 		is_walking = false
+	if action_id != "draw":
+		set_drawing_effector_pose(Vector3.ZERO, false)
+
+
+func set_drawing_effector_pose(surface_world_position: Vector3, contact: bool) -> void:
+	if _drawing_effector == null or _drawing_hand == null or _visual_root == null:
+		return
+	if contact:
+		var target_local := _visual_root.to_local(surface_world_position)
+		var shoulder := Vector3(0.34, 1.22, -0.34)
+		var reach := target_local - shoulder
+		if reach.length() > 1.12:
+			target_local = shoulder + reach.normalized() * 1.12
+		_drawing_target_local = target_local
+		if _drawing_tip_material != null:
+			_drawing_tip_material.albedo_color = Color(0.12, 0.10, 0.075)
+	else:
+		_drawing_target_local = _drawing_rest_local
+		if _drawing_tip_material != null:
+			_drawing_tip_material.albedo_color = Color(0.34, 0.28, 0.20)
 
 
 func sensed_interactables() -> Array[Interactable]:
@@ -143,6 +169,10 @@ func _physics_process(_delta: float) -> void:
 	direction.y = 0.0
 	var arrival_distance := OBSERVATION_STOP_DISTANCE if current_action == "observe_peer" else ARRIVAL_DISTANCE
 	if direction.length() <= arrival_distance:
+		if current_action == "draw":
+			velocity = Vector3.ZERO
+			is_walking = false
+			return
 		var completed_target := target
 		var completed_action := current_action
 		var completed_target_id := target_id
@@ -160,6 +190,14 @@ func _physics_process(_delta: float) -> void:
 	is_walking = true
 	look_at(global_position + forward, Vector3.UP)
 	move_and_slide()
+
+
+func _process(delta: float) -> void:
+	if _drawing_hand == null or _drawing_arm == null:
+		return
+	var blend := 1.0 - exp(-maxf(0.0, delta) * 15.0)
+	_drawing_hand.position = _drawing_hand.position.lerp(_drawing_target_local, blend)
+	_update_drawing_arm()
 
 
 func _build_collision() -> void:
@@ -202,7 +240,63 @@ func _build_body() -> void:
 	_add_sphere("LeftEyelid", _front_surface_point(left_eye_x, eyelid_y, 0.018), Vector3(0.18, 0.07, 0.055), warm_brown, 10, 6)
 	_add_sphere("RightEyelid", _front_surface_point(right_eye_x, eyelid_y, 0.018), Vector3(0.18, 0.07, 0.055), warm_brown, 10, 6)
 	_add_sphere("Nose", _front_surface_point(0.0, 1.52, 0.04), Vector3(0.14, 0.1, 0.07), _material(Color(0.2, 0.1, 0.08)), 8, 5)
+	_build_drawing_effector()
 	_apply_life_stage()
+
+
+func _build_drawing_effector() -> void:
+	_drawing_effector = Node3D.new()
+	_drawing_effector.name = "DrawingEffector"
+	_visual_root.add_child(_drawing_effector)
+	_drawing_arm = MeshInstance3D.new()
+	_drawing_arm.name = "Arm"
+	var arm_mesh := CapsuleMesh.new()
+	arm_mesh.radius = 0.065
+	arm_mesh.height = 1.0
+	arm_mesh.radial_segments = 8
+	arm_mesh.rings = 3
+	_drawing_arm.mesh = arm_mesh
+	_drawing_arm.material_override = _material(body_color.darkened(0.06))
+	_drawing_effector.add_child(_drawing_arm)
+	_drawing_hand = Node3D.new()
+	_drawing_hand.name = "Hand"
+	_drawing_hand.position = _drawing_rest_local
+	_drawing_effector.add_child(_drawing_hand)
+	var palm := MeshInstance3D.new()
+	palm.name = "Palm"
+	var palm_mesh := SphereMesh.new()
+	palm_mesh.radius = 0.11
+	palm_mesh.height = 0.22
+	palm_mesh.radial_segments = 8
+	palm_mesh.rings = 5
+	palm.mesh = palm_mesh
+	palm.material_override = _material(body_color.lightened(0.08))
+	_drawing_hand.add_child(palm)
+	var charcoal := MeshInstance3D.new()
+	charcoal.name = "CharcoalTip"
+	var charcoal_mesh := CylinderMesh.new()
+	charcoal_mesh.top_radius = 0.018
+	charcoal_mesh.bottom_radius = 0.035
+	charcoal_mesh.height = 0.28
+	charcoal_mesh.radial_segments = 6
+	charcoal.mesh = charcoal_mesh
+	charcoal.position = Vector3(0.0, -0.04, -0.16)
+	charcoal.rotation.x = -PI * 0.5
+	_drawing_tip_material = _material(Color(0.34, 0.28, 0.20))
+	charcoal.material_override = _drawing_tip_material
+	_drawing_hand.add_child(charcoal)
+	_update_drawing_arm()
+
+
+func _update_drawing_arm() -> void:
+	if _drawing_arm == null or _drawing_hand == null:
+		return
+	var shoulder := Vector3(0.34, 1.22, -0.34)
+	var direction := _drawing_hand.position - shoulder
+	var length := maxf(0.08, direction.length())
+	_drawing_arm.position = shoulder + direction * 0.5
+	_drawing_arm.rotation = Quaternion(Vector3.UP, direction.normalized()).get_euler()
+	_drawing_arm.scale = Vector3(1.0, length, 1.0)
 
 
 func _front_surface_point(x: float, y: float, outward_offset: float = 0.0) -> Vector3:

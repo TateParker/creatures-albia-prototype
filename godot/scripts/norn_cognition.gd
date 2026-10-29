@@ -1,10 +1,15 @@
 class_name NornCognition
 extends RefCounted
 
-const VERSION := 2
+const VERSION := 3
 const EPISODE_LIMIT := 512
 const RECURRENT_UNITS := 128
 const RECURRENT_DEGREE := 4
+const NAMED_INPUT_COUNT := 20
+const MARK_INPUT_COUNT := 256
+const INPUT_COUNT := NAMED_INPUT_COUNT + MARK_INPUT_COUNT
+const MOTOR_OUTPUT_COUNT := 3
+const DRAW_MAX_POINTS_PER_STROKE := 128
 const PEER_SELECTION_RADIUS := 10.0
 const ADOLESCENT_NON_PARENT_BONUS := 0.25
 const PEER_MEMORY_SCORE_LIMIT := 0.35
@@ -20,7 +25,9 @@ const CHEMICAL_NAMES: Array[String] = [
 	"glucose", "hunger", "curiosity", "fatigue", "reward",
 	"punishment", "stress", "socialComfort", "arousal", "satiety"
 ]
-const ACTION_IDS: Array[String] = ["fruit", "spinner", "rest", "observe_peer", "idle"]
+const ACTION_IDS: Array[String] = ["fruit", "spinner", "rest", "observe_peer", "idle", "draw"]
+const DRAW_SURFACE_ID := "drawing_surface"
+const DRAW_TOOL_ID := "charcoal"
 const CONTEXT_IDS: Array[String] = ["hungry", "curious", "fatigued", "social", "settled"]
 const INPUT_NAMES: Array[String] = [
 	"glucose", "hunger", "curiosity", "fatigue", "reward",
@@ -138,8 +145,10 @@ static func decide(state: Dictionary, observation: Dictionary = {}) -> Dictionar
 		return {}
 	_update_recurrent_state(state, observation)
 	var decision := _apply_commitment(state, _score_decision(state, observation), observation, true)
+	if decision.get("actionId", "") == "draw":
+		decision["drawMotorCommand"] = draw_motor_command(state)
 	var saved_decision := decision.duplicate(true)
-	for diagnostic: String in ["eligibleActions", "scoreBreakdown", "safetyOverride"]:
+	for diagnostic: String in ["eligibleActions", "scoreBreakdown", "safetyOverride", "drawMotorCommand"]:
 		saved_decision.erase(diagnostic)
 	state["lastDecision"] = saved_decision
 	return decision.duplicate(true)
@@ -148,7 +157,37 @@ static func decide(state: Dictionary, observation: Dictionary = {}) -> Dictionar
 static func preview(state: Dictionary, observation: Dictionary = {}) -> Dictionary:
 	if not state.has("policy"):
 		return {}
-	return _apply_commitment(state, _score_decision(state, observation), observation, false).duplicate(true)
+	var decision := _apply_commitment(state, _score_decision(state, observation), observation, false)
+	if decision.get("actionId", "") == "draw":
+		decision["drawMotorCommand"] = draw_motor_command(state)
+	return decision.duplicate(true)
+
+
+static func draw_motor_command(state: Dictionary) -> Dictionary:
+	if not state.has("policy") or not (state["policy"] is Dictionary):
+		return {}
+	var policy: Dictionary = state["policy"]
+	var weights: PackedFloat32Array = policy.get("motorWeights", PackedFloat32Array())
+	var biases: PackedFloat32Array = policy.get("motorBiases", PackedFloat32Array())
+	var hidden: PackedFloat32Array = state.get("hidden", PackedFloat32Array())
+	if weights.size() != MOTOR_OUTPUT_COUNT * RECURRENT_UNITS or biases.size() != MOTOR_OUTPUT_COUNT or hidden.size() != RECURRENT_UNITS:
+		return {}
+	var outputs := PackedFloat32Array()
+	outputs.resize(MOTOR_OUTPUT_COUNT)
+	for output_index: int in range(MOTOR_OUTPUT_COUNT):
+		var activation := float(biases[output_index])
+		var offset := output_index * RECURRENT_UNITS
+		for unit: int in range(RECURRENT_UNITS):
+			activation += float(weights[offset + unit]) * float(hidden[unit])
+		outputs[output_index] = tanh(activation)
+	var seed_phase := posmod(int(state.get("seed", 0)), 8)
+	var decision_phase := posmod(int(state.get("decisionCount", 0)) + seed_phase, 8)
+	return {
+		"dx": outputs[0] * 0.08,
+		"dy": outputs[1] * 0.08,
+		"pressure": clampf(0.45 + outputs[2] * 0.4, 0.05, 0.85),
+		"contact": decision_phase != 7
+	}
 
 
 static func select_observation_peer(state: Dictionary, candidates: Array[Dictionary], parent_ids: Array[String], life_stage: String, now: float) -> Dictionary:
@@ -322,7 +361,10 @@ static func record_outcome(state: Dictionary, outcome: Dictionary = {}, external
 		"salience": clampf(_finite_or(outcome.get("salience", salience_default), salience_default), 0.0, 1.0),
 		"valence": int(valence),
 		"text": str(outcome.get("text", "")).left(500),
-		"word": str(outcome.get("word", "")).left(24) if outcome.get("word", null) is String else null
+		"word": str(outcome.get("word", "")).left(24) if outcome.get("word", null) is String else null,
+		"surfaceId": str(outcome.get("surfaceId", "")).left(32) if outcome.get("surfaceId", null) is String else null,
+		"toolId": str(outcome.get("toolId", "")).left(32) if outcome.get("toolId", null) is String else null,
+		"strokeData": outcome.get("strokeData", null).duplicate(true) if outcome.get("strokeData", null) is Dictionary else null
 	}
 	var episodes: Array = state["episodes"]
 	episodes.append(episode)
@@ -364,10 +406,11 @@ static func serialize_state(state: Dictionary) -> Dictionary:
 static func restore_state(record: Dictionary) -> Dictionary:
 	if not _valid_record(record):
 		return {}
+	var record_version := int(record.get("version", VERSION))
 	var traits: Dictionary = record["traits"]
 	var chemistry: Dictionary = record["chemistry"]
 	var associations: Dictionary = record["actionAssociations"]
-	if int(record.get("version", VERSION)) < VERSION:
+	if record_version == 1:
 		associations = _migrate_legacy_action_associations(associations)
 	var state := create_state(int(record["seed"]), traits, {
 		"hunger": chemistry["hunger"],
@@ -384,8 +427,22 @@ static func restore_state(record: Dictionary) -> Dictionary:
 	state["hidden"] = PackedFloat32Array(record["recurrent"]["hidden"])
 	state["decisionCount"] = record["recurrent"]["decisionCount"]
 	state["commitmentUntil"] = record["commitmentUntil"]
-	state["lastDecision"] = (record["lastDecision"] as Dictionary).duplicate(true) if record["lastDecision"] is Dictionary else null
+	state["lastDecision"] = _migrate_last_decision(record["lastDecision"], record_version)
 	return state
+
+
+static func _migrate_last_decision(value: Variant, record_version: int) -> Variant:
+	if not (value is Dictionary):
+		return null
+	var decision: Dictionary = value.duplicate(true)
+	if record_version < VERSION:
+		var scores: Dictionary = decision.get("actionScores", {}).duplicate(true)
+		scores["draw"] = 0.0
+		decision["actionScores"] = scores
+		var components: Dictionary = decision.get("components", {}).duplicate(true)
+		components["drawNeed"] = 0.0
+		decision["components"] = components
+	return decision
 
 
 static func get_chemical_names() -> Array[String]:
@@ -409,15 +466,18 @@ static func _valid_chemistry_signals(signals: Variant) -> bool:
 static func _make_policy(seed: int) -> Dictionary:
 	var rng := {"state": (seed ^ 0x9e3779b9) & 0xffffffff}
 	var input_weights := PackedFloat32Array()
-	input_weights.resize(RECURRENT_UNITS * INPUT_NAMES.size())
+	input_weights.resize(RECURRENT_UNITS * INPUT_COUNT)
+	input_weights.fill(0.0)
 	var recurrent_indices := PackedInt32Array()
 	recurrent_indices.resize(RECURRENT_UNITS * RECURRENT_DEGREE)
 	var recurrent_weights := PackedFloat32Array()
 	recurrent_weights.resize(RECURRENT_UNITS * RECURRENT_DEGREE)
 	var action_weights := PackedFloat32Array()
 	action_weights.resize(ACTION_IDS.size() * RECURRENT_UNITS)
-	for index: int in range(input_weights.size()):
-		input_weights[index] = (_next_random(rng) * 2.0 - 1.0) * 0.12
+	for unit: int in range(RECURRENT_UNITS):
+		var input_offset := unit * INPUT_COUNT
+		for index: int in range(NAMED_INPUT_COUNT):
+			input_weights[input_offset + index] = (_next_random(rng) * 2.0 - 1.0) * 0.12
 	for unit: int in range(RECURRENT_UNITS):
 		for edge: int in range(RECURRENT_DEGREE):
 			var offset := unit * RECURRENT_DEGREE + edge
@@ -425,11 +485,31 @@ static func _make_policy(seed: int) -> Dictionary:
 			recurrent_weights[offset] = (_next_random(rng) * 2.0 - 1.0) * 0.16
 	for index: int in range(action_weights.size()):
 		action_weights[index] = (_next_random(rng) * 2.0 - 1.0) * 0.055
+	var visual_rng := {"state": ((seed ^ 0x85ebca6b) & 0xffffffff)}
+	if int(visual_rng["state"]) == 0:
+		visual_rng["state"] = 1
+	for unit: int in range(RECURRENT_UNITS):
+		var visual_offset := unit * INPUT_COUNT + NAMED_INPUT_COUNT
+		for mark_index: int in range(MARK_INPUT_COUNT):
+			input_weights[visual_offset + mark_index] = (_next_random(visual_rng) * 2.0 - 1.0) * 0.12
+	var motor_rng := {"state": ((seed ^ 0x27d4eb2d) & 0xffffffff)}
+	if int(motor_rng["state"]) == 0:
+		motor_rng["state"] = 1
+	var motor_weights := PackedFloat32Array()
+	motor_weights.resize(MOTOR_OUTPUT_COUNT * RECURRENT_UNITS)
+	for index: int in range(motor_weights.size()):
+		motor_weights[index] = (_next_random(motor_rng) * 2.0 - 1.0) * 0.08
+	var motor_biases := PackedFloat32Array()
+	motor_biases.resize(MOTOR_OUTPUT_COUNT)
+	for index: int in range(motor_biases.size()):
+		motor_biases[index] = (_next_random(motor_rng) * 2.0 - 1.0) * 0.15
 	return {
 		"inputWeights": input_weights,
 		"recurrentIndices": recurrent_indices,
 		"recurrentWeights": recurrent_weights,
-		"actionWeights": action_weights
+		"actionWeights": action_weights,
+		"motorWeights": motor_weights,
+		"motorBiases": motor_biases
 	}
 
 
@@ -510,8 +590,8 @@ static func _update_recurrent_state(state: Dictionary, observation: Dictionary) 
 	next_hidden.resize(RECURRENT_UNITS)
 	for unit: int in range(RECURRENT_UNITS):
 		var activation := 0.0
-		var input_offset := unit * INPUT_NAMES.size()
-		for index: int in range(INPUT_NAMES.size()):
+		var input_offset := unit * INPUT_COUNT
+		for index: int in range(INPUT_COUNT):
 			activation += input_weights[input_offset + index] * input[index]
 		var edge_offset := unit * RECURRENT_DEGREE
 		for edge: int in range(RECURRENT_DEGREE):
@@ -527,7 +607,8 @@ static func _get_input_vector(state: Dictionary, observation: Dictionary) -> Arr
 	var input: Array[float] = []
 	for chemical: String in CHEMICAL_NAMES:
 		input.append(_normalized(float(chemistry.get(chemical, 0.0))))
-	var objects: Array = observation.get("nearbyObjects", [])
+	var objects_value: Variant = observation.get("nearbyObjects", [])
+	var objects: Array = objects_value if objects_value is Array else []
 	var fruit: Dictionary = _find_object(objects, "fruit")
 	var spinner: Dictionary = _find_object(objects, "spinner")
 	var peers: Array = observation.get("nearbyNorns", [])
@@ -544,6 +625,15 @@ static func _get_input_vector(state: Dictionary, observation: Dictionary) -> Arr
 	input.append(1.0 if languages.get("targetId", "") == "spinner" else 0.0)
 	input.append(1.0 if bool(languages.get("praise", false)) else 0.0)
 	input.append(1.0 if bool(languages.get("scold", false)) else 0.0)
+	var surface_visible := _has_sensed_id(objects, DRAW_SURFACE_ID)
+	var mark_values: Variant = observation.get("surfaceMarks", null)
+	for mark_index: int in range(MARK_INPUT_COUNT):
+		var mark_value := 0.0
+		if surface_visible and mark_values is PackedFloat32Array and mark_values.size() == MARK_INPUT_COUNT:
+			mark_value = clampf(_finite_or(mark_values[mark_index], 0.0), 0.0, 1.0)
+		elif surface_visible and mark_values is Array and mark_values.size() == MARK_INPUT_COUNT:
+			mark_value = clampf(_finite_or(mark_values[mark_index], 0.0), 0.0, 1.0)
+		input.append(mark_value)
 	return input
 
 
@@ -638,8 +728,10 @@ static func _score_decision(state: Dictionary, observation: Dictionary) -> Dicti
 	var recalled: Array[Dictionary] = _retrieve_episodes(state, observation)
 	var hunger := clampf(float(chemistry["hunger"]), 0.0, 100.0)
 	var glucose := clampf(float(chemistry["glucose"]), 0.0, 100.0)
+	var curiosity := clampf(float(chemistry["curiosity"]), 0.0, 100.0)
 	var fruit_need := maxf(hunger, 100.0 - glucose)
-	var spinner_need := maxf(0.0, float(chemistry["curiosity"]) - 16.0) * (0.58 + float(state["traits"]["curiosity"]) * 0.46)
+	var spinner_need := maxf(0.0, curiosity - 16.0) * (0.58 + float(state["traits"]["curiosity"]) * 0.46)
+	var draw_need := maxf(0.0, curiosity - 20.0) * 0.34 * (0.7 + float(state["traits"]["curiosity"]) * 0.3)
 	var nearby_norns: Array = observation.get("nearbyNorns", [])
 	var contexts := _get_context_ids(chemistry, nearby_norns.size())
 	var low_glucose_need := 100.0 - glucose
@@ -651,7 +743,8 @@ static func _score_decision(state: Dictionary, observation: Dictionary) -> Dicti
 		"spinner": clampf(spinner_need, 0.0, 100.0),
 		"rest": rest_need,
 		"observe_peer": observe_need,
-		"idle": 24.0
+		"idle": 24.0,
+		"draw": clampf(draw_need, 0.0, 40.0)
 	}
 	var action_scores: Dictionary = {}
 	var score_breakdown: Dictionary = {}
@@ -719,7 +812,7 @@ static func _score_decision(state: Dictionary, observation: Dictionary) -> Dicti
 		"components": {
 			"fruitNeed": fruit_need, "fruitHabit": fruit_habit, "fruitContext": fruit_context, "fruitScore": float(action_scores["fruit"]),
 			"spinnerNeed": spinner_need, "spinnerHabit": spinner_habit, "spinnerContext": spinner_context, "spinnerScore": float(action_scores["spinner"]),
-			"restNeed": rest_need, "observeNeed": observe_need
+			"restNeed": rest_need, "observeNeed": observe_need, "drawNeed": draw_need
 		}
 	}
 
@@ -757,6 +850,8 @@ static func _eligible_actions(observation: Dictionary) -> Array[String]:
 		elif action_id == "spinner" and _has_sensed_id(objects, "spinner"):
 			eligible.append(action_id)
 		elif action_id == "observe_peer" and _has_sensed_peer(peers):
+			eligible.append(action_id)
+		elif action_id == "draw" and _has_sensed_id(objects, DRAW_SURFACE_ID) and _has_sensed_id(objects, DRAW_TOOL_ID):
 			eligible.append(action_id)
 		elif ["rest", "idle"].has(action_id):
 			eligible.append(action_id)
@@ -805,6 +900,8 @@ static func _decision_reason(action_id: String, breakdown: Dictionary, hunger: f
 		return "Learned preferences are favoring a pause" if preference > drive else "Fatigue or low energy is calling for a pause"
 	if action_id == "observe_peer":
 		return "Learned preferences are drawing them toward another Norn" if preference > drive else "Social attention is drawing them toward another Norn"
+	if action_id == "draw":
+		return "Learned preferences are favoring a mark-making visit" if preference > drive else "Curiosity is drawing attention to the mark surface"
 	if preference > drive:
 		return "Learned preferences are favoring a quiet moment"
 	return "Their immediate needs are settled"
@@ -914,8 +1011,10 @@ static func _adjust_chemistry_for_outcome(chemistry: Dictionary, event_type: Str
 
 
 static func _valid_record(record: Dictionary) -> bool:
-	if not [1, VERSION].has(int(record.get("version", -1))):
+	var record_version := int(record.get("version", -1))
+	if not [1, 2, VERSION].has(record_version):
 		return false
+	var allow_missing_draw := record_version < VERSION
 	var seed_value = record.get("seed", null)
 	var traits = record.get("traits", null)
 	var chemistry = record.get("chemistry", null)
@@ -925,17 +1024,17 @@ static func _valid_record(record: Dictionary) -> bool:
 		return false
 	if not _valid_chemistry(chemistry):
 		return false
-	if not (record.get("actionAssociations", null) is Dictionary) or not _valid_associations(record["actionAssociations"]):
+	if not (record.get("actionAssociations", null) is Dictionary) or not _valid_associations(record["actionAssociations"], allow_missing_draw):
 		return false
-	if not (record.get("contextAssociations", null) is Dictionary) or not _valid_context_map(record["contextAssociations"]):
+	if not (record.get("contextAssociations", null) is Dictionary) or not _valid_context_map(record["contextAssociations"], allow_missing_draw):
 		return false
 	if not (record.get("episodes", null) is Array) or record["episodes"].size() > EPISODE_LIMIT:
 		return false
 	if not _is_finite_number(record.get("nextEpisodeId", null)) or int(record["nextEpisodeId"]) < 1:
 		return false
-	if not (record.get("eligibility", null) is Dictionary) or not _valid_associations(record["eligibility"]):
+	if not (record.get("eligibility", null) is Dictionary) or not _valid_associations(record["eligibility"], allow_missing_draw):
 		return false
-	if not (record.get("contextEligibility", null) is Dictionary) or not _valid_context_map(record["contextEligibility"]):
+	if not (record.get("contextEligibility", null) is Dictionary) or not _valid_context_map(record["contextEligibility"], allow_missing_draw):
 		return false
 	var recurrent = record.get("recurrent", null)
 	if not (recurrent is Dictionary) or not (recurrent.get("hidden", null) is Array) or recurrent["hidden"].size() != RECURRENT_UNITS:
@@ -948,7 +1047,7 @@ static func _valid_record(record: Dictionary) -> bool:
 	if not _bounded_number(record.get("commitmentUntil", null), 0.0, 1.0e20):
 		return false
 	var last_decision = record.get("lastDecision", null)
-	if last_decision != null and (not (last_decision is Dictionary) or not _valid_decision(last_decision)):
+	if last_decision != null and (not (last_decision is Dictionary) or not _valid_decision(last_decision, allow_missing_draw)):
 		return false
 	var episode_ids := {}
 	for episode in record["episodes"]:
@@ -970,15 +1069,19 @@ static func _valid_chemistry(chemistry) -> bool:
 	return true
 
 
-static func _valid_associations(associations: Dictionary) -> bool:
+static func _valid_associations(associations: Dictionary, allow_missing_draw: bool = false) -> bool:
 	for action_id: String in ACTION_IDS:
+		if allow_missing_draw and action_id == "draw" and not associations.has("draw"):
+			continue
 		if not _bounded_number(associations.get(action_id, null), 0.0, 1.0):
 			return false
 	return true
 
 
-static func _valid_context_map(context_map: Dictionary) -> bool:
+static func _valid_context_map(context_map: Dictionary, allow_missing_draw: bool = false) -> bool:
 	for action_id: String in ACTION_IDS:
+		if allow_missing_draw and action_id == "draw" and not context_map.has("draw"):
+			continue
 		var row = context_map.get(action_id, null)
 		if not (row is Dictionary):
 			return false
@@ -1012,7 +1115,7 @@ static func _valid_episode(episode: Dictionary) -> bool:
 	if action_id != null and not ACTION_IDS.has(action_id):
 		return false
 	var target_id = episode.get("targetId", null)
-	if target_id != null and not ["fruit", "spinner", "praise", "scold"].has(target_id):
+	if target_id != null and not ["fruit", "spinner", "praise", "scold", "drawing_surface"].has(target_id):
 		return false
 	var actor_id = episode.get("actorId", null)
 	if actor_id != null and (not (actor_id is String) or actor_id.length() > 32):
@@ -1025,6 +1128,18 @@ static func _valid_episode(episode: Dictionary) -> bool:
 	var word = episode.get("word", null)
 	if word != null and (not (word is String) or word.length() > 24):
 		return false
+	var surface_id = episode.get("surfaceId", null)
+	if surface_id != null and (not (surface_id is String) or not ["drawing_surface"].has(surface_id)):
+		return false
+	var tool_id = episode.get("toolId", null)
+	if tool_id != null and (not (tool_id is String) or not ["charcoal"].has(tool_id)):
+		return false
+	var stroke_data = episode.get("strokeData", null)
+	if stroke_data != null and not _valid_draw_stroke_data(stroke_data):
+		return false
+	if str(episode.get("eventType", "")) == "draw-mark":
+		if action_id != "draw" or target_id != "drawing_surface" or surface_id != "drawing_surface" or tool_id != "charcoal" or stroke_data == null:
+			return false
 	var feedback = episode.get("feedback", "")
 	if not (feedback is String) or not ["", "praise", "scold"].has(feedback):
 		return false
@@ -1034,13 +1149,34 @@ static func _valid_episode(episode: Dictionary) -> bool:
 	return true
 
 
-static func _valid_decision(decision) -> bool:
+static func _valid_draw_stroke_data(value: Variant) -> bool:
+	if not (value is Dictionary):
+		return false
+	var stroke: Dictionary = value
+	var point_count: Variant = stroke.get("pointCount", null)
+	var start: Variant = stroke.get("start", null)
+	var finish: Variant = stroke.get("end", null)
+	if not _is_finite_number(point_count) or int(point_count) < 1 or int(point_count) > DRAW_MAX_POINTS_PER_STROKE:
+		return false
+	for point_value: Variant in [start, finish]:
+		if not (point_value is Dictionary):
+			return false
+		var point: Dictionary = point_value
+		for field: String in ["x", "y", "pressure"]:
+			if not _is_finite_number(point.get(field, null)) or int(point[field]) < 0 or int(point[field]) > 255:
+				return false
+	return true
+
+
+static func _valid_decision(decision: Variant, allow_missing_draw: bool = false) -> bool:
 	if not (decision is Dictionary) or not ACTION_IDS.has(decision.get("actionId", "")):
 		return false
 	var scores = decision.get("actionScores", null)
 	if not (scores is Dictionary):
 		return false
 	for action_id: String in ACTION_IDS:
+		if allow_missing_draw and action_id == "draw" and not scores.has("draw"):
+			continue
 		if not _is_finite_number(scores.get(action_id, null)):
 			return false
 	if not (decision.get("reason", null) is String) or decision["reason"].length() > 240:
@@ -1057,6 +1193,8 @@ static func _valid_decision(decision) -> bool:
 	for component in ["fruitNeed", "fruitHabit", "fruitContext", "fruitScore", "spinnerNeed", "spinnerHabit", "spinnerContext", "spinnerScore", "restNeed", "observeNeed"]:
 		if not _is_finite_number(components.get(component, null)):
 			return false
+	if (not allow_missing_draw or components.has("drawNeed")) and not _is_finite_number(components.get("drawNeed", null)):
+		return false
 	return true
 
 

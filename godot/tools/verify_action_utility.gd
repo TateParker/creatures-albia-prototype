@@ -63,7 +63,7 @@ func test_legacy_uncentered_associations_migrate_to_neutral_baseline() -> void:
 	_expect(not restored.is_empty(), "an existing cognition version-1 state remains restorable")
 	if restored.is_empty():
 		return
-	var expected := {"fruit": 0.5, "spinner": 0.625, "rest": 0.75, "observe_peer": 0.875, "idle": 1.0}
+	var expected := {"fruit": 0.5, "spinner": 0.625, "rest": 0.75, "observe_peer": 0.875, "idle": 1.0, "draw": 0.5}
 	for action_id: String in Cognition.get_action_ids():
 		_expect(is_equal_approx(float(restored["actionAssociations"][action_id]), float(expected[action_id])), "legacy %s association maps from a zero baseline" % action_id)
 
@@ -101,7 +101,7 @@ func test_action_scores_have_bounded_explanations() -> void:
 	var decision: Dictionary = Cognition.preview(state, observation)
 	var scores_value: Variant = decision.get("actionScores", null)
 	var breakdown_value: Variant = decision.get("scoreBreakdown", null)
-	_expect(scores_value is Dictionary and (scores_value as Dictionary).size() == Cognition.get_action_ids().size(), "utility scores include all five actions")
+	_expect(scores_value is Dictionary and (scores_value as Dictionary).size() == Cognition.get_action_ids().size(), "utility scores include every action")
 	_expect(breakdown_value is Dictionary and (breakdown_value as Dictionary).size() == Cognition.get_action_ids().size(), "the live decision explains each action")
 	if not (scores_value is Dictionary):
 		return

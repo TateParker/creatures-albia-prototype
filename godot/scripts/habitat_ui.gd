@@ -26,6 +26,8 @@ var _empty_world_label: Label
 var _start_new_run_button: Button
 var _chemistry_label: Label
 var _action_label: Label
+var _drawing_surface_label: Label
+var _drawing_surface_preview: TextureRect
 var _recall_label: Label
 var _language_label: Label
 var _status_label: Label
@@ -95,6 +97,11 @@ func update_view(view: Dictionary) -> void:
 		_action_label.text = empty_message
 		_recall_label.text = "Family history\nThe deceased archive is below."
 		_language_label.text = "No living Norn to teach."
+	var stroke_count := int(view.get("drawingStrokeCount", 0))
+	_drawing_surface_label.text = "Shared mark surface · %d stroke%s" % [stroke_count, "" if stroke_count == 1 else "s"]
+	var surface_texture: Variant = view.get("drawingSurfaceTexture", null)
+	if surface_texture is Texture2D:
+		_drawing_surface_preview.texture = surface_texture
 	_update_roster(view.get("roster", []), actor_id)
 	_update_family_ui(view)
 	_status_label.text = str(view.get("status", ""))
@@ -350,6 +357,19 @@ func _build_ui() -> void:
 	_action_label.add_theme_font_size_override("font_size", 15)
 	_action_label.add_theme_color_override("font_color", Color(0.87, 0.93, 0.76))
 	layout.add_child(_action_label)
+	_drawing_surface_label = Label.new()
+	_drawing_surface_label.name = "DrawingSurfaceLabel"
+	_drawing_surface_label.add_theme_font_size_override("font_size", 12)
+	_drawing_surface_label.add_theme_color_override("font_color", Color(0.96, 0.84, 0.57))
+	layout.add_child(_drawing_surface_label)
+	_drawing_surface_preview = TextureRect.new()
+	_drawing_surface_preview.name = "DrawingSurfacePreview"
+	_drawing_surface_preview.custom_minimum_size = Vector2(240.0, 158.0)
+	_drawing_surface_preview.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_drawing_surface_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_drawing_surface_preview.stretch_mode = TextureRect.STRETCH_SCALE
+	_drawing_surface_preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	layout.add_child(_drawing_surface_preview)
 	_recall_label = Label.new()
 	_recall_label.name = "RememberedMomentsLabel"
 	_recall_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -121,14 +121,14 @@ func _run_scenario() -> void:
 		_scenario_failures.append("save did not write a JSON object")
 		saved_record = {}
 	var saved_norns: Dictionary = saved_record.get("norns", {})
-	if int(saved_record.get("version", -1)) != 5 or not saved_norns.has("mallow") or not saved_norns.has("moss"):
-		_scenario_failures.append("save did not write both Norns in version-5 format")
+	if int(saved_record.get("version", -1)) != 6 or not saved_norns.has("mallow") or not saved_norns.has("moss"):
+		_scenario_failures.append("save did not write both Norns in version-6 format")
 	var saved_mallow: Dictionary = saved_norns.get("mallow", {})
 	var saved_moss: Dictionary = saved_norns.get("moss", {})
 	if saved_mallow.is_empty() or saved_moss.is_empty() or str(saved_record.get("focusedNornId", "")) != "mallow":
-		_scenario_failures.append("version-5 save did not contain both profile records and focus")
+		_scenario_failures.append("version-6 save did not contain both profile records and focus")
 	if int(saved_record.get("nextNornNumber", 0)) != 1 or not (saved_record.get("eggs", null) is Array) or not (saved_record.get("eggs", []) as Array).is_empty():
-		_scenario_failures.append("version-5 save did not initialize its child number and egg list")
+		_scenario_failures.append("version-6 save did not initialize its child number and egg list")
 	for founder_id: String in ["mallow", "moss"]:
 		var founder: Dictionary = saved_norns.get(founder_id, {})
 		var founder_name := "Mallow" if founder_id == "mallow" else "Moss"
@@ -138,35 +138,35 @@ func _run_scenario() -> void:
 		var expected_life: Dictionary = NornLifecycle.create_state(expected_seed, saved_age)
 		var founder_life: Dictionary = founder.get("lifeState", {})
 		if str(founder.get("displayName", "")) != founder_name or int(founder.get("generation", -1)) != 0 or not (founder.get("parentIds", []) as Array).is_empty():
-			_scenario_failures.append("version-5 save lost %s identity or founder ancestry" % founder_id)
+			_scenario_failures.append("version-6 save lost %s identity or founder ancestry" % founder_id)
 		if not _number_arrays_equal(founder.get("bodyColor", []), founder_color) or not is_equal_approx(float(founder_life.get("ageSeconds", -1.0)), saved_age) or not is_equal_approx(float(founder_life.get("lifespanSeconds", -1.0)), float(expected_life["lifespanSeconds"])):
-			_scenario_failures.append("version-5 save lost %s appearance or deterministic adult lifespan" % founder_id)
+			_scenario_failures.append("version-6 save lost %s appearance or deterministic adult lifespan" % founder_id)
 	if saved_mallow.has("biochemistry"):
 		var saved_biochemistry: Dictionary = saved_mallow["biochemistry"]
 		if not _number_maps_equal(saved_biochemistry.get("compounds", {}), expected_compounds, Biochemistry.COMPOUND_IDS):
-			_scenario_failures.append("version-5 save did not preserve all Mallow compound concentrations")
+			_scenario_failures.append("version-6 save did not preserve all Mallow compound concentrations")
 	if saved_moss.has("biochemistry"):
 		var saved_moss_biochemistry: Dictionary = saved_moss["biochemistry"]
 		if not _number_maps_equal(saved_moss_biochemistry.get("compounds", {}), expected_moss_compounds, Biochemistry.COMPOUND_IDS):
-			_scenario_failures.append("version-5 save did not preserve all Moss compound concentrations")
+			_scenario_failures.append("version-6 save did not preserve all Moss compound concentrations")
 	if not saved_mallow.is_empty():
 		var saved_mallow_cognition: Dictionary = saved_mallow.get("cognition", {})
 		var saved_mallow_language: Dictionary = saved_mallow.get("language", {})
 		var saved_mallow_biochemistry: Dictionary = saved_mallow.get("biochemistry", {})
 		var saved_mallow_biochemistry_state: Dictionary = Biochemistry.restore_state(saved_mallow_biochemistry)
 		if not is_equal_approx(float(saved_mallow_cognition.get("actionAssociations", {}).get("fruit", -1.0)), fruit_association_before_save) or saved_mallow_cognition.get("episodes", []).size() != episodes_before_save:
-			_scenario_failures.append("version-5 save did not preserve Mallow's cognition and episode history")
+			_scenario_failures.append("version-6 save did not preserve Mallow's cognition and episode history")
 		if saved_mallow_language.get("words", {}) != expected_language_words or saved_mallow_biochemistry_state.is_empty() or not _number_maps_equal(Biochemistry.read_signals(saved_mallow_biochemistry_state), expected_signals, Biochemistry.SIGNAL_IDS):
-			_scenario_failures.append("version-5 save did not preserve Mallow's language or biochemical signals")
+			_scenario_failures.append("version-6 save did not preserve Mallow's language or biochemical signals")
 	if not saved_moss.is_empty():
 		var saved_moss_cognition: Dictionary = saved_moss.get("cognition", {})
 		var saved_moss_language: Dictionary = saved_moss.get("language", {})
 		var saved_moss_biochemistry: Dictionary = saved_moss.get("biochemistry", {})
 		var saved_moss_biochemistry_state: Dictionary = Biochemistry.restore_state(saved_moss_biochemistry)
 		if not is_equal_approx(float(saved_moss_cognition.get("actionAssociations", {}).get("spinner", -1.0)), expected_moss_association) or saved_moss_cognition.get("episodes", []).size() != expected_moss_episodes:
-			_scenario_failures.append("version-5 save did not preserve Moss's cognition and episode history")
+			_scenario_failures.append("version-6 save did not preserve Moss's cognition and episode history")
 		if saved_moss_language.get("words", {}) != expected_moss_words or saved_moss_biochemistry_state.is_empty() or not _number_maps_equal(Biochemistry.read_signals(saved_moss_biochemistry_state), expected_moss_signals, Biochemistry.SIGNAL_IDS):
-			_scenario_failures.append("version-5 save did not preserve Moss's language or biochemical signals")
+			_scenario_failures.append("version-6 save did not preserve Moss's language or biochemical signals")
 	var legacy_mallow: Dictionary = {
 		"cognition": saved_mallow.get("cognition", {}),
 		"language": saved_mallow.get("language", {}),
@@ -181,7 +181,7 @@ func _run_scenario() -> void:
 		"biochemistry": legacy_mallow["biochemistry"]
 	}
 	if not _write_saved_record(saved_record):
-		_scenario_failures.append("could not prepare version-5 round-trip fixture")
+		_scenario_failures.append("could not prepare version-6 round-trip fixture")
 	world.cognition_state["actionAssociations"]["fruit"] = 0.99
 	world.language_state["words"].clear()
 	var roundtrip_bio: Dictionary = world.get("biochemistry_state")
@@ -208,8 +208,8 @@ func _run_scenario() -> void:
 	v5_round_trip_ok = v5_round_trip_ok and world.cognition_state["episodes"].size() == episodes_before_save and moss_profile.cognition_state["episodes"].size() == expected_moss_episodes
 	v5_round_trip_ok = v5_round_trip_ok and _founder_defaults_are_valid(world, 600.0 + world.simulation_time) and world.focused_norn_id == "mallow"
 	if not v5_round_trip_ok:
-		_scenario_failures.append("version-5 round trip did not preserve both Norns' learning, biochemistry, and family defaults")
-	print("VERSION-5 ROUND TRIP: both profiles=%s; focus=%s" % [v5_round_trip_ok, world.focused_norn_id])
+		_scenario_failures.append("version-6 round trip did not preserve both Norns' learning, biochemistry, and family defaults")
+	print("VERSION-6 ROUND TRIP: both profiles=%s; focus=%s" % [v5_round_trip_ok, world.focused_norn_id])
 	var egg_round_trip_ok := false
 	if world.has_method("start_egg") and world.start_egg("moss") and world.eggs.size() == 1:
 		var live_egg: Node3D = world.get_node_or_null("egg-1") as Node3D
@@ -226,8 +226,8 @@ func _run_scenario() -> void:
 			var restored_egg: Node3D = world.get_node_or_null("egg-1") as Node3D
 			egg_round_trip_ok = world.eggs.size() == 1 and _egg_records_equal(world.eggs[0], expected_egg) and restored_egg != null and restored_egg.get_script() == load("res://scripts/norn_egg.gd")
 	if not egg_round_trip_ok:
-		_scenario_failures.append("version-5 save/load did not preserve partial incubation and realized inheritance")
-	print("VERSION-5 EGG ROUND TRIP: restored=%s; remaining=%.1f" % [egg_round_trip_ok, float(world.eggs[0].get("remainingSeconds", -1.0)) if not world.eggs.is_empty() else -1.0])
+		_scenario_failures.append("version-6 save/load did not preserve partial incubation and realized inheritance")
+	print("VERSION-6 EGG ROUND TRIP: restored=%s; remaining=%.1f" % [egg_round_trip_ok, float(world.eggs[0].get("remainingSeconds", -1.0)) if not world.eggs.is_empty() else -1.0])
 	var lifecycle_round_trip_ok := false
 	var mallow_lifecycle: NornProfile = world.profile_for("mallow")
 	mallow_lifecycle.life_state = NornLifecycle.create_state(int(mallow_lifecycle.cognition_state["seed"]), float(mallow_lifecycle.life_state["lifespanSeconds"]) - 0.1)
@@ -251,7 +251,7 @@ func _run_scenario() -> void:
 	lifecycle_round_trip_ok = lifecycle_round_trip_ok and mallow_lifecycle.actor == null and world.focused_norn_id == "moss" and world.eggs.size() == 1
 	lifecycle_round_trip_ok = lifecycle_round_trip_ok and archive_ui_restored and focus_ui_restored
 	if not lifecycle_round_trip_ok:
-		_scenario_failures.append("old-age death, archive and focus HUD, focus state, and parentless egg did not survive version-5 save/load")
+		_scenario_failures.append("old-age death, archive and focus HUD, focus state, and parentless egg did not survive version-6 save/load")
 	print("LIFECYCLE SAVE/LOAD: deceased=%s; deathNotice=%s; archived=%s; archiveUI=%s; focus=%s; focusUI=%s; egg=%s" % [died_of_old_age and not bool(mallow_lifecycle.life_state.get("alive", true)), death_notice_shown, world.norn_profiles.has("mallow") and mallow_lifecycle.actor == null, archive_ui_restored, world.focused_norn_id, focus_ui_restored, world.eggs.size() == 1])
 	var changed_bio: Dictionary = world.get("biochemistry_state")
 	var changed_compounds: Dictionary = Biochemistry.read_compounds(changed_bio)
@@ -348,33 +348,33 @@ func _run_scenario() -> void:
 	])
 
 	if not _write_saved_record(saved_record):
-		_scenario_failures.append("could not prepare version-5 malformed-candidate checks")
+		_scenario_failures.append("could not prepare version-6 malformed-candidate checks")
 	var live_mallow: NornProfile = world.profile_for("mallow")
 	live_mallow.cognition_state["actionAssociations"]["fruit"] = 0.731
-	var malformed_v5_records: Array[Dictionary] = _make_malformed_v5_records(saved_record)
+	var malformed_v6_records: Array[Dictionary] = _make_malformed_v6_records(saved_record)
 	var malformed_labels: Array[String] = [
 		"duplicate stable ID", "missing parent reference", "negative age", "lifespan below minimum",
 		"alive with death data", "dead without old-age death", "invalid focus", "non-monotonic child number", "population above four"
 	]
 	var malformed_rejections := 0
-	for index in range(malformed_v5_records.size()):
+	for index in range(malformed_v6_records.size()):
 		var candidate_value: Variant
-		if world.has_method("_restore_version5_record"):
-			candidate_value = world.call("_restore_version5_record", malformed_v5_records[index], float(saved_record.get("simulationTime", 0.0)))
+		if world.has_method("_restore_version6_record"):
+			candidate_value = world.call("_restore_version6_record", malformed_v6_records[index], float(saved_record.get("simulationTime", 0.0)))
 		var unchanged := is_equal_approx(float(live_mallow.cognition_state["actionAssociations"]["fruit"]), 0.731)
 		if candidate_value is Dictionary and (candidate_value as Dictionary).is_empty() and unchanged:
 			malformed_rejections += 1
 		else:
-			_scenario_failures.append("malformed v5 candidate was accepted or changed live state: %s" % malformed_labels[index])
-	print("MALFORMED VERSION-5 CANDIDATES: rejected=%d/%d; live state unchanged=%s" % [malformed_rejections, malformed_v5_records.size(), is_equal_approx(float(live_mallow.cognition_state["actionAssociations"]["fruit"]), 0.731)])
-	var safe_v5_fallback := false
-	if not malformed_v5_records.is_empty():
-		_write_saved_record(malformed_v5_records[0])
+			_scenario_failures.append("malformed v6 candidate was accepted or changed live state: %s" % malformed_labels[index])
+	print("MALFORMED VERSION-6 CANDIDATES: rejected=%d/%d; live state unchanged=%s" % [malformed_rejections, malformed_v6_records.size(), is_equal_approx(float(live_mallow.cognition_state["actionAssociations"]["fruit"]), 0.731)])
+	var safe_v6_fallback := false
+	if not malformed_v6_records.is_empty():
+		_write_saved_record(malformed_v6_records[0])
 		world.load_game()
-		safe_v5_fallback = is_equal_approx(float(world.cognition_state["actionAssociations"]["fruit"]), 0.5) and str(world.last_status).contains("started a clean seeded Norn")
-		if not safe_v5_fallback:
-			_scenario_failures.append("invalid version-5 candidate did not safely reset the live habitat")
-	print("INVALID VERSION-5 FALLBACK: fresh=%s; status=%s" % [safe_v5_fallback, world.last_status])
+		safe_v6_fallback = is_equal_approx(float(world.cognition_state["actionAssociations"]["fruit"]), 0.5) and str(world.last_status).contains("started a clean seeded Norn")
+		if not safe_v6_fallback:
+			_scenario_failures.append("invalid version-6 candidate did not safely reset the live habitat")
+	print("INVALID VERSION-6 FALLBACK: fresh=%s; status=%s" % [safe_v6_fallback, world.last_status])
 
 	var invalid_version3: Dictionary = version3_record.duplicate(true)
 	invalid_version3["biochemistry"]["compounds"]["ATP"] = 101.0
@@ -458,7 +458,7 @@ func _make_test_child_record(template: Dictionary, actor_id: String, parent_ids:
 	return child
 
 
-func _make_malformed_v5_records(valid_record: Dictionary) -> Array[Dictionary]:
+func _make_malformed_v6_records(valid_record: Dictionary) -> Array[Dictionary]:
 	var malformed: Array[Dictionary] = []
 	var candidate := valid_record.duplicate(true)
 	candidate["norns"]["moss"]["actorId"] = "mallow"
