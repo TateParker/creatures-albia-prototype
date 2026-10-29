@@ -3,6 +3,7 @@ extends SceneTree
 const HabitatScene = preload("res://scenes/main.tscn")
 const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
 const Cognition = preload("res://scripts/norn_cognition.gd")
+const NornLifecycle = preload("res://scripts/norn_lifecycle.gd")
 const SAVE_PATH := "user://albia_norn_save.json"
 
 var _world: Node
@@ -194,6 +195,8 @@ func _record_preview() -> void:
 		return
 	if not await _run_social_observation_walkthrough():
 		return
+	if not await _run_family_lifespan_walkthrough():
+		return
 	for frame in range(30):
 		await process_frame
 
@@ -234,11 +237,146 @@ func _record_preview() -> void:
 		_fail("The finalized AVI header does not match its frames or 1280x720 capture size.")
 		return
 
-	if not _verify_legacy_save_migration(fruit_association_before_save):
+	if not _verify_legacy_save_migration():
 		return
 	_restore_user_save()
-	print("VIDEO_CAPTURE_OK frames=%d path=%s flow=teach-fruit-food-spinner-activity-praise-scold-rest-social-observation-save-load-migrations" % [frame_count, video_path])
+	print("VIDEO_CAPTURE_OK frames=%d path=%s flow=teach-fruit-food-spinner-activity-praise-scold-rest-social-observation-family-egg-hatch-stage-death-archive-save-load-migrations" % [frame_count, video_path])
 	quit()
+
+
+func _run_family_lifespan_walkthrough() -> bool:
+	if not _press_hud_button("Mallow"):
+		return false
+	var selector := _world.find_child("SecondParentSelector", true, false) as OptionButton
+	if selector == null or selector.item_count != 1 or selector.selected < 0 or str(selector.get_item_metadata(selector.selected)) != "moss":
+		_fail("The family HUD did not select Moss as Mallow's other living adult parent.")
+		return false
+	var start_simulation_time := float(_world.get("simulation_time"))
+	if not _press_hud_button("Start family egg"):
+		return false
+	if _world.get("eggs").size() != 1:
+		_fail("The family HUD did not create the founders' egg.")
+		return false
+	var egg_record: Dictionary = _world.get("eggs")[0]
+	if egg_record.get("parentIds", []) != ["mallow", "moss"] or float(egg_record.get("remainingSeconds", -1.0)) != 45.0:
+		_fail("The new family egg did not record both founders and the full incubation timer.")
+		return false
+	var egg_progress_label := _world.find_child("EggProgressLabel", true, false) as Label
+	if egg_progress_label == null or not egg_progress_label.text.contains(str(egg_record.get("displayName", ""))) or not egg_progress_label.text.contains("45.0 s"):
+		_fail("The family HUD did not show the named egg and its starting incubation progress.")
+		return false
+	for frame in range(24):
+		await process_frame
+	if not egg_progress_label.text.contains("%") or egg_progress_label.text.contains("0%") or float((_world.get("eggs") as Array)[0].get("remainingSeconds", 45.0)) >= 45.0:
+		_fail("The recorded family HUD did not show incubation progress advancing.")
+		return false
+	var speed := float(_world.get("simulation_speed"))
+	for attempt in range(3):
+		if is_equal_approx(speed, 2.0):
+			break
+		if not _press_hud_button("Speed %.1f×" % speed):
+			return false
+		speed = float(_world.get("simulation_speed"))
+	if not is_equal_approx(speed, 2.0):
+		_fail("The family walkthrough could not set 2× simulation speed.")
+		return false
+	var hatch_deadline := Time.get_ticks_msec() + 180000
+	var child = null
+	while Time.get_ticks_msec() < hatch_deadline:
+		await process_frame
+		child = _world.call("profile_for", "norn-1")
+		if child != null:
+			break
+	var incubation_elapsed := float(_world.get("simulation_time")) - start_simulation_time
+	if child == null or incubation_elapsed < 44.999 or not (_world.get("eggs") as Array).is_empty():
+		_fail("The egg did not complete its full 45 in-game-second incubation at 2× speed (elapsed %.3f)." % incubation_elapsed)
+		return false
+	if child.get("parent_ids") != ["mallow", "moss"] or child.get("generation") != 1:
+		_fail("The hatched child lost its founder lineage or generation.")
+		return false
+	var child_seed := int(child.get("cognition_state").get("seed", -1))
+	var child_life: Dictionary = NornLifecycle.create_state(child_seed, 59.95)
+	if child_life.is_empty():
+		_fail("Could not place the hatched child just before its saved child-stage threshold.")
+		return false
+	child.set("life_state", child_life)
+	_world.call("_refresh_ui")
+	var stage_deadline := Time.get_ticks_msec() + 10000
+	while Time.get_ticks_msec() < stage_deadline and str(child.get("life_stage")) != "child":
+		await process_frame
+	var child_stage_label := child.get("actor").find_child("LifeStageLabel", true, false) as Label3D
+	var child_name_label := child.get("actor").find_child("NameLabel", true, false) as Label3D
+	if str(child.get("life_stage")) != "child" or child_stage_label == null or child_stage_label.text != "Child" or child_name_label == null or child_name_label.text != str(child.get("display_name")):
+		_fail("The ordinary world tick did not advance the child through the 60-second stage boundary.")
+		return false
+	if not _press_hud_button(str(child.get("display_name"))):
+		return false
+	for frame in range(36):
+		await process_frame
+	var focus_age_label := _world.find_child("FocusAgeStageLabel", true, false) as Label
+	var child_age := float(child.get("life_state").get("ageSeconds", -1.0))
+	var child_age_text := "Age %.1f s" % child_age
+	if focus_age_label == null or not focus_age_label.text.contains(child_age_text) or not focus_age_label.text.contains("Child") or child_age < 60.0 or child_age >= 62.0:
+		_fail("The focused HUD did not show the hatched child's age and new life stage.")
+		return false
+	var mallow = _world.call("profile_for", "mallow")
+	if mallow == null or not _press_hud_button("Mallow"):
+		return false
+	var saved_lifespan := float(mallow.get("life_state").get("lifespanSeconds", -1.0))
+	var death_fixture: Dictionary = NornLifecycle.create_state(int(mallow.get("cognition_state").get("seed", -1)), saved_lifespan - 0.25)
+	if death_fixture.is_empty():
+		_fail("Could not place Mallow just before its saved old-age limit.")
+		return false
+	mallow.set("life_state", death_fixture)
+	_world.call("_refresh_ui")
+	var death_deadline := Time.get_ticks_msec() + 10000
+	while Time.get_ticks_msec() < death_deadline and bool(mallow.get("life_state").get("alive", true)):
+		await process_frame
+	if bool(mallow.get("life_state").get("alive", true)) or mallow.get("actor") != null:
+		_fail("The normal world tick did not remove Mallow at the saved old-age lifespan.")
+		return false
+	if str(_world.get("focused_norn_id")) != "moss":
+		_fail("Focus did not move from Mallow to the next living founder after death.")
+		return false
+	var archive_panel := _world.find_child("FamilyArchive", true, false) as PanelContainer
+	var archive_label := _world.find_child("FamilyArchiveText", true, false) as Label
+	var death_notice := str(_world.get("last_status"))
+	var hatch_parent_ids: Array = child.get("parent_ids")
+	if archive_panel == null or not archive_panel.visible or archive_label == null or not archive_label.text.contains("Mallow") or not death_notice.contains("Mallow reached old age and died") or hatch_parent_ids != ["mallow", "moss"]:
+		_fail("The deceased archive did not retain Mallow alongside the child's family lineage.")
+		return false
+	var saved_file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var saved_value: Variant = JSON.parse_string(saved_file.get_as_text()) if saved_file != null else null
+	if saved_file != null:
+		saved_file.close()
+	var saved_record: Dictionary = saved_value if saved_value is Dictionary else {}
+	var saved_norns: Dictionary = saved_record.get("norns", {})
+	var saved_mallow: Dictionary = saved_norns.get("mallow", {})
+	var saved_child: Dictionary = saved_norns.get("norn-1", {})
+	var saved_death: Dictionary = saved_mallow.get("lifeState", {}).get("death", {})
+	if int(saved_record.get("version", -1)) != 5:
+		_fail("The rendered family sequence did not save version-5 lineage state.")
+		return false
+	if saved_death.get("cause", "") != "old-age" or saved_child.get("parentIds", []) != ["mallow", "moss"] or str(saved_record.get("focusedNornId", "")) != "moss":
+		_fail("The saved family did not retain Mallow's death, the child's parents, and focus fallback.")
+		return false
+	_world.set("paused", true)
+	_world.call("_refresh_ui")
+	var hud_scroll := _world.find_child("HUDScrollContainer", true, false) as ScrollContainer
+	var status_label := _world.find_child("StatusLabel", true, false) as Label
+	if hud_scroll == null or status_label == null:
+		_fail("The rendered HUD could not bring the old-age notification into view.")
+		return false
+	hud_scroll.scroll_vertical = int(hud_scroll.get_v_scroll_bar().max_value)
+	for frame in range(45):
+		await process_frame
+	var status_rect := status_label.get_global_rect()
+	var death_notice_visible := status_label.text.contains(death_notice) and status_label.is_visible_in_tree() and status_rect.position.y >= 0.0 and status_rect.end.y <= 720.0
+	if not death_notice_visible:
+		_fail("The old-age notification was not visible inside the rendered HUD after scrolling to the status line.")
+		return false
+	print("FAMILY_LIFESPAN_CAPTURE_OK incubation=%.3fs childAge=%.1fs stage=%s death=%s noticeVisible=%s focus=%s archive=%s childParents=%s" % [incubation_elapsed, child_age, child.get("life_stage"), str(saved_death.get("cause", "")), death_notice_visible, str(_world.get("focused_norn_id")), archive_label.text, str(hatch_parent_ids)])
+	return true
 
 
 func _run_social_observation_walkthrough() -> bool:
@@ -612,24 +750,43 @@ func _press_hud_button(button_text: String) -> bool:
 	return false
 
 
-func _verify_legacy_save_migration(expected_fruit_association: float) -> bool:
+func _verify_legacy_save_migration() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
 		_fail("The walkthrough did not leave a local save to check.")
 		return false
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file == null:
-		_fail("The saved version-2 language record could not be read.")
+		_fail("The saved family record could not be read for migration checks.")
 		return false
 	var parser := JSON.new()
 	var parse_error := parser.parse(file.get_as_text())
 	file.close()
 	if parse_error != OK or not (parser.data is Dictionary):
-		_fail("The saved version-4 profile record was not valid JSON.")
+		_fail("The saved version-5 family record was not valid JSON.")
 		return false
-	var record: Dictionary = parser.data
+	var version5_record: Dictionary = parser.data
+	var version5_norns: Variant = version5_record.get("norns", null)
+	if int(version5_record.get("version", -1)) != 5 or not (version5_norns is Dictionary):
+		_fail("The rendered family sequence did not leave a version-5 family save.")
+		return false
+	var legacy_norns: Dictionary = {}
+	for founder_id: String in ["mallow", "moss"]:
+		var founder_value: Variant = (version5_norns as Dictionary).get(founder_id, null)
+		if not (founder_value is Dictionary):
+			_fail("The version-5 family save is missing founder %s." % founder_id)
+			return false
+		var founder_record: Dictionary = (founder_value as Dictionary).duplicate(true)
+		for metadata_key: String in ["displayName", "generation", "parentIds", "bodyColor", "lifeState"]:
+			founder_record.erase(metadata_key)
+		legacy_norns[founder_id] = founder_record
+	var record: Dictionary = version5_record.duplicate(true)
+	record["version"] = 4
+	record["norns"] = legacy_norns
+	record.erase("nextNornNumber")
+	record.erase("eggs")
 	var norns = record.get("norns", null)
-	if int(record.get("version", -1)) != 4 or not (norns is Dictionary) or not norns.has("mallow") or not norns.has("moss") or str(record.get("focusedNornId", "")) != "moss":
-		_fail("Save did not write version-4 records for both Norns.")
+	if int(record.get("version", -1)) != 4 or not (norns is Dictionary) or norns.size() != 2 or not norns.has("mallow") or not norns.has("moss") or str(record.get("focusedNornId", "")) != "moss":
+		_fail("The version-5 family save could not be reduced to a version-4 founder migration fixture.")
 		return false
 	var saved_mallow: Dictionary = norns["mallow"]
 	var saved_moss: Dictionary = norns["moss"]
@@ -637,7 +794,7 @@ func _verify_legacy_save_migration(expected_fruit_association: float) -> bool:
 	var saved_compounds: Dictionary = saved_biochemistry.get("compounds", {})
 	var expected_compounds: Dictionary = Biochemistry.read_compounds(Biochemistry.restore_state(saved_biochemistry))
 	if not _number_maps_match(saved_compounds, expected_compounds, Biochemistry.COMPOUND_IDS):
-		_fail("The version-4 Mallow record did not contain all 18 compound concentrations.")
+		_fail("The version-4 migration fixture did not contain all 18 Mallow compound concentrations.")
 		return false
 	var expected_signals: Dictionary = Biochemistry.read_signals(Biochemistry.restore_state(saved_biochemistry))
 	var saved_cognition: Dictionary = saved_mallow.get("cognition", {})
@@ -648,8 +805,9 @@ func _verify_legacy_save_migration(expected_fruit_association: float) -> bool:
 	var moss_cognition: Dictionary = Cognition.restore_state(saved_moss.get("cognition", {}))
 	var moss_biochemistry: Dictionary = Biochemistry.restore_state(saved_moss.get("biochemistry", null))
 	var moss_language: Dictionary = saved_moss.get("language", {})
-	if moss_cognition.is_empty() or int(moss_cognition.get("seed", -1)) != 4181997 or moss_biochemistry.is_empty() or moss_language.get("words", {}).is_empty():
-		_fail("The version-4 Moss profile was incomplete or was not saved independently.")
+	var moss_words: Variant = moss_language.get("words", null)
+	if moss_cognition.is_empty() or int(moss_cognition.get("seed", -1)) != 4181997 or moss_biochemistry.is_empty() or not (moss_words is Dictionary):
+		_fail("The version-4 migration fixture did not preserve Moss's independent profile.")
 		return false
 
 	var version3_record := {
@@ -705,7 +863,7 @@ func _verify_legacy_save_migration(expected_fruit_association: float) -> bool:
 	if not version1_words.is_empty():
 		_fail("A version-1 save did not initialize an empty vocabulary.")
 		return false
-	if not is_equal_approx(float(version1_cognition["actionAssociations"]["fruit"]), expected_fruit_association) or version1_cognition["episodes"].size() != expected_episode_count or not _number_maps_match(version1_signals, expected_signals, Biochemistry.SIGNAL_IDS):
+	if not is_equal_approx(float(version1_cognition["actionAssociations"]["fruit"]), expected_association) or version1_cognition["episodes"].size() != expected_episode_count or not _number_maps_match(version1_signals, expected_signals, Biochemistry.SIGNAL_IDS):
 		_fail("Version-1 migration did not preserve learning and cognition signals.")
 		return false
 	return true

@@ -21,6 +21,7 @@
 - `godot/tools/verify_family_system.gd` — focused lifecycle, family, persistence, malformed-state, and extinction checks.
 - `godot/tools/run_habitat_scenario.gd` — existing social/biochemistry regression flow plus version-5 profile/egg round-trips and versions-1–4 migrations.
 - `godot/tools/record_preview.gd` — rendered walkthrough of pairing, incubation, hatch, growth, old-age death, and the retained archive; it continues to back up and restore the user's save.
+- `godot/tools/inspect_recording.gd` — AVI header/index validation, full JPEG decode, and extraction of representative gameplay frames.
 - `godot/README.md` — controls, age pacing, family behavior, save shape, and verification commands.
 - `docs/superpowers/ledgers/2026-10-29-godot-family-lifespan.md` — verification outcomes and final clip path.
 
@@ -64,11 +65,11 @@
 - `advance` returns `ok`, `stageChanged`, `previousStage`, `stage`, and `died`; it clamps the terminal age to `lifespanSeconds` and records death exactly once.
 - Derive lifespan deterministically as `3600 + posmod(seed, 601) - 300` seconds. Stage boundaries are 60, 180, 420, and 3,000 seconds.
 
-- [ ] **Step 1: Add failing pure lifecycle assertions**
+- [x] **Step 1: Add failing pure lifecycle assertions**
 
 In `verify_family_system.gd`, extend `SceneTree` and add `test_stage_thresholds`, `test_lifespan_is_seeded_and_bounded`, `test_age_advances_and_reports_stage_change`, `test_death_is_recorded_once`, and `test_lifecycle_restore_rejects_malformed_state`. Assert exact stage values on both sides of every boundary, lifespan in `[3300, 3900]`, equal lifespan for the same seed, no death before the limit, one old-age death at the limit, and rejection of negative/non-finite age, lifespan, or timestamps.
 
-- [ ] **Step 2: Run the focused verifier and confirm the expected failures**
+- [x] **Step 2: Run the focused verifier and confirm the expected failures**
 
 Run:
 
@@ -78,15 +79,15 @@ Run:
 
 Expected: lifecycle checks fail because `NornLifecycle` does not exist.
 
-- [ ] **Step 3: Implement the lifecycle state and pure transitions**
+- [x] **Step 3: Implement the lifecycle state and pure transitions**
 
 Add the five declared static methods. Reject non-finite values, negative ages, and invalid state without mutation; `create_state` also rejects a starting age at or beyond its lifespan limit. `stage_for_age` returns `baby`, `child`, `adolescent`, `adult`, or `elder`; age at or beyond the lifespan limit transitions an existing living state to deceased with cause `old-age` and the provided simulation timestamp.
 
-- [ ] **Step 4: Run the focused verifier**
+- [x] **Step 4: Run the focused verifier**
 
 Run the Task 1 Godot command. Expected: `FAMILY_SYSTEM_CHECKS_OK`, with all stage, lifespan, validation, and one-shot death assertions passing.
 
-- [ ] **Step 5: Commit the lifecycle model**
+- [x] **Step 5: Commit the lifecycle model**
 
 ```powershell
 git add godot/scripts/norn_lifecycle.gd godot/tools/verify_family_system.gd
@@ -111,11 +112,11 @@ git commit -m "Add deterministic Norn lifecycle model"
 - `_restore_profile(value: Variant, actor_id: String, saved_simulation_time: float) -> Dictionary` validates one candidate record without mutating the live profile.
 - Version-5 focus identifies a living profile whenever one exists; it is empty when no Norn is alive. Eggs and deceased profiles remain valid without an active focus.
 
-- [ ] **Step 1: Add failing version-5 and migration checks**
+- [x] **Step 1: Add failing version-5 and migration checks**
 
 In `verify_family_system.gd` and `run_habitat_scenario.gd`, assert that v5 saves Mallow and Moss with stable IDs/names, generation zero, established body colors, age 600 seconds, deterministic lifespan, no parents, and unchanged cognition/biochemistry/language. Add fixtures for v1, v2, v3, and v4: preserve every field previously supported by that version, create adult founders with no ancestry/eggs, and initialize `nextNornNumber` to 1. Add malformed tests for duplicate IDs, missing parent references, negative age, lifespan below the minimum, an alive record with death data, a dead record without an old-age death, an invalid focus, a non-monotonic `nextNornNumber`, and a population above four; each malformed candidate must leave the current live state unchanged before safe fallback.
 
-- [ ] **Step 2: Run the focused verifier and habitat scenario against the current save code**
+- [x] **Step 2: Run the focused verifier and habitat scenario against the current save code**
 
 Run:
 
@@ -126,15 +127,15 @@ Run:
 
 Expected: the v5 format and new metadata assertions fail while the existing v1–v4 behavior remains observable.
 
-- [ ] **Step 3: Add profile metadata and atomic version-5 restore**
+- [x] **Step 3: Add profile metadata and atomic version-5 restore**
 
 Extend `NornProfile` with the new profile fields. Set founders to generation zero, no parents, established starter colors, age 600, and lifecycle lifespan from their cognition seeds. Replace fixed `PROFILE_IDS` loading/iteration with stable numeric child ordering and a shared profile factory. Serialize stable IDs/names, the complete `norns` map, `nextNornNumber`, and an empty `eggs` array initially; on v5 load, instantiate actors only for living profiles and retain deceased records without actors. Implement v1–v4 migration defaults while preserving each version's current learning migration; validate every profile and focus before replacing live state. Do not require offspring cognition seeds to equal the world seed; they use the deterministic child seed stored on the profile/egg. Retain the existing safe-reset behavior for malformed saves.
 
-- [ ] **Step 4: Run both persistence verifiers**
+- [x] **Step 4: Run both persistence verifiers**
 
 Run the two Task 2 commands. Expected: `FAMILY_SYSTEM_CHECKS_OK` and `HABITAT_SCENARIO_OK`; all supported old learning fields survive migration and malformed v5 state cannot partially replace the world.
 
-- [ ] **Step 5: Commit the profile/save migration**
+- [x] **Step 5: Commit the profile/save migration**
 
 ```powershell
 git add godot/scripts/norn_profile.gd godot/scripts/albia_world.gd godot/tools/verify_family_system.gd godot/tools/run_habitat_scenario.gd
@@ -159,27 +160,27 @@ git commit -m "Add family metadata and version-5 saves"
 - Egg records retain egg/child IDs, name, parent IDs, generation, realized traits, blended color, child cognition seed, and remaining incubation seconds.
 - Child IDs use monotonic `norn-N`; egg IDs use `egg-N`; no generation cap is imposed. The first four child names follow `Sprout`, `Clover`, `Acorn`, `Pip`, adding the child number when a living Norn already has that name.
 
-- [ ] **Step 1: Add failing pairing, capacity, inheritance, and hatch assertions**
+- [x] **Step 1: Add failing pairing, capacity, inheritance, and hatch assertions**
 
 Add `test_pairing_requires_distinct_living_adults`, `test_population_cap_includes_eggs_but_not_deceased`, `test_inheritance_is_reproducible`, `test_generation_continues_past_three`, `test_family_events_record_neutral_memories`, `test_child_ids_are_monotonic`, and `test_hatch_creates_fresh_independent_profile`. Cover a fifth combined living-Norn/egg slot, a child name collision, an egg's full 45-second duration, unchanged focus after a hatch when living Norns remain, parent references, inherited curiosity/sociability in bounds, deterministic color/seed/traits after restore, neutral parent memories without feedback deltas, and empty child vocabulary/action associations at hatch.
 
-- [ ] **Step 2: Run the family verifier and confirm expected failures**
+- [x] **Step 2: Run the family verifier and confirm expected failures**
 
 Run the Task 1 verifier command. Expected: pairing and egg checks fail because dynamic family creation and `NornEgg` do not exist.
 
-- [ ] **Step 3: Implement the egg state and visible nest item**
+- [x] **Step 3: Implement the egg state and visible nest item**
 
 Create a `Node3D` `NornEgg` that owns the realized child record, renders a compact egg with a readable name/progress label, advances only by supplied in-game delta, and exposes its record for save/load. Build the static nest in `AlbiaWorld._build_habitat()`. Serialize realized inheritance on egg creation so loads never reroll it.
 
-- [ ] **Step 4: Implement parent validation, inheritance, and dynamic hatching**
+- [x] **Step 4: Implement parent validation, inheritance, and dynamic hatching**
 
 Add stable living-roster and population-count helpers. Require two distinct living adults/elders and available capacity before allocating an ID or incrementing `nextNornNumber`. Compute traits as parent average plus deterministic uniform variation in `[-0.06, 0.06]`, clamped to `[0.05, 0.95]`; blend parent colors; derive the cognition seed from the world seed and child number. Record neutral family-memory episodes for both parents at egg/hatch and a birth episode with parent IDs for the child, without changing food/play associations. Tick eggs in world simulation time; save on egg creation and after hatch; on completion, replace exactly one egg with a fresh generation `max(parent generation) + 1` Norn and wire its actor the same way as the founders.
 
-- [ ] **Step 5: Persist eggs and run focused family checks**
+- [x] **Step 5: Persist eggs and run focused family checks**
 
 Serialize every egg in version 5 and validate egg IDs, reserved child IDs, lineage, traits, colors, and remaining timers before applying a loaded world. Run `verify_family_system.gd` and `run_habitat_scenario.gd`. Expected: `FAMILY_SYSTEM_CHECKS_OK` and `HABITAT_SCENARIO_OK`; capacity never exceeds four, inheritance repeats exactly, hatch creates one independent profile, and egg state round-trips without rerolling.
 
-- [ ] **Step 6: Commit the family loop**
+- [x] **Step 6: Commit the family loop**
 
 ```powershell
 git add godot/scripts/norn_egg.gd godot/scripts/albia_world.gd godot/tools/verify_family_system.gd godot/tools/run_habitat_scenario.gd
@@ -202,23 +203,23 @@ git commit -m "Add Norn pairing and egg hatching"
 - Age advances with the existing `step_delta = min(delta * simulation_speed, 0.5)`; eggs use the same in-game delta. Pause advances neither.
 - A life-stage boundary updates the profile/actor and saves once. Ordinary per-frame age advancement does not save.
 
-- [ ] **Step 1: Add failing world age and death assertions**
+- [x] **Step 1: Add failing world age and death assertions**
 
 Add `test_world_age_obeys_speed_and_pause`, `test_stage_transition_saves_once`, `test_old_age_death_frees_population_slot_once`, `test_focus_moves_after_death`, `test_dead_parent_egg_hatches`, and `test_extinction_keeps_archive`. Assert living profiles alone receive chemistry/cognition steps, paused age and egg timers hold, 0.5×/1×/2× rates are honored, a large frame delta respects the existing 0.5-second world-step cap, death is emitted once, old records remain in the family map, death releases one slot, eggs continue after parent death, and no-living/egg states produce the specified focus behavior.
 
-- [ ] **Step 2: Run the focused verifier and confirm expected failures**
+- [x] **Step 2: Run the focused verifier and confirm expected failures**
 
 Run `verify_family_system.gd`. Expected: world age, death, focus, and parent-death hatch assertions fail before lifecycle integration.
 
-- [ ] **Step 3: Integrate age and death into the world tick**
+- [x] **Step 3: Integrate age and death into the world tick**
 
 Advance lifecycle state once per living profile per in-game frame delta, separately from the fixed-rate chemistry/decision accumulators. On stage changes, update the actor and save; on terminal death, record `old-age`, remove the actor from simulation and the living roster, preserve the profile, release the slot, move focus deterministically, and save. Continue ticking eggs when no living Norn remains. Do not add illness, injury, or starvation mortality.
 
-- [ ] **Step 4: Run family and habitat scenarios**
+- [x] **Step 4: Run family and habitat scenarios**
 
 Run `verify_family_system.gd` and `run_habitat_scenario.gd`. Expected: both print their `*_OK` markers; pause, speed, one-shot death, focus transitions, parent death during incubation, and old-age save/load checks pass.
 
-- [ ] **Step 5: Commit age/death integration**
+- [x] **Step 5: Commit age/death integration**
 
 ```powershell
 git add godot/scripts/albia_world.gd godot/scripts/norn_profile.gd godot/tools/verify_family_system.gd godot/tools/run_habitat_scenario.gd
@@ -242,23 +243,23 @@ git commit -m "Integrate Norn aging and old-age death"
 - Family UI invokes `AlbiaWorld.start_egg(second_parent_id)`; roster focus invokes the existing `select_norn(actor_id)` only for living profiles.
 - Stable UI control names for verification: `NornRoster`, `FamilyPanel`, `SecondParentSelector`, `StartEggButton`, `FamilyArchive`, `ExtinctionPanel`, `StartNewRunButton`, and `FocusNameLabel`.
 
-- [ ] **Step 1: Add failing HUD/actor state assertions before implementation**
+- [x] **Step 1: Add failing HUD/actor state assertions before implementation**
 
 Add `test_actor_stage_changes_visuals_only` and `test_hud_shows_family_and_archive_states` to `verify_family_system.gd`. Assert the body visual scale is 0.55 baby, 0.70 child, 0.85 adolescent, 1.00 adult, and 0.95 elder while collision/sensor scales remain unchanged; verify the living roster excludes dead IDs, the archive includes them read-only, the second-parent selector excludes self and all stages below adult, and the extinction panel plus start-new-run action appear only with zero living Norns and zero eggs. Add preflight assertions to `record_preview.gd` for the roster, family panel, parent selector, start button, archive, extinction panel, and age/stage display before that script starts a recording.
 
-- [ ] **Step 2: Run the focused verifier and confirm expected failures**
+- [x] **Step 2: Run the focused verifier and confirm expected failures**
 
 Run `verify_family_system.gd`. Expected: actor-stage and family/archive HUD assertions fail because stage rendering and family UI are absent.
 
-- [ ] **Step 3: Implement stage visuals and compact family HUD**
+- [x] **Step 3: Implement stage visuals and compact family HUD**
 
 Group actor body meshes under a visual-only node and apply the planned stage scale. Update the name label with the current stage. Replace fixed Mallow/Moss focus buttons with the dynamic living roster; add current age/stage, collapsible family pairing and egg progress, a read-only deceased archive, and an eggs-only/extinction presentation with an explicit start-new-run action. Keep the archive until the player chooses that action; do not clear it as a side effect of death. Preserve teaching, needs, recording, biochemistry, and the existing 1280×720 layout. Keep the HUD usable if `focused_profile()` is null.
 
-- [ ] **Step 4: Run the focused and habitat checks**
+- [x] **Step 4: Run the focused and habitat checks**
 
 Run `verify_family_system.gd` and `run_habitat_scenario.gd`. Expected: `FAMILY_SYSTEM_CHECKS_OK` and `HABITAT_SCENARIO_OK`; active profile controls remain isolated and all family/empty-world states are visible to the verifier.
 
-- [ ] **Step 5: Commit the HUD and stage rendering**
+- [x] **Step 5: Commit the HUD and stage rendering**
 
 ```powershell
 git add godot/scripts/norn_actor.gd godot/scripts/habitat_ui.gd godot/scripts/albia_world.gd godot/tools/verify_family_system.gd
@@ -270,8 +271,11 @@ git commit -m "Show Norn life stages and family archive"
 ### Task 6: Verify the full life cycle in a rendered recording and document it
 
 **Files:**
+- Modify: `godot/scripts/albia_world.gd` to keep the death notice visible after its automatic save.
+- Modify: `godot/scripts/habitat_ui.gd` to name the status label for rendered verification.
 - Modify: `godot/tools/record_preview.gd`
 - Modify: `godot/tools/run_habitat_scenario.gd`
+- Create: `godot/tools/inspect_recording.gd`
 - Modify: `godot/README.md`
 - Create: `docs/superpowers/ledgers/2026-10-29-godot-family-lifespan.md`
 
@@ -280,11 +284,11 @@ git commit -m "Show Norn life stages and family archive"
 - The rendered preview uses 2× speed for the actual 45-second hatch, then sets a saved-age test fixture near a real stage threshold and near one founder's actual lifespan limit; the normal `_process` path must produce those transitions.
 - The recorded AVI must be finalized by the recorder, decoded/inspected through its frames, and leave no more than 10 completed clips in `user://recordings/`.
 
-- [ ] **Step 1: Add the family and lifespan sequence to the rendered walkthrough**
+- [x] **Step 1: Add the family and lifespan sequence to the rendered walkthrough**
 
 Extend `record_preview.gd` to select the two founders, start an egg through the HUD, set 2× speed, and wait for the full 45 in-game-second incubation. After hatch, place the child fixture just before a stage boundary and wait for the ordinary world tick to advance it; place a founder just before its saved lifespan limit and wait for the ordinary world tick to produce old-age death. Assert focus fallback, archived lineage, clip finalization, and restoration of the prior local save on every success/failure exit.
 
-- [ ] **Step 2: Run the rendered preview and inspect its clip**
+- [x] **Step 2: Run the rendered preview and inspect its clip**
 
 Run in rendered, non-headless mode:
 
@@ -294,15 +298,15 @@ Run in rendered, non-headless mode:
 
 Inspect the AVI itself or extracted frames for the named parents, visible egg progress, child identity/age, death notification, and archived lineage. Confirm the recorder finalized a playable clip and at most 10 completed recordings remain; record the clip path in the ledger.
 
-- [ ] **Step 3: Run supporting checks**
+- [x] **Step 3: Run supporting checks**
 
 Run `verify_family_system.gd`, `run_habitat_scenario.gd`, `verify_biochemistry.gd`, `verify_avi_writer.gd`, `verify_recording_retention.gd`, and a rendered scene-startup check. Expected: each emits its documented `*_OK` marker or exits successfully, with no regressions in existing social, chemistry, recording, or save behavior.
 
-- [ ] **Step 4: Update the README and execution ledger**
+- [x] **Step 4: Update the README and execution ledger**
 
 Document adult/elder pairing, the five life stages, approximate lifespan, old-age-only mortality, family archive/extinction behavior, version-5 saves, and the new verification commands in `godot/README.md`. In the ledger, list every command, its pass/fail marker, the captured AVI path, and inspected frames; do not claim any check that lacks fresh output.
 
-- [ ] **Step 5: Commit and push the verified feature**
+- [x] **Step 5: Commit and push the verified feature**
 
 After all checks and frame inspection pass, run:
 

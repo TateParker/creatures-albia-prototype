@@ -419,6 +419,7 @@ func _build_ui() -> void:
 	instruction.add_theme_color_override("font_color", Color(0.68, 0.76, 0.7))
 	layout.add_child(instruction)
 	_status_label = Label.new()
+	_status_label.name = "StatusLabel"
 	_status_label.custom_minimum_size.y = 34.0
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status_label.add_theme_font_size_override("font_size", 13)

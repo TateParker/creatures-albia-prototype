@@ -233,18 +233,26 @@ func _run_scenario() -> void:
 	mallow_lifecycle.life_state = NornLifecycle.create_state(int(mallow_lifecycle.cognition_state["seed"]), float(mallow_lifecycle.life_state["lifespanSeconds"]) - 0.1)
 	world._process(0.2)
 	var died_of_old_age: bool = not bool(mallow_lifecycle.life_state.get("alive", true)) and mallow_lifecycle.life_state.get("death", {}).get("cause", "") == "old-age"
+	var death_notice_shown: bool = world.last_status.contains("Mallow reached old age and died")
 	var archived_before_load: bool = world.norn_profiles.has("mallow") and mallow_lifecycle.actor == null
 	var focus_after_death: bool = world.focused_norn_id == "moss"
 	var egg_after_parent_death: bool = world.eggs.size() == 1 and float(world.eggs[0].get("remainingSeconds", -1.0)) < 32.5
 	world.load_game()
 	mallow_lifecycle = world.profile_for("mallow")
 	moss_profile = world.profile_for("moss")
-	lifecycle_round_trip_ok = died_of_old_age and archived_before_load and focus_after_death and egg_after_parent_death
+	var archive_panel := world.find_child("FamilyArchive", true, false) as PanelContainer
+	var archive_text := world.find_child("FamilyArchiveText", true, false) as Label
+	var focused_name_label := world.find_child("FocusNameLabel", true, false) as Label
+	var focused_age_label := world.find_child("FocusAgeStageLabel", true, false) as Label
+	var archive_ui_restored := archive_panel != null and archive_panel.visible and archive_text != null and archive_text.text.contains("Mallow")
+	var focus_ui_restored := focused_name_label != null and focused_name_label.text == "Focused: Moss" and focused_age_label != null and focused_age_label.text.contains("Age ")
+	lifecycle_round_trip_ok = died_of_old_age and death_notice_shown and archived_before_load and focus_after_death and egg_after_parent_death
 	lifecycle_round_trip_ok = lifecycle_round_trip_ok and not bool(mallow_lifecycle.life_state.get("alive", true)) and mallow_lifecycle.life_state.get("death", {}).get("cause", "") == "old-age"
 	lifecycle_round_trip_ok = lifecycle_round_trip_ok and mallow_lifecycle.actor == null and world.focused_norn_id == "moss" and world.eggs.size() == 1
+	lifecycle_round_trip_ok = lifecycle_round_trip_ok and archive_ui_restored and focus_ui_restored
 	if not lifecycle_round_trip_ok:
-		_scenario_failures.append("old-age death, archived profile, focus, and parentless egg did not survive version-5 save/load")
-	print("LIFECYCLE SAVE/LOAD: deceased=%s; archived=%s; focus=%s; egg=%s" % [died_of_old_age and not bool(mallow_lifecycle.life_state.get("alive", true)), world.norn_profiles.has("mallow") and mallow_lifecycle.actor == null, world.focused_norn_id, world.eggs.size() == 1])
+		_scenario_failures.append("old-age death, archive and focus HUD, focus state, and parentless egg did not survive version-5 save/load")
+	print("LIFECYCLE SAVE/LOAD: deceased=%s; deathNotice=%s; archived=%s; archiveUI=%s; focus=%s; focusUI=%s; egg=%s" % [died_of_old_age and not bool(mallow_lifecycle.life_state.get("alive", true)), death_notice_shown, world.norn_profiles.has("mallow") and mallow_lifecycle.actor == null, archive_ui_restored, world.focused_norn_id, focus_ui_restored, world.eggs.size() == 1])
 	var changed_bio: Dictionary = world.get("biochemistry_state")
 	var changed_compounds: Dictionary = Biochemistry.read_compounds(changed_bio)
 	changed_compounds["glucose"] = 1.0

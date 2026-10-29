@@ -938,6 +938,7 @@ func _step_lifecycle(profile: NornProfile, delta_seconds: float) -> void:
 func _handle_norn_death(profile: NornProfile, death: Dictionary) -> void:
 	if profile == null or profile.actor == null or bool(profile.life_state.get("alive", true)):
 		return
+	var death_status := "%s reached old age and died." % profile.display_name
 	var actor := profile.actor
 	actor.set_action_target(null, "dead", "Reached the end of its natural lifespan.")
 	actor.set_physics_process(false)
@@ -971,9 +972,10 @@ func _handle_norn_death(profile: NornProfile, death: Dictionary) -> void:
 			if _ui != null:
 				_ui.clear_teaching_input()
 		focused_norn_id = _next_living_profile_id(profile.actor_id)
-	last_status = "%s reached old age and died." % profile.display_name
+	last_status = death_status
 	_sync_mallow_compatibility()
 	save_game()
+	last_status = death_status
 	_refresh_ui()
 
 
