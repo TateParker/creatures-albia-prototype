@@ -226,13 +226,15 @@ func test_mark_input_is_appended_and_visibility_gated() -> void:
 	var changed_marks := marks.duplicate()
 	changed_marks[73] = 0.8
 	var visible_objects: Array[Dictionary] = [{"id": "drawing_surface", "distance": 4.0}]
-	var blank: Array[float] = Cognition._get_input_vector(state, {"nearbyObjects": visible_objects, "surfaceMarks": marks})
+	var blank: Array[float] = Cognition._get_input_vector(state, {"nearbyObjects": visible_objects, "surfaceMarks": marks, "drawTargetDelta": Vector2(0.4, -0.6)})
 	var changed: Array[float] = Cognition._get_input_vector(state, {"nearbyObjects": visible_objects, "surfaceMarks": changed_marks})
-	var hidden: Array[float] = Cognition._get_input_vector(state, {"nearbyObjects": [], "surfaceMarks": changed_marks})
-	_expect(blank.size() == 276 and changed.size() == 276 and hidden.size() == 276, "cognition input contains 20 named signals and 256 visual marks")
-	if blank.size() == 276 and changed.size() == 276 and hidden.size() == 276:
+	var hidden: Array[float] = Cognition._get_input_vector(state, {"nearbyObjects": [], "surfaceMarks": changed_marks, "drawTargetDelta": Vector2(0.4, -0.6)})
+	_expect(blank.size() == 278 and changed.size() == 278 and hidden.size() == 278, "cognition input contains 20 named signals, 256 visual marks, and 2 reach cues")
+	if blank.size() >= 276 and changed.size() >= 276 and hidden.size() >= 276:
 		_expect(is_zero_approx(blank[20 + 73]) and is_equal_approx(changed[20 + 73], 0.8), "surface mark changes its matching visual input")
 		_expect(is_zero_approx(hidden[20 + 73]), "marks are hidden when the surface is not in the visible observation")
+	if blank.size() == 278:
+		_expect(is_zero_approx(blank[276]) and is_zero_approx(blank[277]), "target cues stay zero unless both the surface and charcoal are visible")
 
 
 func test_draw_action_migrates_with_neutral_defaults() -> void:

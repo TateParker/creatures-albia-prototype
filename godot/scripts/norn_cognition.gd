@@ -1,13 +1,14 @@
 class_name NornCognition
 extends RefCounted
 
-const VERSION := 3
+const VERSION := 4
 const EPISODE_LIMIT := 512
 const RECURRENT_UNITS := 128
 const RECURRENT_DEGREE := 4
 const NAMED_INPUT_COUNT := 20
 const MARK_INPUT_COUNT := 256
-const INPUT_COUNT := NAMED_INPUT_COUNT + MARK_INPUT_COUNT
+const TARGET_INPUT_COUNT := 2
+const INPUT_COUNT := NAMED_INPUT_COUNT + MARK_INPUT_COUNT + TARGET_INPUT_COUNT
 const MOTOR_OUTPUT_COUNT := 3
 const DRAW_MAX_POINTS_PER_STROKE := 128
 const PEER_SELECTION_RADIUS := 10.0
@@ -188,6 +189,13 @@ static func draw_motor_command(state: Dictionary) -> Dictionary:
 		"pressure": clampf(0.45 + outputs[2] * 0.4, 0.05, 0.85),
 		"contact": decision_phase != 7
 	}
+
+
+static func draw_motor_step(state: Dictionary, observation: Dictionary = {}) -> Dictionary:
+	if not state.has("policy") or not (state["policy"] is Dictionary):
+		return {}
+	_update_recurrent_state(state, observation)
+	return draw_motor_command(state)
 
 
 static func select_observation_peer(state: Dictionary, candidates: Array[Dictionary], parent_ids: Array[String], life_stage: String, now: float) -> Dictionary:
@@ -435,7 +443,7 @@ static func _migrate_last_decision(value: Variant, record_version: int) -> Varia
 	if not (value is Dictionary):
 		return null
 	var decision: Dictionary = value.duplicate(true)
-	if record_version < VERSION:
+	if record_version < 3:
 		var scores: Dictionary = decision.get("actionScores", {}).duplicate(true)
 		scores["draw"] = 0.0
 		decision["actionScores"] = scores
@@ -485,6 +493,13 @@ static func _make_policy(seed: int) -> Dictionary:
 			recurrent_weights[offset] = (_next_random(rng) * 2.0 - 1.0) * 0.16
 	for index: int in range(action_weights.size()):
 		action_weights[index] = (_next_random(rng) * 2.0 - 1.0) * 0.055
+	var target_rng := {"state": ((seed ^ 0xc2b2ae35) & 0xffffffff)}
+	if int(target_rng["state"]) == 0:
+		target_rng["state"] = 1
+	for unit: int in range(RECURRENT_UNITS):
+		var target_offset := unit * INPUT_COUNT + NAMED_INPUT_COUNT + MARK_INPUT_COUNT
+		for target_index: int in range(TARGET_INPUT_COUNT):
+			input_weights[target_offset + target_index] = (_next_random(target_rng) * 2.0 - 1.0) * 0.12
 	var visual_rng := {"state": ((seed ^ 0x85ebca6b) & 0xffffffff)}
 	if int(visual_rng["state"]) == 0:
 		visual_rng["state"] = 1
@@ -634,6 +649,13 @@ static func _get_input_vector(state: Dictionary, observation: Dictionary) -> Arr
 		elif surface_visible and mark_values is Array and mark_values.size() == MARK_INPUT_COUNT:
 			mark_value = clampf(_finite_or(mark_values[mark_index], 0.0), 0.0, 1.0)
 		input.append(mark_value)
+	var tool_visible := _has_sensed_id(objects, DRAW_TOOL_ID)
+	var target_delta_value: Variant = observation.get("drawTargetDelta", null)
+	var target_delta := Vector2.ZERO
+	if surface_visible and tool_visible and target_delta_value is Vector2 and is_finite(target_delta_value.x) and is_finite(target_delta_value.y):
+		target_delta = Vector2(clampf(target_delta_value.x, -1.0, 1.0), clampf(target_delta_value.y, -1.0, 1.0))
+	input.append(target_delta.x)
+	input.append(target_delta.y)
 	return input
 
 
@@ -1012,9 +1034,9 @@ static func _adjust_chemistry_for_outcome(chemistry: Dictionary, event_type: Str
 
 static func _valid_record(record: Dictionary) -> bool:
 	var record_version := int(record.get("version", -1))
-	if not [1, 2, VERSION].has(record_version):
+	if not [1, 2, 3, VERSION].has(record_version):
 		return false
-	var allow_missing_draw := record_version < VERSION
+	var allow_missing_draw := record_version < 3
 	var seed_value = record.get("seed", null)
 	var traits = record.get("traits", null)
 	var chemistry = record.get("chemistry", null)
