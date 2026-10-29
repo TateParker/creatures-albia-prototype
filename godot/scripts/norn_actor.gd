@@ -1,14 +1,18 @@
 class_name NornActor
 extends CharacterBody3D
 
-signal action_completed(action_id: String, target_id: String)
+signal action_completed(actor_id: String, action_id: String, target_id: String)
 
 const WALK_SPEED := 2.8
 const ARRIVAL_DISTANCE := 1.05
 
 var current_action: String = "idle"
 var action_reason: String = "Looking around the habitat"
-var target: Interactable
+var actor_id: String = ""
+var display_name: String = "Norn"
+var body_color: Color = Color(0.43, 0.27, 0.16)
+var target: Node3D
+var target_id: String = ""
 var is_walking: bool = false
 var _sensor: Area3D
 
@@ -21,10 +25,32 @@ func _ready() -> void:
 	_build_sensor()
 
 
-func set_action_target(target_node: Node3D, action_id: String, reason: String) -> void:
-	target = target_node as Interactable if target_node is Interactable else null
+func configure_identity(profile_actor_id: String, profile_display_name: String, profile_body_color: Color) -> void:
+	actor_id = profile_actor_id
+	display_name = profile_display_name
+	body_color = profile_body_color
+	name = profile_display_name
+	if has_node("NameLabel"):
+		get_node("NameLabel").queue_free()
+	var name_label := Label3D.new()
+	name_label.name = "NameLabel"
+	name_label.text = display_name
+	name_label.position = Vector3(0.0, 3.0, 0.0)
+	name_label.font_size = 24
+	name_label.modulate = Color(1.0, 0.92, 0.66)
+	name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	name_label.outline_size = 6
+	name_label.outline_modulate = Color(0.1, 0.12, 0.08, 0.95)
+	add_child(name_label)
+
+
+func set_action_target(target_node: Node3D, action_id: String, reason: String, target_id_value: String = "") -> void:
+	target = target_node
 	current_action = action_id
 	action_reason = reason
+	target_id = target_id_value
+	if target is Interactable and target_id.is_empty():
+		target_id = (target as Interactable).object_id
 	if target == null:
 		velocity = Vector3.ZERO
 		is_walking = false
@@ -40,29 +66,51 @@ func sensed_interactables() -> Array[Interactable]:
 	return sensed
 
 
+func can_see_peer(peer: NornActor) -> bool:
+	if peer == null or peer == self or not is_inside_tree() or not peer.is_inside_tree():
+		return false
+	var from := global_position + Vector3(0.0, 1.35, 0.0)
+	var to := peer.global_position + Vector3(0.0, 1.35, 0.0)
+	var query := PhysicsRayQueryParameters3D.create(from, to, 1, [get_rid()])
+	query.collide_with_areas = false
+	var result := get_world_3d().direct_space_state.intersect_ray(query)
+	return not result.is_empty() and result.get("collider") == peer
+
+
 func reset_position(position_value: Vector3) -> void:
 	global_position = position_value
 	velocity = Vector3.ZERO
 	target = null
+	target_id = ""
 	current_action = "idle"
 	action_reason = "Looking around the habitat"
 	is_walking = false
 
 
 func _physics_process(_delta: float) -> void:
-	if target == null or not is_instance_valid(target) or not target.available:
+	if target == null or not is_instance_valid(target):
+		velocity = Vector3.ZERO
+		is_walking = false
+		return
+	if target is Interactable and not (target as Interactable).available:
+		target = null
+		target_id = ""
 		velocity = Vector3.ZERO
 		is_walking = false
 		return
 	var direction := target.global_position - global_position
 	direction.y = 0.0
-	if direction.length() <= ARRIVAL_DISTANCE:
+	var arrival_distance := 2.1 if current_action == "observe_peer" else ARRIVAL_DISTANCE
+	if direction.length() <= arrival_distance:
 		var completed_target := target
 		var completed_action := current_action
+		var completed_target_id := target_id
 		target = null
+		target_id = ""
 		velocity = Vector3.ZERO
 		is_walking = false
-		action_completed.emit(completed_action, completed_target.object_id)
+		if completed_target is Interactable:
+			action_completed.emit(actor_id, completed_action, completed_target_id)
 		return
 	var forward := direction.normalized()
 	velocity.x = forward.x * WALK_SPEED
@@ -85,7 +133,7 @@ func _build_collision() -> void:
 
 
 func _build_body() -> void:
-	var warm_brown := _material(Color(0.43, 0.27, 0.16))
+	var warm_brown := _material(body_color)
 	var cream := _material(Color(0.92, 0.76, 0.51))
 	var dark := _material(Color(0.08, 0.055, 0.04))
 	var eye_white := _material(Color(0.96, 0.92, 0.78))

@@ -464,19 +464,10 @@ func _build_camera() -> void:
 
 func _build_creature() -> void:
 	norn = NornActor.new()
-	norn.name = "Mallow"
+	norn.configure_identity("mallow", "Mallow", Color(0.43, 0.27, 0.16))
 	norn.position = Vector3(3.0, 0.0, 2.0)
 	norn.action_completed.connect(_on_action_completed)
 	add_child(norn)
-	var name_label := Label3D.new()
-	name_label.text = "Mallow"
-	name_label.position = Vector3(0.0, 3.0, 0.0)
-	name_label.font_size = 24
-	name_label.modulate = Color(1.0, 0.92, 0.66)
-	name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	name_label.outline_size = 6
-	name_label.outline_modulate = Color(0.1, 0.12, 0.08, 0.95)
-	norn.add_child(name_label)
 
 
 func _build_objects() -> void:
@@ -573,13 +564,17 @@ func _run_decision() -> void:
 	current_decision["reason"] = reason
 
 
-func _on_action_completed(action_id: String, target_id: String) -> void:
+func _on_action_completed(actor_id: String, action_id: String, target_id: String) -> void:
+	if norn == null or actor_id != norn.actor_id:
+		return
 	if not objects.has(target_id):
 		return
 	var item: Interactable = objects[target_id]
 	if not item.available:
 		return
 	var event_type := "food" if action_id == "fruit" else "toy"
+	var actor_name := norn.display_name
+	var outcome_text := "%s ate honey fruit" % actor_name if event_type == "food" else "%s played with the spinner" % actor_name
 	item.activate()
 	_respawn_times[target_id] = simulation_time + (6.0 if event_type == "food" else 4.0)
 	var spoken_word: Dictionary = _language.call("word_for_target", language_state, target_id)
@@ -587,9 +582,9 @@ func _on_action_completed(action_id: String, target_id: String) -> void:
 		"eventType": event_type,
 		"actionId": action_id,
 		"targetId": target_id,
-		"actorId": "Mallow",
+		"actorId": actor_id,
 		"time": simulation_time,
-		"text": "Mallow ate honey fruit" if event_type == "food" else "Mallow played with the spinner"
+		"text": outcome_text
 	}
 	if not spoken_word.is_empty():
 		outcome["word"] = str(spoken_word["word"])
@@ -599,14 +594,14 @@ func _on_action_completed(action_id: String, target_id: String) -> void:
 	feedback_target = target_id
 	feedback_time = simulation_time
 	feedback_available = true
-	last_status = "Mallow %s. Learned association: %s %.2f (Δ %.2f)." % [
-		"ate honey fruit" if event_type == "food" else "played with the spinner",
+	last_status = "%s. Learned association: %s %.2f (Δ %.2f)." % [
+		outcome_text,
 		action_id,
 		float(result.get("association", 0.0)),
 		float(result.get("learningDelta", 0.0))
 	]
 	if not spoken_word.is_empty():
-		last_status += " Mallow said “%s”." % str(spoken_word["word"])
+		last_status += " %s said “%s”." % [actor_name, str(spoken_word["word"])]
 	_run_decision()
 
 
