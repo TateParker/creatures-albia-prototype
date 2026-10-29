@@ -964,7 +964,12 @@ func _handle_norn_death(profile: NornProfile, death: Dictionary) -> void:
 		"salience": 1.0,
 		"text": "%s reached old age and died." % profile.display_name
 	})
-	if focused_norn_id == profile.actor_id:
+	var focused_profile_died := focused_norn_id == profile.actor_id
+	if focused_profile_died:
+		if teaching_mode:
+			teaching_mode = false
+			if _ui != null:
+				_ui.clear_teaching_input()
 		focused_norn_id = _next_living_profile_id(profile.actor_id)
 	last_status = "%s reached old age and died." % profile.display_name
 	_sync_mallow_compatibility()
@@ -1677,22 +1682,64 @@ func _reset_state(write_save: bool) -> void:
 
 
 func _refresh_ui() -> void:
-	var profile := focused_profile()
-	if _ui == null or profile == null or profile.cognition_state.is_empty():
+	if _ui == null:
 		return
+	var profile := focused_profile()
+	if profile != null and (not bool(profile.life_state.get("alive", false)) or profile.actor == null):
+		profile = null
+	var roster: Array[Dictionary] = []
+	for living: NornProfile in living_profiles():
+		roster.append({
+			"actorId": living.actor_id,
+			"displayName": living.display_name,
+			"ageSeconds": float(living.life_state.get("ageSeconds", 0.0)),
+			"lifeStage": living.life_stage,
+			"generation": living.generation,
+			"parentIds": living.parent_ids.duplicate()
+		})
+	var archived_norns: Array[Dictionary] = []
+	for actor_id: String in ordered_profile_ids():
+		var archived := profile_for(actor_id)
+		if archived == null or bool(archived.life_state.get("alive", false)):
+			continue
+		var death: Dictionary = archived.life_state.get("death", {})
+		archived_norns.append({
+			"actorId": archived.actor_id,
+			"displayName": archived.display_name,
+			"ageSeconds": float(archived.life_state.get("ageSeconds", 0.0)),
+			"lifeStage": archived.life_stage,
+			"generation": archived.generation,
+			"parentIds": archived.parent_ids.duplicate(),
+			"cause": str(death.get("cause", "old-age"))
+		})
+	var egg_records: Array[Dictionary] = []
+	for egg_record: Dictionary in eggs:
+		egg_records.append(egg_record.duplicate(true))
+	var chemistry: Dictionary = profile.cognition_state.get("chemistry", {}) if profile != null else {}
+	var compounds: Dictionary = Biochemistry.read_compounds(profile.biochemistry_state) if profile != null else {}
+	var reaction_fluxes: Dictionary = Biochemistry.read_fluxes(profile.biochemistry_state) if profile != null else {}
+	var roster_is_empty := roster.is_empty()
 	_ui.update_view({
-		"actorId": profile.actor_id,
-		"displayName": profile.display_name,
-		"chemistry": profile.cognition_state["chemistry"],
-		"decision": profile.current_decision,
-		"recalled": profile.recalled_moments,
-		"languageState": profile.language_state,
-		"compounds": Biochemistry.read_compounds(profile.biochemistry_state),
-		"reactionFluxes": Biochemistry.read_fluxes(profile.biochemistry_state),
+		"actorId": profile.actor_id if profile != null else "",
+		"displayName": profile.display_name if profile != null else "",
+		"chemistry": chemistry,
+		"decision": profile.current_decision if profile != null else {},
+		"recalled": profile.recalled_moments if profile != null else [],
+		"languageState": profile.language_state if profile != null else {},
+		"compounds": compounds,
+		"reactionFluxes": reaction_fluxes,
+		"ageSeconds": float(profile.life_state.get("ageSeconds", 0.0)) if profile != null else -1.0,
+		"lifeStage": profile.life_stage if profile != null else "none",
+		"roster": roster,
+		"eggRecords": egg_records,
+		"archivedNorns": archived_norns,
+		"populationCount": population_count(),
+		"eggsOnly": roster_is_empty and not egg_records.is_empty(),
+		"extinct": roster_is_empty and egg_records.is_empty(),
 		"status": last_status,
 		"paused": paused,
 		"speed": simulation_speed,
-		"feedbackReady": profile.feedback_available and simulation_time - profile.feedback_time <= FEEDBACK_WINDOW,
+		"feedbackReady": profile != null and profile.feedback_available and simulation_time - profile.feedback_time <= FEEDBACK_WINDOW,
 		"recording": video_recorder != null and video_recorder.is_recording(),
 		"recordingElapsed": video_recorder.recording_time() if video_recorder != null else 0.0,
 		"lastRecordingPath": last_recording_path,

@@ -177,6 +177,8 @@ func test_family_system() -> void:
 	test_focus_moves_after_death()
 	test_dead_parent_egg_hatches()
 	test_extinction_keeps_archive()
+	test_actor_stage_changes_visuals_only()
+	test_hud_shows_family_and_archive_states()
 	if previous_exists and not previous_text.is_empty():
 		var restore_file := FileAccess.open(save_path, FileAccess.WRITE)
 		if restore_file != null:
@@ -410,6 +412,8 @@ func test_stage_transition_saves_once() -> void:
 	var saved_profiles: Dictionary = transition_save.get("norns", {}) if transition_save is Dictionary else {}
 	var saved_mallow: Dictionary = saved_profiles.get("mallow", {})
 	_expect(float(mallow.life_state.get("ageSeconds", -1.0)) >= 60.0 and float(saved_mallow.get("lifeState", {}).get("ageSeconds", -1.0)) >= 60.0, "crossing a life-stage boundary persists the new age")
+	var stage_label := mallow.actor.find_child("LifeStageLabel", true, false) as Label3D
+	_expect(mallow.life_stage == "child" and stage_label != null and stage_label.text == "Child", "world stage transition updates the actor's life-stage display")
 	var post_transition_age := float(mallow.life_state.get("ageSeconds", -1.0))
 	world._process(0.1)
 	var steady_save_file := FileAccess.open("user://albia_norn_save.json", FileAccess.READ)
@@ -448,9 +452,11 @@ func test_focus_moves_after_death() -> void:
 	var world := _new_family_world()
 	var mallow: NornProfile = world.profile_for("mallow")
 	var moss: NornProfile = world.profile_for("moss")
+	world.teaching_mode = true
 	mallow.life_state = Lifecycle.create_state(int(mallow.cognition_state["seed"]), float(mallow.life_state["lifespanSeconds"]) - 0.1)
 	world._process(0.2)
 	_expect(world.focused_norn_id == "moss", "focused death selects the next living profile in stable order")
+	_expect(not world.teaching_mode, "death of the focused Norn cancels its pending teaching input")
 	world.select_norn("mallow")
 	_expect(world.focused_norn_id == "moss", "deceased family members cannot be selected as the live focus")
 	moss.life_state = Lifecycle.create_state(int(moss.cognition_state["seed"]), float(moss.life_state["lifespanSeconds"]) - 0.1)
@@ -506,6 +512,88 @@ func _count_event_episodes(profile: NornProfile, event_type: String) -> int:
 		if episode_value is Dictionary and str((episode_value as Dictionary).get("eventType", "")) == event_type:
 			count += 1
 	return count
+
+
+func test_actor_stage_changes_visuals_only() -> void:
+	var world := _new_family_world()
+	var actor: NornActor = world.profile_for("mallow").actor
+	_expect(actor.has_method("set_life_stage"), "NornActor exposes a life-stage visual update")
+	if actor.has_method("set_life_stage"):
+		var visuals := actor.find_child("LifeStageVisuals", true, false) as Node3D
+		var body := actor.find_child("Body", true, false) as MeshInstance3D
+		var collision := actor.find_child("BodyCollision", true, false) as CollisionShape3D
+		var sensor := actor.find_child("LocalSensor", true, false) as Area3D
+		var stage_label := actor.find_child("LifeStageLabel", true, false) as Label3D
+		_expect(visuals != null and body != null and body.get_parent() == visuals, "all life-stage-scaled body meshes share a visual-only parent")
+		var actor_scale := actor.scale
+		var collision_scale := collision.scale if collision != null else Vector3.ZERO
+		var collision_height := ((collision.shape as CapsuleShape3D).height if collision != null and collision.shape is CapsuleShape3D else -1.0)
+		var sensor_scale := sensor.scale if sensor != null else Vector3.ZERO
+		var sensor_radius := ((sensor.get_child(0) as CollisionShape3D).shape as SphereShape3D).radius if sensor != null and sensor.get_child_count() > 0 and (sensor.get_child(0) as CollisionShape3D).shape is SphereShape3D else -1.0
+		var stages: Array[Array] = [["baby", 0.55], ["child", 0.70], ["adolescent", 0.85], ["adult", 1.0], ["elder", 0.95]]
+		for stage_case: Array in stages:
+			actor.call("set_life_stage", str(stage_case[0]))
+			var expected_scale := Vector3.ONE * float(stage_case[1])
+			_expect(visuals != null and visuals.scale.is_equal_approx(expected_scale), "%s scales the body visuals to %.2f" % [str(stage_case[0]), float(stage_case[1])])
+			_expect(actor.scale == actor_scale and collision != null and collision.scale == collision_scale and is_equal_approx(float((collision.shape as CapsuleShape3D).height), collision_height), "%s leaves actor and collision dimensions unchanged" % str(stage_case[0]))
+			_expect(sensor != null and sensor.scale == sensor_scale and is_equal_approx(float(((sensor.get_child(0) as CollisionShape3D).shape as SphereShape3D).radius), sensor_radius), "%s leaves sensing dimensions unchanged" % str(stage_case[0]))
+			_expect(stage_label != null and stage_label.text.to_lower() == str(stage_case[0]), "%s updates the overhead life-stage label" % str(stage_case[0]))
+	world.free()
+
+
+func test_hud_shows_family_and_archive_states() -> void:
+	var world := _new_family_world()
+	world.call("_refresh_ui")
+	var roster := world.find_child("NornRoster", true, false) as Container
+	var family_panel := world.find_child("FamilyPanel", true, false) as Control
+	var second_parent_selector := world.find_child("SecondParentSelector", true, false) as OptionButton
+	var start_egg_button := world.find_child("StartEggButton", true, false) as Button
+	var archive := world.find_child("FamilyArchive", true, false) as Control
+	var extinction_panel := world.find_child("ExtinctionPanel", true, false) as Control
+	var start_new_run_button := world.find_child("StartNewRunButton", true, false) as Button
+	var age_stage_label := world.find_child("FocusAgeStageLabel", true, false) as Label
+	_expect(roster != null and family_panel != null and second_parent_selector != null and start_egg_button != null and archive != null and extinction_panel != null and start_new_run_button != null and age_stage_label != null, "family controls, stage display, archive, and extinction controls exist")
+	if roster == null or family_panel == null or second_parent_selector == null or start_egg_button == null or archive == null or extinction_panel == null or start_new_run_button == null or age_stage_label == null:
+		world.free()
+		return
+	_expect(roster.get_child_count() == 2 and roster.find_child("Roster_mallow", true, false) != null and roster.find_child("Roster_moss", true, false) != null, "living Norn roster follows stable founder order")
+	_expect(age_stage_label.text.to_lower().contains("adult") and age_stage_label.text.contains("600"), "HUD shows the focused Norn's age and life stage")
+	_expect(second_parent_selector.item_count == 1 and str(second_parent_selector.get_item_metadata(0)) == "moss", "parent selector excludes self and lists the other living adult")
+	start_egg_button.emit_signal("pressed")
+	_expect(world.eggs.size() == 1, "family start button creates an egg with the selected second parent")
+	var moss: NornProfile = world.profile_for("moss")
+	moss.life_state = Lifecycle.create_state(int(moss.cognition_state["seed"]), 100.0)
+	world.call("_refresh_ui")
+	_expect(second_parent_selector.item_count == 0 and start_egg_button.disabled, "second-parent selector excludes all profiles below adulthood")
+	moss.life_state = Lifecycle.create_state(int(moss.cognition_state["seed"]), 600.0)
+	var mallow: NornProfile = world.profile_for("mallow")
+	mallow.life_state = Lifecycle.create_state(int(mallow.cognition_state["seed"]), float(mallow.life_state["lifespanSeconds"]) - 0.1)
+	world._process(0.2)
+	world.call("_refresh_ui")
+	_expect(roster.get_child_count() == 1 and roster.find_child("Roster_mallow", true, false) == null and roster.find_child("Roster_moss", true, false) != null, "dead IDs leave the living roster")
+	_expect(archive.visible and str(world.find_child("FamilyArchiveText", true, false).text).contains("Mallow"), "deceased Norns appear in the read-only family archive")
+	_expect(not extinction_panel.visible and not start_new_run_button.is_visible_in_tree(), "an incubating egg prevents the extinction panel and action")
+	moss.life_state = Lifecycle.create_state(int(moss.cognition_state["seed"]), float(moss.life_state["lifespanSeconds"]) - 0.1)
+	world._process(0.2)
+	world.call("_refresh_ui")
+	_expect(roster.get_child_count() == 0 and world.focused_norn_id.is_empty(), "an egg-only habitat has no living roster or focus")
+	_expect(not extinction_panel.visible, "egg-only habitat is not reported as extinct")
+	var egg_node: Node3D = world.get_node_or_null("egg-1") as Node3D
+	if egg_node != null:
+		var egg_record: Dictionary = egg_node.get("record")
+		egg_record["remainingSeconds"] = 0.0
+		egg_node.set("record", egg_record)
+	world._process(0.0)
+	_expect(not extinction_panel.visible and world.profile_for("norn-1") != null, "a new hatch clears the extinction state")
+	var child: NornProfile = world.profile_for("norn-1")
+	child.life_state = Lifecycle.create_state(int(child.cognition_state["seed"]), float(child.life_state["lifespanSeconds"]) - 0.1)
+	world._process(0.2)
+	world.call("_refresh_ui")
+	_expect(extinction_panel.visible and start_new_run_button.is_visible_in_tree(), "extinction and its new-run action appear only after the last Norn and egg are gone")
+	_expect(archive.visible and str(world.find_child("FamilyArchiveText", true, false).text).contains("Sprout"), "the deceased archive remains visible through extinction")
+	start_new_run_button.emit_signal("pressed")
+	_expect(world.profile_for("mallow") != null and world.profile_for("mallow").life_stage == "adult" and world.profile_for("norn-1") == null, "explicit new run clears the prior archive and starts the founders")
+	world.free()
 
 
 func _new_family_world() -> AlbiaWorld:

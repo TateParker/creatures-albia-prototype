@@ -420,6 +420,10 @@ func _verify_starting_layout(world: Node) -> bool:
 	if hud == null or hud.get_child_count() == 0:
 		_fail("The habitat HUD panel could not be found.")
 		return false
+	for control_name: String in ["NornRoster", "FamilyPanel", "SecondParentSelector", "StartEggButton", "FamilyArchive", "ExtinctionPanel", "FocusAgeStageLabel"]:
+		if world.find_child(control_name, true, false) == null:
+			_fail("The family and lifespan HUD control %s is missing." % control_name)
+			return false
 	var panel := hud.get_child(0) as Control
 	if panel.size.x > 390.0:
 		_fail("The HUD panel is too wide for the gameplay view (%d px)." % int(panel.size.x))

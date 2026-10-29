@@ -16,6 +16,10 @@ var target: Node3D
 var target_id: String = ""
 var is_walking: bool = false
 var _sensor: Area3D
+var _visual_root: Node3D
+var _name_label: Label3D
+var _life_stage_label: Label3D
+var _life_stage: String = "adult"
 
 
 func _ready() -> void:
@@ -34,16 +38,44 @@ func configure_identity(profile_actor_id: String, profile_display_name: String, 
 	name = profile_display_name
 	if has_node("NameLabel"):
 		get_node("NameLabel").queue_free()
-	var name_label := Label3D.new()
-	name_label.name = "NameLabel"
-	name_label.text = display_name
-	name_label.position = Vector3(0.0, 3.0, 0.0)
-	name_label.font_size = 24
-	name_label.modulate = Color(1.0, 0.92, 0.66)
-	name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	name_label.outline_size = 6
-	name_label.outline_modulate = Color(0.1, 0.12, 0.08, 0.95)
-	add_child(name_label)
+	if has_node("LifeStageLabel"):
+		get_node("LifeStageLabel").queue_free()
+	_name_label = Label3D.new()
+	_name_label.name = "NameLabel"
+	_name_label.text = display_name
+	_name_label.position = Vector3(0.0, 3.15, 0.0)
+	_name_label.font_size = 24
+	_name_label.modulate = Color(1.0, 0.92, 0.66)
+	_name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_name_label.outline_size = 6
+	_name_label.outline_modulate = Color(0.1, 0.12, 0.08, 0.95)
+	add_child(_name_label)
+	_life_stage_label = Label3D.new()
+	_life_stage_label.name = "LifeStageLabel"
+	_life_stage_label.position = Vector3(0.0, 2.82, 0.0)
+	_life_stage_label.font_size = 14
+	_life_stage_label.modulate = Color(0.85, 0.91, 0.75)
+	_life_stage_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_life_stage_label.outline_size = 4
+	_life_stage_label.outline_modulate = Color(0.1, 0.12, 0.08, 0.95)
+	add_child(_life_stage_label)
+	_apply_life_stage()
+
+
+func set_life_stage(stage: String) -> void:
+	var normalized := stage.strip_edges().to_lower()
+	if not ["baby", "child", "adolescent", "adult", "elder"].has(normalized):
+		return
+	_life_stage = normalized
+	_apply_life_stage()
+
+
+func _apply_life_stage() -> void:
+	var scale_by_stage := {"baby": 0.55, "child": 0.70, "adolescent": 0.85, "adult": 1.0, "elder": 0.95}
+	if _visual_root != null:
+		_visual_root.scale = Vector3.ONE * float(scale_by_stage.get(_life_stage, 1.0))
+	if _life_stage_label != null:
+		_life_stage_label.text = _life_stage.capitalize()
 
 
 func set_action_target(target_node: Node3D, action_id: String, reason: String, target_id_value: String = "") -> void:
@@ -139,6 +171,9 @@ func _build_collision() -> void:
 
 
 func _build_body() -> void:
+	_visual_root = Node3D.new()
+	_visual_root.name = "LifeStageVisuals"
+	add_child(_visual_root)
 	var warm_brown := _material(body_color)
 	var cream := _material(Color(0.92, 0.76, 0.51))
 	var dark := _material(Color(0.08, 0.055, 0.04))
@@ -155,6 +190,7 @@ func _build_body() -> void:
 	_add_sphere("LeftPupil", Vector3(-0.25, 1.76, -0.65), Vector3(0.075, 0.11, 0.05), dark, 8, 5)
 	_add_sphere("RightPupil", Vector3(0.29, 1.76, -0.65), Vector3(0.075, 0.11, 0.05), dark, 8, 5)
 	_add_sphere("Nose", Vector3(0.0, 1.52, -0.66), Vector3(0.15, 0.11, 0.09), _material(Color(0.2, 0.1, 0.08)), 8, 5)
+	_apply_life_stage()
 
 
 func _add_sphere(label: String, at: Vector3, scale_value: Vector3, material: Material, segments: int, rings: int) -> void:
@@ -169,7 +205,10 @@ func _add_sphere(label: String, at: Vector3, scale_value: Vector3, material: Mat
 	mesh_instance.position = at
 	mesh_instance.scale = scale_value
 	mesh_instance.material_override = material
-	add_child(mesh_instance)
+	if _visual_root != null:
+		_visual_root.add_child(mesh_instance)
+	else:
+		add_child(mesh_instance)
 
 
 func _build_sensor() -> void:
