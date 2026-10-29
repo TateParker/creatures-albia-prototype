@@ -1,0 +1,30 @@
+{
+  "id": "01a1897b-6e77-7068-8a08-fdfe75584b47",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 1301570899,
+  "prompt": "A small clear-water spring for a low-poly fantasy habitat, shallow blue pool, pale stone rim and several translucent aqua glassy shards, compact ground prop, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307930256,
+  "progress": 100,
+  "started_at": 1793307930262,
+  "finished_at": 1793307959872,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897b-6e77-7068-8a08-fdfe75584b47/output/model.glb?Expires=4946832000&Signature=QKB-juoRdwNfC4wRfpIRByiQPFKdLhAJUUSTf~5Ge1CRBxOHRjKgkzlXa8AeqyF59DYQFZb0g13KQ8qHAj7luU1damVkgkFwYbw8Vpf7ci5tdVkwLsk~679e-jgpFSlmmWbJWXqJg5WlYqgcYVnFrGZ9ipl9vPiJLcYDgo2W5P2IER9SzIJ1eJFPvbhNgq-FADbNkTysefZk4qIFWrHgzKrVSsza13oS9xgsIDGQzlevHzsd34nfaIXZSz75llD--PEZO7I7Jglxv1PlEhvUxB~7tE0ITS1l2Pv~oHqSQ2KZsSN5YjpaM2SHqQM5aAEqEbHhniZvROU8ZGbUIhWACw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897b-6e77-7068-8a08-fdfe75584b47/output/preview.png?Expires=4946832000&Signature=iu~NuH3gfHHconDv~Xpaa~BUjkL2DEiA9TlWDc25nuQLYkjyQwouCcDUkwas8O-E4toOwo53IUOT2nccxG2BjPwZcZ6pZi~i0S3bo2aC-HytNWBsjDtHyaz9M9hGjWBgbIEtXkMcjqyOwsBgnKAkNcHg~bq96Gx3bGmPDvawQQM-thtJHI3QOOuX9U628r6jSwo0rpa~GBF18wpOGA8A2yIhwiJmLS4UYbUuimVyuKALl~Io65l4ETfeJzO6LN6wf5mbLioTy4SsIyxIs0Ykvd3uGF52m7c2XW~0xG-TR3~MXAvlpfwemGhjLvS7wdcHhWyQIPuqqLE1hVFJySc5sQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897b-6e77-7068-8a08-fdfe75584b47/output/texture_0.png?Expires=4946832000&Signature=R-pXkgEaItRsOZMrSyB6JQH1cNy5li8NQQfYMvfvFHzWg3eK-Gm855z-lFbxLqbK9bU-i4FUD0hXCUR7mhBaepmXEhebkM3CmvgREBgqqDZBJYGoBBPpwjYNFlrAey5AgyHvtJkO6rQYk49kS5DhLHjkCjOI4x0uvk6ugmtIWsZ0kdYoE7pYlfpEb4w1aEgSBv81Epkb1r0IIbEO1tL-AtScglqSpuoWiTWz7QYjcZ9AVaWjTTdC3g2cWqTRJbdKNofGU8e6qA3n6Dcnc~Emh6iWkMOto9APvkkLb5wncKmNY2wXrkQqPpJo~74mI-5ETPNTwa71bMAMtqHxTe6Dfw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897b-6e77-7068-8a08-fdfe75584b47/output/texture_0_metallic.png?Expires=4946832000&Signature=jo1BGppBIls0Rh1ni4CCX7ym8qnK1A6giYEbgo9sXyuDeeI5kKshPgWEeHkDMCNyW5vpBXWSPQlXDjzYuKnXV0S8p8IFwHIhfafY498lCR6rSU9JTdPr6MX8uvJvz16tsq3Ce8xm~-KdyrskwaH5zQN5eWRF0eTlf545eSHcQhq~OahSLVbYzYYCUa2T4teAEvI8IKu5Ci6iWP2pC5egIRNGWY5FoY7qOqDHCUcdzBf8d0-PmdEv2PM1bANqUCE2NIL7iJl0TawL9FghUyFUgvNGYpdorvQH1vDuyJVJJ3ApiBSsQr3KHBc5vSCCeHQQDkRJx7kj2Dk4T8P-Rv7THg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897b-6e77-7068-8a08-fdfe75584b47/output/texture_0_roughness.png?Expires=4946832000&Signature=Lm61QbIH6fguMotv46C-eXKYduWUP516Odk1SP5ARXAOOctlZtMbmHYoh2RntUjKonDRsdWErlj6NTG1-T~tG00YBadveziwbi2PMeiIGjMGh2pJk1GRXoNJNqtbTs~V4fTnCB71hDS4iGQJaoV-tm3X8ENvG1vXbeu-czyFpGXvVRrOD6Omp8SN-S-aAKnSA7Sdddom1fs65vGOCuYNlhN0qJrbMCCcrijgCB~lOy5o124dGFbCFkvPMg4KtYMr55iGkQfQxV1Phz6AsrSwKvgUpGvDk9Y2sh9L5lWk6V9qThknYWPHfraF0dYQh6yXaB1XfTW-7kwk6K9MIXxQHg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897b-6e77-7068-8a08-fdfe75584b47/output/texture_0_normal.png?Expires=4946832000&Signature=ernAOJ3Pms20hl0~2BeDFaH1JheqNyMJssA66itl9q4Y0Znslqtb9NSqrWAb3QI5r19u8AN72YKthv-JDsFreOjaLFku3mKep1LQ4cCf1NCr8tiJzIb9ukmh9I11j5C3aQEkhT2izmyoX8zEK1kLKlf8nmfQ7vQML5S37fQqLAzrnlyMWJYq5zJIAOckrZATFT71muhvo~-fQuhprvTfUvGkrVPNR-ofSQbBD32BE4TbTe-AcpNjWHBoG~OBVz~sijp1tSDMqQIfg3M6E1i1XybW2bkmAkBU4VMENCpbrJ4oW5Im9s7Ohho~drm~Se2gr2MoE8fIBK7NlKyTeRi5Kw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

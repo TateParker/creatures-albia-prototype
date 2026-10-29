@@ -1,0 +1,30 @@
+{
+  "id": "01a1896f-cf0d-722c-9f54-f6f6eae9247e",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 3454616187,
+  "prompt": "A small woven grass nest bowl for a gentle fantasy creature habitat, low-poly braided natural fibers, shallow oval interior, warm straw and brown color variation, no eggs, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307168546,
+  "progress": 100,
+  "started_at": 1793307169054,
+  "finished_at": 1793307207178,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896f-cf0d-722c-9f54-f6f6eae9247e/output/model.glb?Expires=4946832000&Signature=IRoZwZr7N47hIn5Q8QjGdkdXh~gNZA6gBQU8b-FWMjmTQu9NaVgjuzpqaMJIa2w3I7ZUBg4QVRwHO9ZRB0W4-RVB-BIUzrxDeW~0NSKmLSx6Gnz79jsEUh~7VtL1MrlhCL22vzWSRP90p2DP9Fr9nDisLc3WMiAlw542I-b3rNXvjAPX7FBT4wnLG86CciBonzx630xXKxN3XsptoBfYszdmwf8qCEK-Fx-rVjcZXFpQJ405deprypGufCQkmyFjV95EQqrR6Ttqjs1HAYZOA~UvYeKc2iyx-rq8mPCptdlFy6mqwwboyOCqu0SQckqazYd6ciS0eM~xjUB39yKTFw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896f-cf0d-722c-9f54-f6f6eae9247e/output/preview.png?Expires=4946832000&Signature=jQQEE8pO1cSXTJSqjao2H~gFp4A6pxOY20m1p6GjNtVNEstVZjXMTjiY9NtAHdwcUEclaVdo6tGIBhHyaogMpHmdw5YQhWPLOER3unHzorbvu7jVbvFid70XanvhxIAwj2FcKqdEVhBeXmKZwzaBFvrI06sY6Ao4MVIZlSpoEpcjUssxzy73qMl4RIP6LDrz5SPlj5a6tXNtfq5iY91XDbmSkp6ynHeWtYLOF9L982GRNV3v92mlAf5cV5xL50sYelqA7KXat-hX30c0i0fZpVuqZKJ82kYkIw9Hh4JCyMW2MC~AY4QyTkNZPyC08HB8rcvzkVRw3O1Q6YF0fWz6Bg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896f-cf0d-722c-9f54-f6f6eae9247e/output/texture_0.png?Expires=4946832000&Signature=XXOLBoxtudk0EeCseeJt-0KfgoDEUNRp7WGpgcoG96BhPaiOcsLErOX1wNRL68kfbwxvELAjV-dN8T0AQplq56LoBdFVsqyalFAJsc0ok2xl8Zsj9N8ubzpB4ERsuzdI4eMcYOriXpvKRn~p-0~6OUZjQ4u5hTHqUFd03vOlwukJm881-tE35YlYInPIe2OLqrPSAvs~jPaDFqSfVtUFschUkNsZTF8bHvk8qeIhLuNbkAKr1HvKMvpldujL6rcGTZfE4O0X8AzlWL~NhOOVqT02tb2NHw68YfpP~pWpu2vNYtGjLCiZVXLjESILd95MLYVJ75eEm0PO5bxwXFzdXA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896f-cf0d-722c-9f54-f6f6eae9247e/output/texture_0_metallic.png?Expires=4946832000&Signature=ZVO4DbhIbh0yXXndOupN8h90Te8tNC8dWO0SezXOOMo9AkGCppugXWJ4huAwP5Ov5cTqxeFqE7Dj~sKLGHmKxDJzizVkMZ1uBbl56ViDlfjyuhUfoH6Cx-vWXqA9i1jXq5Atu~JU3QVWr7k2MlPUBkkH27EiOTQj5cELX2snQ2Rck-N7fEsoWNNaMygvw2j6fGIjxFxz33DKD503Q22NpvopHcJ~KkIyG2NS1tPP9-LoCNETEUNexbU9QsFC6zJyLsh6uQmTkYdCfi3h-DdcWwPtTLVh1zjDMmIAPQ2bFYyY-OF3Jspr4fk-H5uuDCW0IWm6to8ZsCH00wL6pOu~WA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896f-cf0d-722c-9f54-f6f6eae9247e/output/texture_0_roughness.png?Expires=4946832000&Signature=fvhVZHrADJ9L~dbiAucHqaUZCcuQ~0Ne1LJoeeL77aieZzY6TKFjQoiHoB-MFTP7kpzhXUCloQ-ezVnMtdTbV~wbIuBrI0SPqmu4g60zy51SxrI7fDbl3jkGQoy-5KqV3W2Ti-Gbqxt1kNxP2BiZUUO4YD808plQujYBjEoexfqFtwXLJLgXuMqn-R1qmWWb2tlSa4qpj~7wmlHJScNG42iEwfl4zyDSGpQh--t98Z9f9Jw1a7lLvl-oL9zdLJapRIM9pfF9otP8-Kt~UqQQ48J6vbUgGsU24wsyMjRivqHc7r4ciU6HytOpt~aTnZMW-npknbl8POU1BKqD5szJyA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896f-cf0d-722c-9f54-f6f6eae9247e/output/texture_0_normal.png?Expires=4946832000&Signature=f2hZ7KTXxoVRoJAkoSyzPh~e9ubXd~1oxie0nukUKqdsCwiduGi4w-ahe5J~CkREQDEb5d1iZkbs-HzIyL1LtqKAyP-sen0w65iB7c89UhEW-9pujPFpl7BAnglM1cgz882dWgWOOTnmwOox~yFerqGvE3oPwLJfAXHZCRpZDhDBUuahaWzildBQ0uFzdmCDMMot0cXQ4JH5m3hbNVVL5awmmCcxxQxUkR4-FyFxTVLzLOk40btBumOeocH6Y0dqQ3kZA1GeDbsNAbZVbTqcF8hTLWotUCerMdeAb10J-3sDUcibXi8Y2X7bvTZIsFnm-O2Xa6GuG-xTA~GxI7j3Xg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

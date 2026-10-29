@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "project_name": "egg-closed-shell-retry",
+  "folder": "20261029_171906_egg-closed-shell-retry_01a18987",
+  "root_task_id": "01a18987-b3c8-7793-a7f8-5fc11e51e35c",
+  "created_at": "2026-10-29T21:19:06.471Z",
+  "updated_at": "2026-10-29T21:21:58.957Z",
+  "tasks": [
+    {
+      "task_id": "01a18987-b3c8-7793-a7f8-5fc11e51e35c",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a18987-b3c8-7793-a7f8-5fc11e51e35c.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T21:19:14.492Z",
+      "updated_at": "2026-10-29T21:19:20.026Z"
+    },
+    {
+      "task_id": "01a18988-3a79-7102-9d29-38bf157d81cd",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a18987-b3c8-7793-a7f8-5fc11e51e35c",
+      "status": "SUCCEEDED",
+      "files": [],
+      "task_json": "task_01a18988-3a79-7102-9d29-38bf157d81cd.json",
+      "operation_id": "habitat-egg-closed-refine-20261029",
+      "created_at": "2026-10-29T21:19:29.757Z",
+      "updated_at": "2026-10-29T21:21:00.216Z"
+    },
+    {
+      "task_id": "01a18988-3a79-7102-9d29-38bf157d81cd",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "delivered",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png",
+        "thumbnail.png"
+      ],
+      "task_json": null,
+      "operation_id": null,
+      "created_at": "2026-10-29T21:21:54.302Z",
+      "updated_at": "2026-10-29T21:21:58.957Z"
+    }
+  ]
+}

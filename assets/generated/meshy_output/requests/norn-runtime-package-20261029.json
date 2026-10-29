@@ -1,0 +1,13 @@
+{
+  "description": "Meshy-generated static Norn species placeholder. In Godot, the CharacterBody3D continues to drive locomotion and interaction; the model has no skin or rig. The original generated GLB remains preserved separately.",
+  "category": "creature",
+  "provenance": {
+    "origin": "generated",
+    "provider": "Meshy",
+    "providerTaskId": "01a1897f-20f9-715a-b590-7972ffe5894e",
+    "sourceJobId": "01a1897f-20f9-715a-b590-7972ffe5894e",
+    "model": "meshy-t2.5 smart topology",
+    "prompt": "An original gentle low-poly fantasy creature species candidate for a cozy habitat, small rounded quadruped body, large expressive eyes, soft ear-like head tufts, smooth cream and moss-green material variation, neutral A-pose with four limbs clearly separated, full body centered, no base, no text, no background.",
+    "notes": "Source geometry is 10,532 triangles with UVs, normals and three 2K PBR textures. Blender 5.2.2 exported tangent data for the normal map; the mesh shape was not decimated. Meshy API access requires a paid plan and Meshy documents private output ownership on paid plans. Recorded license: LicenseRef-Meshy-Private for this local project use. The original provider output remains intact at assets/generated/meshy_output/review-candidates/norn/20261029_170840_norn-review-candidate-20261029_01a1897e/model.glb."
+  }
+}

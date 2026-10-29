@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A compact freestanding wooden drawing station for a cozy fantasy creature habitat, sturdy easel-like frame, blank pale marking board and small lower shelf, leave the board face plain and unobstructed for a live texture, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 5000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

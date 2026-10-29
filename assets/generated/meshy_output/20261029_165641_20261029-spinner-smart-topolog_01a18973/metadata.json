@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "20261029_spinner-smart-topology_01a18973",
+  "folder": "20261029_165641_20261029-spinner-smart-topolog_01a18973",
+  "root_task_id": "01a18973-49ba-731b-902e-f09bc3c9e38a",
+  "created_at": "2026-10-29T20:56:41.214Z",
+  "updated_at": "2026-10-29T20:58:14.014Z",
+  "tasks": [
+    {
+      "task_id": "01a18973-49ba-731b-902e-f09bc3c9e38a",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a18973-49ba-731b-902e-f09bc3c9e38a.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T20:57:01.807Z",
+      "updated_at": "2026-10-29T20:57:06.098Z"
+    },
+    {
+      "task_id": "01a18973-ebee-744a-866a-666434e182a2",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a18973-49ba-731b-902e-f09bc3c9e38a",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a18973-ebee-744a-866a-666434e182a2.json",
+      "operation_id": "habitat-spinner-refine-20261029",
+      "created_at": "2026-10-29T20:57:17.470Z",
+      "updated_at": "2026-10-29T20:58:14.014Z"
+    }
+  ]
+}

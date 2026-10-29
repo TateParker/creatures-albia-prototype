@@ -1,0 +1,23 @@
+{
+  "id": "01a18987-b3c8-7793-a7f8-5fc11e51e35c",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 810411714,
+  "prompt": "A single intact, closed, smooth fantasy creature egg for a cozy low-poly game. A complete continuous hard outer shell, fully sealed all the way around with no interior visible. Symmetrical upright oval, gently tapered at the top, softly rounded base. Uniform uninterrupted shell surface from crown to base, softly mottled pale cream with delicate warm golden speckles. No crack, no opening, no hole, no broken shell, no exposed interior, no hatching, no cutaway, no nest, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793308737001,
+  "progress": 100,
+  "started_at": 1793308737009,
+  "finished_at": 1793308753332,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18987-b3c8-7793-a7f8-5fc11e51e35c/output/model.glb?Expires=4946832000&Signature=ZEfpsq~JgLTHyWLehTAB6M~LjohzUdDaKi5W4vcLPisYgW270tRr0gVHe~4bNx0~3cVRzN3~l95Hlxk6cq2~w-Kws~vmx6TzypgqGOWQ3jjn6Edkrn~IpcQFCByXDtif0insIOmIkGK6fCwCdvutVf2NKgE5mjCxFiR1bL7dD5xFiUddsjXaDH4-74~4dsbgrssfpUJyaVxt-DM6IkvqC4kwCAo8Nvc49Ec99h9fbEZSxRiqh~SqP2s1i3YtT3zA2srKe-ENvvP-u52CroCsMVzYrrub336Uej953He0suDYDb08GQ1OqG3TGO5iMQ1u0WUSOZ2KRcYr2ANUGFL02w__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18987-b3c8-7793-a7f8-5fc11e51e35c/output/preview.png?Expires=4946832000&Signature=OU8bqlc5BRMLLpDFUHTYVHbvkhaHq018-b2er4Vbp7gAEAb3B3zQWANlDPSG8CBNV3~wYfz4P-CjDcfSRqQIbd5FCBbrdSAG4G~4GmRG3~vwsIBqY5xsBGUNt8-MBb4nINOjZ3Au1xrVSrWeqSo8GEIJtIJCeuf0x7ysM8esGUD28~DeUOCTKPVHBPhW--jB9f7aZQ3YAmpiXpZH7r8hS-fbl~cIPVupiUi55OTpXltawUAimV1PzyyJrgjl7j1oAQQb9umsOBuN7yJQvcBY2QesDC2KrvugCLC31-48E6HeEHhVnuelJ1406TEklxibOTP9i~DkBKcZd1KHlYHFEg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

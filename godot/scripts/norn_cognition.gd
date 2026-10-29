@@ -1,14 +1,16 @@
 class_name NornCognition
 extends RefCounted
 
-const VERSION := 4
+const VERSION := 5
 const EPISODE_LIMIT := 512
 const RECURRENT_UNITS := 128
 const RECURRENT_DEGREE := 4
 const NAMED_INPUT_COUNT := 20
 const MARK_INPUT_COUNT := 256
 const TARGET_INPUT_COUNT := 2
-const INPUT_COUNT := NAMED_INPUT_COUNT + MARK_INPUT_COUNT + TARGET_INPUT_COUNT
+const NEW_INPUT_COUNT := 4
+const LEGACY_INPUT_COUNT := NAMED_INPUT_COUNT + MARK_INPUT_COUNT + TARGET_INPUT_COUNT
+const INPUT_COUNT := LEGACY_INPUT_COUNT + NEW_INPUT_COUNT
 const MOTOR_OUTPUT_COUNT := 3
 const DRAW_MAX_POINTS_PER_STROKE := 128
 const PEER_SELECTION_RADIUS := 10.0
@@ -22,11 +24,16 @@ const ACTION_NON_DRIVE_LIMIT := 20.0
 const FRUIT_URGENT_HUNGER := 90.0
 const FRUIT_URGENT_GLUCOSE := 10.0
 const REST_URGENT_FATIGUE := 95.0
-const CHEMICAL_NAMES: Array[String] = [
+const LEGACY_CHEMICAL_INPUT_NAMES: Array[String] = [
 	"glucose", "hunger", "curiosity", "fatigue", "reward",
 	"punishment", "stress", "socialComfort", "arousal", "satiety"
 ]
-const ACTION_IDS: Array[String] = ["fruit", "spinner", "rest", "observe_peer", "idle", "draw"]
+const CHEMICAL_NAMES: Array[String] = [
+	"glucose", "hunger", "curiosity", "fatigue", "reward",
+	"punishment", "stress", "socialComfort", "arousal", "satiety", "thirst"
+]
+const LEGACY_ACTION_IDS: Array[String] = ["fruit", "spinner", "rest", "observe_peer", "idle", "draw"]
+const ACTION_IDS: Array[String] = ["fruit", "spinner", "rest", "observe_peer", "idle", "draw", "forage", "drink", "explore"]
 const DRAW_SURFACE_ID := "drawing_surface"
 const DRAW_TOOL_ID := "charcoal"
 const CONTEXT_IDS: Array[String] = ["hungry", "curious", "fatigued", "social", "settled"]
@@ -37,6 +44,7 @@ const INPUT_NAMES: Array[String] = [
 	"fruitAffordance", "spinnerAffordance", "fruitLanguageSignal", "spinnerLanguageSignal",
 	"praiseSignal", "scoldSignal"
 ]
+const EXTENSION_INPUT_NAMES: Array[String] = ["thirst", "nearForage", "nearDrink", "nearExplore"]
 const REACTION_TABLE := [
 	{"id": "metabolism", "target": "hunger", "rate": 1.55},
 	{"id": "curiosity", "target": "curiosity", "rate": 0.68, "trait": "curiosity", "traitRate": 0.34},
@@ -49,7 +57,8 @@ const REACTION_TABLE := [
 	{"id": "social-comfort-decay", "target": "socialComfort", "rate": -0.15},
 	{"id": "peer-comfort", "target": "socialComfort", "rate": 0.55, "stimulus": "nearbyPeer"},
 	{"id": "arousal-decay", "target": "arousal", "rate": -0.6},
-	{"id": "satiety-decay", "target": "satiety", "rate": -0.8}
+	{"id": "satiety-decay", "target": "satiety", "rate": -0.8},
+	{"id": "thirst", "target": "thirst", "rate": 0.8}
 ]
 const CHEMICAL_COUPLINGS := [
 	{"source": "stress", "target": "arousal", "rate": 0.12},
@@ -76,7 +85,8 @@ static func create_state(seed: int, traits: Dictionary = {}, initial: Dictionary
 		"stress": 0.0,
 		"socialComfort": 50.0,
 		"arousal": curiosity * 0.35,
-		"satiety": clampf(100.0 - hunger, 0.0, 100.0)
+		"satiety": clampf(100.0 - hunger, 0.0, 100.0),
+		"thirst": clampf(_finite_or(initial.get("thirst", 0.0), 0.0), 0.0, 100.0)
 	}
 	var safe_traits := {
 		"curiosity": clampf(_finite_or(traits.get("curiosity", 0.5), 0.5), 0.0, 1.0),
@@ -309,7 +319,7 @@ static func record_outcome(state: Dictionary, outcome: Dictionary = {}, external
 	var valence := 0.0
 	if event_type == "scold" or (event_type == "observe-feedback" and outcome.get("feedback", "") == "scold"):
 		valence = -1.0
-	elif ["food", "toy", "praise", "observe", "observe-feedback"].has(event_type):
+	elif ["food", "forage", "drink", "explore", "toy", "praise", "observe", "observe-feedback"].has(event_type):
 		valence = 1.0
 	var associations: Dictionary = state["actionAssociations"]
 	var context_associations: Dictionary = state["contextAssociations"]
@@ -427,8 +437,10 @@ static func restore_state(record: Dictionary) -> Dictionary:
 		"actionAssociations": associations
 	})
 	state["chemistry"] = chemistry.duplicate(true)
+	if not state["chemistry"].has("thirst"):
+		state["chemistry"]["thirst"] = 0.0
 	state["contextAssociations"] = _normalize_context_map(record["contextAssociations"])
-	state["episodes"] = (record["episodes"] as Array).duplicate(true)
+	state["episodes"] = _migrate_episodes((record["episodes"] as Array), record_version)
 	state["nextEpisodeId"] = record["nextEpisodeId"]
 	state["eligibility"] = _normalize_associations(record["eligibility"], 0.0)
 	state["contextEligibility"] = _normalize_context_map(record["contextEligibility"], 0.0)
@@ -450,7 +462,33 @@ static func _migrate_last_decision(value: Variant, record_version: int) -> Varia
 		var components: Dictionary = decision.get("components", {}).duplicate(true)
 		components["drawNeed"] = 0.0
 		decision["components"] = components
+	if record_version < VERSION:
+		var extended_scores: Dictionary = decision.get("actionScores", {}).duplicate(true)
+		for action_id: String in ["forage", "drink", "explore"]:
+			if not extended_scores.has(action_id):
+				extended_scores[action_id] = 0.0
+		decision["actionScores"] = extended_scores
+		var extended_components: Dictionary = decision.get("components", {}).duplicate(true)
+		for component: String in ["forageNeed", "drinkNeed", "exploreNeed"]:
+			if not extended_components.has(component):
+				extended_components[component] = 0.0
+		decision["components"] = extended_components
 	return decision
+
+
+static func _migrate_episodes(value: Array, record_version: int) -> Array:
+	var episodes: Array = value.duplicate(true)
+	if record_version >= VERSION:
+		return episodes
+	for episode_value: Variant in episodes:
+		if not (episode_value is Dictionary):
+			continue
+		var episode: Dictionary = episode_value
+		for chemistry_key: String in ["chemicalsBefore", "chemicalsAfter"]:
+			var chemistry: Variant = episode.get(chemistry_key, null)
+			if chemistry is Dictionary and not chemistry.has("thirst"):
+				chemistry["thirst"] = 0.0
+	return episodes
 
 
 static func get_chemical_names() -> Array[String]:
@@ -472,18 +510,57 @@ static func _valid_chemistry_signals(signals: Variant) -> bool:
 
 
 static func _make_policy(seed: int) -> Dictionary:
-	var rng := {"state": (seed ^ 0x9e3779b9) & 0xffffffff}
+	var policy := _make_legacy_policy(seed)
+	var legacy_input_weights: PackedFloat32Array = policy["inputWeights"]
 	var input_weights := PackedFloat32Array()
 	input_weights.resize(RECURRENT_UNITS * INPUT_COUNT)
+	input_weights.fill(0.0)
+	for unit: int in range(RECURRENT_UNITS):
+		var legacy_offset := unit * LEGACY_INPUT_COUNT
+		var extended_offset := unit * INPUT_COUNT
+		for input_index: int in range(LEGACY_INPUT_COUNT):
+			input_weights[extended_offset + input_index] = legacy_input_weights[legacy_offset + input_index]
+	var legacy_action_weights: PackedFloat32Array = policy["actionWeights"]
+	var action_weights := PackedFloat32Array()
+	action_weights.resize(ACTION_IDS.size() * RECURRENT_UNITS)
+	action_weights.fill(0.0)
+	for action_index: int in range(LEGACY_ACTION_IDS.size()):
+		var legacy_offset := action_index * RECURRENT_UNITS
+		var extended_offset := action_index * RECURRENT_UNITS
+		for unit: int in range(RECURRENT_UNITS):
+			action_weights[extended_offset + unit] = legacy_action_weights[legacy_offset + unit]
+	var cue_rng := {"state": (seed ^ 0x165667b1) & 0xffffffff}
+	if int(cue_rng["state"]) == 0:
+		cue_rng["state"] = 1
+	for unit: int in range(RECURRENT_UNITS):
+		var cue_offset := unit * INPUT_COUNT + LEGACY_INPUT_COUNT
+		for cue_index: int in range(NEW_INPUT_COUNT):
+			input_weights[cue_offset + cue_index] = (_next_random(cue_rng) * 2.0 - 1.0) * 0.12
+	var action_rng := {"state": (seed ^ 0xd3a2646c) & 0xffffffff}
+	if int(action_rng["state"]) == 0:
+		action_rng["state"] = 1
+	for action_index: int in range(LEGACY_ACTION_IDS.size(), ACTION_IDS.size()):
+		var action_offset := action_index * RECURRENT_UNITS
+		for unit: int in range(RECURRENT_UNITS):
+			action_weights[action_offset + unit] = (_next_random(action_rng) * 2.0 - 1.0) * 0.055
+	policy["inputWeights"] = input_weights
+	policy["actionWeights"] = action_weights
+	return policy
+
+
+static func _make_legacy_policy(seed: int) -> Dictionary:
+	var rng := {"state": (seed ^ 0x9e3779b9) & 0xffffffff}
+	var input_weights := PackedFloat32Array()
+	input_weights.resize(RECURRENT_UNITS * LEGACY_INPUT_COUNT)
 	input_weights.fill(0.0)
 	var recurrent_indices := PackedInt32Array()
 	recurrent_indices.resize(RECURRENT_UNITS * RECURRENT_DEGREE)
 	var recurrent_weights := PackedFloat32Array()
 	recurrent_weights.resize(RECURRENT_UNITS * RECURRENT_DEGREE)
 	var action_weights := PackedFloat32Array()
-	action_weights.resize(ACTION_IDS.size() * RECURRENT_UNITS)
+	action_weights.resize(LEGACY_ACTION_IDS.size() * RECURRENT_UNITS)
 	for unit: int in range(RECURRENT_UNITS):
-		var input_offset := unit * INPUT_COUNT
+		var input_offset := unit * LEGACY_INPUT_COUNT
 		for index: int in range(NAMED_INPUT_COUNT):
 			input_weights[input_offset + index] = (_next_random(rng) * 2.0 - 1.0) * 0.12
 	for unit: int in range(RECURRENT_UNITS):
@@ -497,14 +574,14 @@ static func _make_policy(seed: int) -> Dictionary:
 	if int(target_rng["state"]) == 0:
 		target_rng["state"] = 1
 	for unit: int in range(RECURRENT_UNITS):
-		var target_offset := unit * INPUT_COUNT + NAMED_INPUT_COUNT + MARK_INPUT_COUNT
+		var target_offset := unit * LEGACY_INPUT_COUNT + NAMED_INPUT_COUNT + MARK_INPUT_COUNT
 		for target_index: int in range(TARGET_INPUT_COUNT):
 			input_weights[target_offset + target_index] = (_next_random(target_rng) * 2.0 - 1.0) * 0.12
 	var visual_rng := {"state": ((seed ^ 0x85ebca6b) & 0xffffffff)}
 	if int(visual_rng["state"]) == 0:
 		visual_rng["state"] = 1
 	for unit: int in range(RECURRENT_UNITS):
-		var visual_offset := unit * INPUT_COUNT + NAMED_INPUT_COUNT
+		var visual_offset := unit * LEGACY_INPUT_COUNT + NAMED_INPUT_COUNT
 		for mark_index: int in range(MARK_INPUT_COUNT):
 			input_weights[visual_offset + mark_index] = (_next_random(visual_rng) * 2.0 - 1.0) * 0.12
 	var motor_rng := {"state": ((seed ^ 0x27d4eb2d) & 0xffffffff)}
@@ -620,7 +697,7 @@ static func _update_recurrent_state(state: Dictionary, observation: Dictionary) 
 static func _get_input_vector(state: Dictionary, observation: Dictionary) -> Array[float]:
 	var chemistry: Dictionary = observation.get("chemistry", state["chemistry"])
 	var input: Array[float] = []
-	for chemical: String in CHEMICAL_NAMES:
+	for chemical: String in LEGACY_CHEMICAL_INPUT_NAMES:
 		input.append(_normalized(float(chemistry.get(chemical, 0.0))))
 	var objects_value: Variant = observation.get("nearbyObjects", [])
 	var objects: Array = objects_value if objects_value is Array else []
@@ -629,7 +706,7 @@ static func _get_input_vector(state: Dictionary, observation: Dictionary) -> Arr
 	var peers: Array = observation.get("nearbyNorns", [])
 	var guidance = observation.get("guidance", null)
 	var languages: Dictionary = observation.get("languageSignals", {})
-	var guidance_active := guidance is Dictionary and ["fruit", "spinner"].has(guidance.get("objectId", ""))
+	var guidance_active := guidance is Dictionary and ["fruit", "spinner", "berry_bush", "spring", "echo_bloom"].has(guidance.get("objectId", ""))
 	input.append(_distance_signal(fruit))
 	input.append(_distance_signal(spinner))
 	input.append(1.0 if not peers.is_empty() else 0.0)
@@ -656,6 +733,13 @@ static func _get_input_vector(state: Dictionary, observation: Dictionary) -> Arr
 		target_delta = Vector2(clampf(target_delta_value.x, -1.0, 1.0), clampf(target_delta_value.y, -1.0, 1.0))
 	input.append(target_delta.x)
 	input.append(target_delta.y)
+	var berry := _find_object(objects, "berry_bush")
+	var spring := _find_object(objects, "spring")
+	var explore_target := _nearest_sensed_affordance(objects, "explore")
+	input.append(_normalized(float(chemistry.get("thirst", 0.0))))
+	input.append(_distance_signal(berry) if _has_affordance(berry, "forage") else 0.0)
+	input.append(_distance_signal(spring) if _has_affordance(spring, "drink") else 0.0)
+	input.append(_distance_signal(explore_target))
 	return input
 
 
@@ -664,6 +748,28 @@ static func _find_object(objects: Array, object_id: String) -> Dictionary:
 		if item is Dictionary and item.get("id", "") == object_id:
 			return item
 	return {}
+
+
+static func _nearest_sensed_affordance(objects: Array, affordance: String) -> Dictionary:
+	var nearest: Dictionary = {}
+	var nearest_distance := INF
+	for entry_value: Variant in objects:
+		if not (entry_value is Dictionary):
+			continue
+		var entry: Dictionary = entry_value
+		var distance_value: Variant = entry.get("distance", null)
+		if not bool(entry.get("available", true)) or not _has_affordance(entry, affordance) or not _is_finite_number(distance_value):
+			continue
+		var distance := maxf(0.0, float(distance_value))
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest = entry
+	return nearest
+
+
+static func _has_affordance(item: Dictionary, affordance: String) -> bool:
+	var affordances: Variant = item.get("affordances", [])
+	return affordances is Array and affordances.has(affordance)
 
 
 static func _distance_signal(item: Dictionary) -> float:
@@ -751,9 +857,13 @@ static func _score_decision(state: Dictionary, observation: Dictionary) -> Dicti
 	var hunger := clampf(float(chemistry["hunger"]), 0.0, 100.0)
 	var glucose := clampf(float(chemistry["glucose"]), 0.0, 100.0)
 	var curiosity := clampf(float(chemistry["curiosity"]), 0.0, 100.0)
+	var thirst := clampf(float(chemistry.get("thirst", 0.0)), 0.0, 100.0)
 	var fruit_need := maxf(hunger, 100.0 - glucose)
 	var spinner_need := maxf(0.0, curiosity - 16.0) * (0.58 + float(state["traits"]["curiosity"]) * 0.46)
 	var draw_need := maxf(0.0, curiosity - 20.0) * 0.34 * (0.7 + float(state["traits"]["curiosity"]) * 0.3)
+	var forage_need := fruit_need
+	var drink_need := thirst
+	var explore_need := maxf(0.0, curiosity - 14.0) * (0.65 + float(state["traits"]["curiosity"]) * 0.45)
 	var nearby_norns: Array = observation.get("nearbyNorns", [])
 	var contexts := _get_context_ids(chemistry, nearby_norns.size())
 	var low_glucose_need := 100.0 - glucose
@@ -766,7 +876,10 @@ static func _score_decision(state: Dictionary, observation: Dictionary) -> Dicti
 		"rest": rest_need,
 		"observe_peer": observe_need,
 		"idle": 24.0,
-		"draw": clampf(draw_need, 0.0, 40.0)
+		"draw": clampf(draw_need, 0.0, 40.0),
+		"forage": clampf(forage_need, 0.0, 100.0),
+		"drink": clampf(drink_need, 0.0, 100.0),
+		"explore": clampf(explore_need, 0.0, 100.0)
 	}
 	var action_scores: Dictionary = {}
 	var score_breakdown: Dictionary = {}
@@ -834,7 +947,8 @@ static func _score_decision(state: Dictionary, observation: Dictionary) -> Dicti
 		"components": {
 			"fruitNeed": fruit_need, "fruitHabit": fruit_habit, "fruitContext": fruit_context, "fruitScore": float(action_scores["fruit"]),
 			"spinnerNeed": spinner_need, "spinnerHabit": spinner_habit, "spinnerContext": spinner_context, "spinnerScore": float(action_scores["spinner"]),
-			"restNeed": rest_need, "observeNeed": observe_need, "drawNeed": draw_need
+			"restNeed": rest_need, "observeNeed": observe_need, "drawNeed": draw_need,
+			"forageNeed": forage_need, "drinkNeed": drink_need, "exploreNeed": explore_need
 		}
 	}
 
@@ -875,6 +989,12 @@ static func _eligible_actions(observation: Dictionary) -> Array[String]:
 			eligible.append(action_id)
 		elif action_id == "draw" and _has_sensed_id(objects, DRAW_SURFACE_ID) and _has_sensed_id(objects, DRAW_TOOL_ID):
 			eligible.append(action_id)
+		elif action_id == "forage" and _has_sensed_affordance(objects, "forage"):
+			eligible.append(action_id)
+		elif action_id == "drink" and _has_sensed_affordance(objects, "drink"):
+			eligible.append(action_id)
+		elif action_id == "explore" and _has_sensed_affordance(objects, "explore"):
+			eligible.append(action_id)
 		elif ["rest", "idle"].has(action_id):
 			eligible.append(action_id)
 	return eligible
@@ -886,6 +1006,16 @@ static func _has_sensed_id(sensed: Array, expected_id: String) -> bool:
 			continue
 		var entry: Dictionary = entry_value
 		if str(entry.get("id", "")) == expected_id and bool(entry.get("available", true)):
+			return true
+	return false
+
+
+static func _has_sensed_affordance(sensed: Array, affordance: String) -> bool:
+	for entry_value: Variant in sensed:
+		if not (entry_value is Dictionary):
+			continue
+		var entry: Dictionary = entry_value
+		if bool(entry.get("available", true)) and _has_affordance(entry, affordance):
 			return true
 	return false
 
@@ -924,6 +1054,12 @@ static func _decision_reason(action_id: String, breakdown: Dictionary, hunger: f
 		return "Learned preferences are drawing them toward another Norn" if preference > drive else "Social attention is drawing them toward another Norn"
 	if action_id == "draw":
 		return "Learned preferences are favoring a mark-making visit" if preference > drive else "Curiosity is drawing attention to the mark surface"
+	if action_id == "forage":
+		return "Learned preferences are favoring a berry visit" if preference > drive else "Hunger is drawing attention to nearby berries"
+	if action_id == "drink":
+		return "Learned preferences are favoring the spring" if preference > drive else "Thirst is calling for fresh water"
+	if action_id == "explore":
+		return "Remembering a rewarding discovery" if memory > 0.0 and memory >= strongest_preference else "Curiosity is drawing attention to a nearby discovery"
 	if preference > drive:
 		return "Learned preferences are favoring a quiet moment"
 	return "Their immediate needs are settled"
@@ -991,6 +1127,12 @@ static func _derive_learning_delta(event_type: String, explicit_delta) -> float:
 		return clampf(float(explicit_delta), -0.2, 0.2)
 	if event_type == "food":
 		return 0.12
+	if event_type == "forage":
+		return 0.12
+	if event_type == "drink":
+		return 0.1
+	if event_type == "explore":
+		return 0.14
 	if event_type == "toy":
 		return 0.14
 	if event_type == "praise":
@@ -1005,11 +1147,18 @@ static func _derive_learning_delta(event_type: String, explicit_delta) -> float:
 
 
 static func _adjust_chemistry_for_outcome(chemistry: Dictionary, event_type: String, feedback: String) -> void:
-	if event_type == "food":
+	if event_type == "food" or event_type == "forage":
 		chemistry["hunger"] = float(chemistry["hunger"]) - 42.0
 		chemistry["glucose"] = float(chemistry["glucose"]) + 34.0
 		chemistry["satiety"] = float(chemistry["satiety"]) + 38.0
 		chemistry["reward"] = float(chemistry["reward"]) + 8.0
+	elif event_type == "drink":
+		chemistry["thirst"] = float(chemistry.get("thirst", 0.0)) - 55.0
+		chemistry["reward"] = float(chemistry["reward"]) + 2.0
+	elif event_type == "explore":
+		chemistry["curiosity"] = float(chemistry["curiosity"]) - 12.0
+		chemistry["reward"] = float(chemistry["reward"]) + 7.0
+		chemistry["arousal"] = float(chemistry["arousal"]) + 3.0
 	elif event_type == "toy":
 		chemistry["curiosity"] = float(chemistry["curiosity"]) - 45.0
 		chemistry["reward"] = float(chemistry["reward"]) + 8.0
@@ -1034,9 +1183,11 @@ static func _adjust_chemistry_for_outcome(chemistry: Dictionary, event_type: Str
 
 static func _valid_record(record: Dictionary) -> bool:
 	var record_version := int(record.get("version", -1))
-	if not [1, 2, 3, VERSION].has(record_version):
+	if not [1, 2, 3, 4, VERSION].has(record_version):
 		return false
 	var allow_missing_draw := record_version < 3
+	var allow_missing_extensions := record_version < VERSION
+	var allow_missing_thirst := record_version < VERSION
 	var seed_value = record.get("seed", null)
 	var traits = record.get("traits", null)
 	var chemistry = record.get("chemistry", null)
@@ -1044,19 +1195,19 @@ static func _valid_record(record: Dictionary) -> bool:
 		return false
 	if not (traits is Dictionary) or not _bounded_number(traits.get("curiosity", null), 0.0, 1.0) or not _bounded_number(traits.get("sociability", null), 0.0, 1.0):
 		return false
-	if not _valid_chemistry(chemistry):
+	if not _valid_chemistry(chemistry, allow_missing_thirst):
 		return false
-	if not (record.get("actionAssociations", null) is Dictionary) or not _valid_associations(record["actionAssociations"], allow_missing_draw):
+	if not (record.get("actionAssociations", null) is Dictionary) or not _valid_associations(record["actionAssociations"], allow_missing_draw, allow_missing_extensions):
 		return false
-	if not (record.get("contextAssociations", null) is Dictionary) or not _valid_context_map(record["contextAssociations"], allow_missing_draw):
+	if not (record.get("contextAssociations", null) is Dictionary) or not _valid_context_map(record["contextAssociations"], allow_missing_draw, allow_missing_extensions):
 		return false
 	if not (record.get("episodes", null) is Array) or record["episodes"].size() > EPISODE_LIMIT:
 		return false
 	if not _is_finite_number(record.get("nextEpisodeId", null)) or int(record["nextEpisodeId"]) < 1:
 		return false
-	if not (record.get("eligibility", null) is Dictionary) or not _valid_associations(record["eligibility"], allow_missing_draw):
+	if not (record.get("eligibility", null) is Dictionary) or not _valid_associations(record["eligibility"], allow_missing_draw, allow_missing_extensions):
 		return false
-	if not (record.get("contextEligibility", null) is Dictionary) or not _valid_context_map(record["contextEligibility"], allow_missing_draw):
+	if not (record.get("contextEligibility", null) is Dictionary) or not _valid_context_map(record["contextEligibility"], allow_missing_draw, allow_missing_extensions):
 		return false
 	var recurrent = record.get("recurrent", null)
 	if not (recurrent is Dictionary) or not (recurrent.get("hidden", null) is Array) or recurrent["hidden"].size() != RECURRENT_UNITS:
@@ -1069,11 +1220,11 @@ static func _valid_record(record: Dictionary) -> bool:
 	if not _bounded_number(record.get("commitmentUntil", null), 0.0, 1.0e20):
 		return false
 	var last_decision = record.get("lastDecision", null)
-	if last_decision != null and (not (last_decision is Dictionary) or not _valid_decision(last_decision, allow_missing_draw)):
+	if last_decision != null and (not (last_decision is Dictionary) or not _valid_decision(last_decision, allow_missing_draw, allow_missing_extensions)):
 		return false
 	var episode_ids := {}
 	for episode in record["episodes"]:
-		if not (episode is Dictionary) or not _valid_episode(episode):
+		if not (episode is Dictionary) or not _valid_episode(episode, allow_missing_thirst):
 			return false
 		var episode_id := int(episode["id"])
 		if episode_ids.has(episode_id) or episode_id >= int(record["nextEpisodeId"]):
@@ -1082,27 +1233,33 @@ static func _valid_record(record: Dictionary) -> bool:
 	return true
 
 
-static func _valid_chemistry(chemistry) -> bool:
+static func _valid_chemistry(chemistry, allow_missing_thirst: bool = false) -> bool:
 	if not (chemistry is Dictionary):
 		return false
 	for chemical: String in CHEMICAL_NAMES:
+		if chemical == "thirst" and allow_missing_thirst and not chemistry.has(chemical):
+			continue
 		if not _bounded_number(chemistry.get(chemical, null), 0.0, 100.0):
 			return false
 	return true
 
 
-static func _valid_associations(associations: Dictionary, allow_missing_draw: bool = false) -> bool:
+static func _valid_associations(associations: Dictionary, allow_missing_draw: bool = false, allow_missing_extensions: bool = false) -> bool:
 	for action_id: String in ACTION_IDS:
 		if allow_missing_draw and action_id == "draw" and not associations.has("draw"):
+			continue
+		if allow_missing_extensions and ["forage", "drink", "explore"].has(action_id) and not associations.has(action_id):
 			continue
 		if not _bounded_number(associations.get(action_id, null), 0.0, 1.0):
 			return false
 	return true
 
 
-static func _valid_context_map(context_map: Dictionary, allow_missing_draw: bool = false) -> bool:
+static func _valid_context_map(context_map: Dictionary, allow_missing_draw: bool = false, allow_missing_extensions: bool = false) -> bool:
 	for action_id: String in ACTION_IDS:
 		if allow_missing_draw and action_id == "draw" and not context_map.has("draw"):
+			continue
+		if allow_missing_extensions and ["forage", "drink", "explore"].has(action_id) and not context_map.has(action_id):
 			continue
 		var row = context_map.get(action_id, null)
 		if not (row is Dictionary):
@@ -1113,7 +1270,7 @@ static func _valid_context_map(context_map: Dictionary, allow_missing_draw: bool
 	return true
 
 
-static func _valid_episode(episode: Dictionary) -> bool:
+static func _valid_episode(episode: Dictionary, allow_missing_thirst: bool = false) -> bool:
 	if not _is_finite_number(episode.get("id", null)) or int(episode["id"]) < 1:
 		return false
 	if not _bounded_number(episode.get("time", null), 0.0, 1.0e20):
@@ -1123,9 +1280,9 @@ static func _valid_episode(episode: Dictionary) -> bool:
 		return false
 	if not _bounded_number(observation.get("fatigue", null), 0.0, 100.0) or not _bounded_number(observation.get("peerCount", null), 0.0, 4.0):
 		return false
-	if not (episode.get("chemicalsBefore", null) is Dictionary) or not _valid_chemistry(episode["chemicalsBefore"]):
+	if not (episode.get("chemicalsBefore", null) is Dictionary) or not _valid_chemistry(episode["chemicalsBefore"], allow_missing_thirst):
 		return false
-	if not (episode.get("chemicalsAfter", null) is Dictionary) or not _valid_chemistry(episode["chemicalsAfter"]):
+	if not (episode.get("chemicalsAfter", null) is Dictionary) or not _valid_chemistry(episode["chemicalsAfter"], allow_missing_thirst):
 		return false
 	if not _bounded_number(episode.get("salience", null), 0.0, 1.0):
 		return false
@@ -1137,8 +1294,11 @@ static func _valid_episode(episode: Dictionary) -> bool:
 	if action_id != null and not ACTION_IDS.has(action_id):
 		return false
 	var target_id = episode.get("targetId", null)
-	if target_id != null and not ["fruit", "spinner", "praise", "scold", "drawing_surface"].has(target_id):
-		return false
+	if target_id != null:
+		if not (target_id is String):
+			return false
+		if not ["fruit", "spinner", "praise", "scold", "drawing_surface", "berry_bush", "spring", "echo_bloom"].has(target_id) and not _is_valid_route_marker_id(target_id):
+			return false
 	var actor_id = episode.get("actorId", null)
 	if actor_id != null and (not (actor_id is String) or actor_id.length() > 32):
 		return false
@@ -1171,6 +1331,13 @@ static func _valid_episode(episode: Dictionary) -> bool:
 	return true
 
 
+static func _is_valid_route_marker_id(target_id: String) -> bool:
+	if not target_id.begins_with("route_marker_"):
+		return false
+	var marker_number := target_id.trim_prefix("route_marker_")
+	return marker_number.is_valid_int() and int(marker_number) >= 1 and int(marker_number) <= 8
+
+
 static func _valid_draw_stroke_data(value: Variant) -> bool:
 	if not (value is Dictionary):
 		return false
@@ -1190,7 +1357,7 @@ static func _valid_draw_stroke_data(value: Variant) -> bool:
 	return true
 
 
-static func _valid_decision(decision: Variant, allow_missing_draw: bool = false) -> bool:
+static func _valid_decision(decision: Variant, allow_missing_draw: bool = false, allow_missing_extensions: bool = false) -> bool:
 	if not (decision is Dictionary) or not ACTION_IDS.has(decision.get("actionId", "")):
 		return false
 	var scores = decision.get("actionScores", null)
@@ -1198,6 +1365,8 @@ static func _valid_decision(decision: Variant, allow_missing_draw: bool = false)
 		return false
 	for action_id: String in ACTION_IDS:
 		if allow_missing_draw and action_id == "draw" and not scores.has("draw"):
+			continue
+		if allow_missing_extensions and ["forage", "drink", "explore"].has(action_id) and not scores.has(action_id):
 			continue
 		if not _is_finite_number(scores.get(action_id, null)):
 			return false
@@ -1217,6 +1386,11 @@ static func _valid_decision(decision: Variant, allow_missing_draw: bool = false)
 			return false
 	if (not allow_missing_draw or components.has("drawNeed")) and not _is_finite_number(components.get("drawNeed", null)):
 		return false
+	for component: String in ["forageNeed", "drinkNeed", "exploreNeed"]:
+		if allow_missing_extensions and not components.has(component):
+			continue
+		if not _is_finite_number(components.get(component, null)):
+			return false
 	return true
 
 

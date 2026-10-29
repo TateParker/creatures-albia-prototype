@@ -1,0 +1,4 @@
+/assets/generated/meshy_output/**/*.glb filter=lfs diff=lfs merge=lfs -text
+/assets/generated/meshy_output/**/*.png filter=lfs diff=lfs merge=lfs -text
+/godot/assets/generated/norns/albia-norn/**/*.glb filter=lfs diff=lfs merge=lfs -text
+/godot/assets/generated/norns/albia-norn/**/*.png filter=lfs diff=lfs merge=lfs -text

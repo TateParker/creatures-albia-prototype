@@ -1,0 +1,30 @@
+{
+  "id": "01a1897c-de0c-72ea-a238-3adae72b9047",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2893215501,
+  "prompt": "A curious low-poly fantasy flower landmark for a gentle creature habitat, tall green stem, six soft aqua and warm gold petals around a glowing golden heart, distinctive simple silhouette, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793308024341,
+  "progress": 100,
+  "started_at": 1793308024347,
+  "finished_at": 1793308070149,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897c-de0c-72ea-a238-3adae72b9047/output/model.glb?Expires=4946832000&Signature=liCt8SMy4cbuiFmi-S1TKF0FrWqsd6Mgo0qMhVuFnD68NXpwxD8GQp2vnmjGmzk6Ld0JYzxBJ90f9ArKQjrId~wU82TFDvqey4p0ShR~nHVWt8MI-fYh1-EVX8MLYgrSE0cW-CBlF64JnKJiaa9ChWi4JJ11bmdvJeOzuKnCn~28VyUt4BmDeCz-~~3MGBCIit4gGIsh12arA9mpkyZUx-9360pCqLRqNwgaC0o5b105UYsLWMrowZFJo5oqqqzRYxG2LqhdHJah3EymZARXAvlGK-msORRHND~fzFEZjwfKXXq~qlyw78DuL9FHzwewcuX4gLZ-ULA6I3rGcGrmhg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897c-de0c-72ea-a238-3adae72b9047/output/preview.png?Expires=4946832000&Signature=qOi-B-Pf7NvgtWaCOiFF-0wkg3L9Ku55CoKmkbAiuO4CqC91u-OmoCjOp0xzcfkLFwfEYxOxq6kwSBITSbozngjqgaTf7CHyL4mA2SQtiRedNuI47AM1XpTxRPIyW4E1AiDsv3E6609yq-3~fEjVjQxDR565~JCTFSU3SJ3zaw6pyS~kCWsCItoRBdtRRFhep7pqTdKub~Xr2DUD-ZuPK-aA63r0wI5yrW03Zrma4WirCQEMEnxFr4k7vJLWofbnNZ8o5qf4nBkPJ6kWmYwINyQFCL7zI3zixI1SqsvqYPYGRCSvwmU8PPKk0UP-ny3-bItbUdyIIkmAEASRUUhXmQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897c-de0c-72ea-a238-3adae72b9047/output/texture_0.png?Expires=4946832000&Signature=qUYH7cW16aiMvbSXzxId5Sv0zQHhLgvbqfUX53VrJdbAiSJMjlq9oKYjc5jjOl7WhtrxL5DjGr3NNBHx~fPNrlVoXduZGpt33g3O--qPvjcs4-TCIbxENQvcZMVz1xl1v-pwCUbgqQLUg0UpjpIU-Ii-BitK0XXOELuFiizPBndTOZL6MfFqSrfrzxIAHAWIZWquslYYdkGt9zQD5DeBV8rp1HBZXcYCdb-e8mRmBgAOt4eMmDOBvFs5p-xTptHi36HiAFRfW8PyHbHCv6YMNnMOkzUrefPS4I0KZ0bYDgINzTeuftn6o~spER7vpko5a0zHgkcx-tfqX5lOWAN1Wg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897c-de0c-72ea-a238-3adae72b9047/output/texture_0_metallic.png?Expires=4946832000&Signature=iuvlJz9zdTRs3bozfVZfAhxTnJ3~ZCeyqvs3dUkF9Bozs6jDztvXxZx0JWYTCzyQmQKFnq4g-eoAqbU7wpQZYDCvE8XbCu~giAqbhIcj92yNYLdcW4xO3Ikmg1-nXEnrZHjSXRLlT6TvzCtru-PYW2M6qJ5RXYykinlkAkfdnnBTziW7J97XbqI0JAGekRS17Bfq2zp1oEMX48rJ8nc-rqtw~SkwH4RCx-CFzsS5X8LrluE5w14onU1h1MQO2vtKgI2xEhZLmViEOweL85mseOu8hfqRF2Q~8TiFwnVh2lKztSiAQZJo-FJON~q2YgtwrzxG-wNE7hJxpz1Lg~VkwQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897c-de0c-72ea-a238-3adae72b9047/output/texture_0_roughness.png?Expires=4946832000&Signature=g6~3EOg3plWMrXBbfJHVnyzfuhOj-CxNq17yAOYyuJC1956Jwwv0vJN7JcV-CuX2vTGSTck06d4eHPJzb1t0vEunkPcaUxpYVqOkw4uQ16uAp8NUI4vicDqe1Y39gSMBG2cVLRNkmEdUuz6cXpu3imJiPM1bA6j9mtasZppUe~wbjHoeWQ-zr~TkqnR-d~V7ESfSKZL~hv~2rRREIACGP3q45h~G7W0VJvcs8kCz5xP6603jhV7JcSGgkodwRlTrxHZyLkrW4WqHHGWwritMpeLGxP0kmegq3bxMeaNXVHH5J2xW8rq89yUyzECT5G9MVJuItlxxEB3z6WpnNnCupA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897c-de0c-72ea-a238-3adae72b9047/output/texture_0_normal.png?Expires=4946832000&Signature=LB6YeUJXGvE8WUzUP-WyCzs5mkX08QAQmdET6~DlkfL9-2ysc1NxIujE1eYY1b6lW69FwbxKHzw4u~k1c8P9dGtkIQDVaOp8vCIPBy33p~DFREvxla3-rqXJMI9Gq~fTprJ9Y0vCHYNLP9Jb7O~RLw27emE-6OH6yCnTF2P2OFst6wMnS0wrfIcDAhsM4pNFlYJ2uIWYS~sriNev-YDlO6RUPhEDZiZhwcqg9x0m36OaGoueIozlQWvUhqJ32BWpcNvsPUGrAYuQ4xFRLb6hiYdAQ9QX1HEuIewfXBVUTnUEJ2sbJzZBLzwIMTYItXgL0ME-YHCsR~9znV38dNd6Pw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

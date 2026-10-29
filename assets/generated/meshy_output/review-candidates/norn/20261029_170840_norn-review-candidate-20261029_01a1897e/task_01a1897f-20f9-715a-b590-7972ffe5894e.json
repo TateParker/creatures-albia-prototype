@@ -1,0 +1,30 @@
+{
+  "id": "01a1897f-20f9-715a-b590-7972ffe5894e",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 3221056904,
+  "prompt": "An original gentle low-poly fantasy creature species candidate for a cozy habitat, small rounded quadruped body, large expressive eyes, soft ear-like head tufts, smooth cream and moss-green material variation, neutral A-pose with four limbs clearly separated, full body centered, no base, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793308172547,
+  "progress": 100,
+  "started_at": 1793308172552,
+  "finished_at": 1793308203073,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897f-20f9-715a-b590-7972ffe5894e/output/model.glb?Expires=4946832000&Signature=ZEjTo-H4-pqC-N91uIjk8E1gsDJMqyms9HKmHHKIw61dwMIZptPSJWz~rmRaxWBr2mw~Fu~HPj0snSEpJKPs8nN9LvRdItNKIHEKt7XaaQkdRiDO7EUhpG4jnMAXXLCDIDXQJFB-ORKIhuMQTN1kjPrqRsbsqd1UTeT9GakhXpeAfVRwuJHbx~l2gFtoDlCRt0eVpZP~8yWJ3jCAf6LEJUYDUMs~ogy7rDb1B6PtxaEjTEgRIoxZ-bYtk-LS2teJn-bw62Wtd6e8PaNb1BBv1dFyCvdFNO1Y3DtmCeF0LUvhcvVt3hpHyyUchVYPginqIqQvEaqqAWGfVVmNTIeC9w__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897f-20f9-715a-b590-7972ffe5894e/output/preview.png?Expires=4946832000&Signature=EdhqJKtoDPdjNOOUq2-tMGqYG~IrknA76fjqCeOVHVQJxiIJZdCBy1H~TzlUztw7RxKyRNy3sbke5NlynCM2IOTzvJW834fdCeoo6hKeB0jiyVM47gRh8hK68nuf52ouDuzoSrCK~zx2zoUHb6bA7R1DL9N6X6J8PMOV0LwJl6I6BYnjk-xAU-O7EE5XgGLcTsow2N6CKK~Os40TBWlARt8fBwmJ7aQvwqcCnKs5UA9jLcS7LTZHcDh6XJR5MzY7jk9AdWtuzQTn0hYdmlBTGB76lAFfr48V2nwcFEJQy31dpMqMmmT0LITqoc~HKd~EXLZnYDZWAz0Xttxo55nNTA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897f-20f9-715a-b590-7972ffe5894e/output/texture_0.png?Expires=4946832000&Signature=G2Tk9ntVzjznb4R~Ug3ZiZmpqg3mAqyfBGoDjfrDegXiRWlx2Z3Q6ltKXUBdJiZyWKYc9C7wOUNXMrPF6rtRuRjsv6vtXiwGI6iBuZkaUjguoF1M50Qsvb6zvpPtmjq09L-VSk7R0ywAl-GEWY0Ii1~dbISGysyiag1Ay9wBE3nV1MVgjMIwUx1OAAmEhFf~9OSha4uiVqxUILUFf3uUWwobfiUNOjyybRePTL2Zq6mJM5NWb8DvGXaed2eY~wVbTcBbk-7CWeLIi-d5nB7CE~Vams~EbjBgyh0zS4JWnWITexIk~c4qrfp-QjtAj~FTPv5tbpWrTBV7DixQi~v3Ig__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897f-20f9-715a-b590-7972ffe5894e/output/texture_0_metallic.png?Expires=4946832000&Signature=KwDXcOmwq2tJrK61ErSd1qk~QCx-hj-rFr1g00CMJnzjVMvq41G9K3MuG4pr8ipuhhEyEPBSPUDm5DqzHe-aEXJzfERr4wO83q8Mt-eSDBeOCwZftYWv29gnJkz~M4feuoPTnW93eKab2vjuk3p07dYfLUDG4DR~PdAfLZk9z-O4FfhutKFKw5-VR7v0iu5g7N9-M32JVxZxgRlS~g~0B0os27wsOD7O0yu-n2yWAycS6aWwBOx2IdqJ2epSmz1nxzvuxYA2y6kIJf3wn69jLuXNUR0qt7MNXmz5-ia32f7iPrXtDylXtPeUrwxzGYVSwHgabU7cSCJCrBR72LW~bg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897f-20f9-715a-b590-7972ffe5894e/output/texture_0_roughness.png?Expires=4946832000&Signature=buW8-v0-~wksqqw-l6i-kdQ6MQMZiGCJ444HAlF7pQuaU4xdxGIZvV~oOWKENxCFk2wZ7kQXsNLJplO6OaeAlhuQyK6sxkNCjIkKTyjXuz8Tv5MS3sCbLdR0a39ygXOD5AQXPOwPex42Ijadrqnr~fvKsluqiSs63GAcdkhLgeIJcvmN5nGbPkq462gErDv-iRsDsfZzaLQVkpYlg8436LbpNciS2Ka8nVd8pqZMCgHKioyPp0r9tFUCcdCviVU1-tqAudMFd~qqHEhnskZLxbyUbb-PLDFtUH~9rOmRri5FlLEFP4u6ss1DP9LeS~0sKbrtbfnJCBvn0LrufS0aOg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897f-20f9-715a-b590-7972ffe5894e/output/texture_0_normal.png?Expires=4946832000&Signature=ZFszZLohv9~jBE20RGPj8t6bqrSBMn1VJCmh-m1dvu4hMIK96f~SV~kQRSrbOGtc32eohcJDp~gl9457-fGDY54Rl~KJOrNP9f9ePMUNYKbfIBkWpVKyxF8VCYsSK9wPgKzDxNOAKbM5Ds8N3NHTEhL4W8uEXbk7OyAY~gFPWovIwjwknRh9hqWImCW4xlwk2bAquBSkN6o4Elkml~Rvgd2Hrn3uqoVP2vo6S2nhbua-E5r4~pN~3Ko14OHtpyMb6lE~I~v5oUIhZ~NsWGq0K6b0qn01D3dM7xsf6Rm1dwbgve8FWc8fvqo2cgZ2V4EPOQym4YI~SqU6TxkNBzYUaw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

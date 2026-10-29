@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "20261029_egg-smart-topology_01a18977",
+  "folder": "20261029_170125_20261029-egg-smart-topology-01_01a18977",
+  "root_task_id": "01a18977-9e43-731c-87d9-f4a14929b409",
+  "created_at": "2026-10-29T21:01:25.174Z",
+  "updated_at": "2026-10-29T21:02:49.500Z",
+  "tasks": [
+    {
+      "task_id": "01a18977-9e43-731c-87d9-f4a14929b409",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a18977-9e43-731c-87d9-f4a14929b409.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T21:01:37.288Z",
+      "updated_at": "2026-10-29T21:01:41.920Z"
+    },
+    {
+      "task_id": "01a18978-2841-7724-8798-27c88a82fb54",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a18977-9e43-731c-87d9-f4a14929b409",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a18978-2841-7724-8798-27c88a82fb54.json",
+      "operation_id": "habitat-egg-refine-20261029",
+      "created_at": "2026-10-29T21:01:55.048Z",
+      "updated_at": "2026-10-29T21:02:49.500Z"
+    }
+  ]
+}

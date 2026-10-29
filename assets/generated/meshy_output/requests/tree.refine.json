@@ -1,0 +1,7 @@
+{
+  "mode": "refine",
+  "preview_task_id": "01a18969-ace3-70ef-a4b2-573eeed729ae",
+  "enable_pbr": true,
+  "texture_resolution": "2k",
+  "target_formats": ["glb"]
+}

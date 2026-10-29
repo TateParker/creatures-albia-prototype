@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A small clear-water spring for a low-poly fantasy habitat, shallow blue pool, pale stone rim and several translucent aqua glassy shards, compact ground prop, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 5000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

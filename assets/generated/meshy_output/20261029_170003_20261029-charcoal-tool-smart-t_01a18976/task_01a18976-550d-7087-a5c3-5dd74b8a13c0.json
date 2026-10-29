@@ -1,0 +1,23 @@
+{
+  "id": "01a18976-550d-7087-a5c3-5dd74b8a13c0",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2126347600,
+  "prompt": "A short handmade charcoal drawing stick with a simple small wooden rest, low-poly soft fantasy game prop, dark charcoal tip and warm wood, no marks or lettering, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307597516,
+  "progress": 100,
+  "started_at": 1793307597520,
+  "finished_at": 1793307612385,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18976-550d-7087-a5c3-5dd74b8a13c0/output/model.glb?Expires=4946832000&Signature=Hc0KGdd3KXQMnVsTlBBX5faTgcgNuS3hd~6C95YNVIsW66lIEoRKyXrQ5pLuAliukxXKHolsOxX4QJT8~x20ywZvTZTtCPF0t6u4pM2t17ucbblKVnwgUGtuMZlwMTY5zEbQqmdDPxLLv8GC100drzY6xH9~gYmGBijnSIKRgTO8dXFqVCURBWUGqENi7yKcVhLUrW1wkZiaubqSzH0NGXOSQ2Q8-i7HbqWhFN73EH8iK~WKCdv-vg9RKmzcUpDFc1klAExt8tyiUOgQ0XNvfVrCL-H9Su3a2GRq-1IDSw5EvejVw9M3ckAV~p914LDwGbZvRlE8UK-Fbx0virKUkg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18976-550d-7087-a5c3-5dd74b8a13c0/output/preview.png?Expires=4946832000&Signature=Yya89O~1EP-jiVPvdjGSNVXqxv-MJGuKfbBGW6sBOKs6IvngEmz63kejoeurxtVNOgKfW~ZgQVVPtthnubhUAbOXWnv2duv2W8oJAB7Q0lEmtCN7~6wh6GIGZ0nxfa~XAsQiFfWtICmumAqhq7gxKq3tPK815wSD0S9oRlu14eV7pdVndiEwu79pVk9pvZ7jP0vUoR0FRJ13H9GgjvPHxzUEPjR2jFq~x7wezSDHKVFoTH5fHWQEPvOwK0ZfxGvPYJT2AsnegxvTTOt2qUDa1E1Y~R0J07ah8QTI71A2yVNnDhycbXlj2GAK44ceqL78gczlX8Lt~BJwUldh5vESOw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

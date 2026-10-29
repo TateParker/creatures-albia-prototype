@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "20261029_spring-smart-topology_01a1897a",
+  "folder": "20261029_170455_20261029-spring-smart-topology_01a1897a",
+  "root_task_id": "01a1897a-d349-757b-a8d5-9d570ca76470",
+  "created_at": "2026-10-29T21:04:55.259Z",
+  "updated_at": "2026-10-29T21:06:09.119Z",
+  "tasks": [
+    {
+      "task_id": "01a1897a-d349-757b-a8d5-9d570ca76470",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a1897a-d349-757b-a8d5-9d570ca76470.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T21:05:14.098Z",
+      "updated_at": "2026-10-29T21:05:18.612Z"
+    },
+    {
+      "task_id": "01a1897b-6e77-7068-8a08-fdfe75584b47",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a1897a-d349-757b-a8d5-9d570ca76470",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a1897b-6e77-7068-8a08-fdfe75584b47.json",
+      "operation_id": "habitat-spring-refine-20261029",
+      "created_at": "2026-10-29T21:05:29.642Z",
+      "updated_at": "2026-10-29T21:06:09.119Z"
+    }
+  ]
+}

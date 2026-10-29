@@ -1,0 +1,12 @@
+{
+  "mode": "preview",
+  "prompt": "An original gentle low-poly fantasy creature species candidate for a cozy habitat, small rounded quadruped body, large expressive eyes, soft ear-like head tufts, smooth cream and moss-green material variation, neutral A-pose with four limbs clearly separated, full body centered, no base, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 10000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ],
+  "pose_mode": "a-pose"
+}

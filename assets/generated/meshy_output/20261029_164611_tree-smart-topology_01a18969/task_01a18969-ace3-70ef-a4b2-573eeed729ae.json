@@ -1,0 +1,23 @@
+{
+  "id": "01a18969-ace3-70ef-a4b2-573eeed729ae",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 3615445377,
+  "prompt": "A reusable stylized low-poly broadleaf tree for an original cozy fantasy habitat, warm tapered trunk and clustered green canopy with soft leaf color variation, sturdy simple silhouette, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793306768341,
+  "progress": 100,
+  "started_at": 1793306768351,
+  "finished_at": 1793306784684,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18969-ace3-70ef-a4b2-573eeed729ae/output/model.glb?Expires=4946832000&Signature=FEsDDlnLUneto7q6v0IassUZkP5UQ0AFOyyNJDnW~kQpCjJllnTbnEcSrN~rTFVIffmdoFyn1WOyVsvbWhNICDVb5dZsAYkRkpw17Mn6v8fq1C1rXtcw0nXYA1tuq34AKbZ5IP7dwZCKpOUH3cYFcLPG~ZZnqZCtjyhz6Ktrycz8pWtM72EtlQ53AQNnXoY25nE2dubzx7mpX02WezQ1UEbfOOhSZETyd7al0CdzGCcIhnzUxSn2hU2VXmX5AGLQ23GH8MAe1Pb6aL3xo-4J0Yfn3l15K-6m3J67xjujv4nRcB3WNwDZM86omUndif2MHuQEKemRMOlCZVsvEHCXEQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18969-ace3-70ef-a4b2-573eeed729ae/output/preview.png?Expires=4946832000&Signature=HYrD0Mi31Ni6Yz-nR0IUT8~tm8P-~sIAp0V6FN61DR56H1V7wrHeaDs6JMBxB2LPPHOR2Qu6i61Y9ehbbBfWT2e1HIvho8zdG~De5FwJnmYIEhepqc7UJi9JCMw4LhqKJ~zP6WyNcbPI~uQuIfj4kIbp4wzC3NbbWMGTf0RfbIgHNRZW9jqoteojoSGVAX9BDaCZEC5rFCSlc06VkXkc9Yct9PlIl5p-5lC~GIaiV1inrBjtK1LUolJuKRdwSRu81pOcucavET13pJbnUAOq2BolMUnmImDZwSPPp-mV3XyHAgmmr9u4pJ8V-6WI86Xw4BTy7QF8CPaOjiAoZHhDSQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

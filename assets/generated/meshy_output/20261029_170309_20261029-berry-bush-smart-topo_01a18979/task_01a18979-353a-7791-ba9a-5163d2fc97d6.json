@@ -1,0 +1,23 @@
+{
+  "id": "01a18979-353a-7791-ba9a-5163d2fc97d6",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2415509655,
+  "prompt": "A reusable low-poly berry bush for a cozy fantasy creature habitat, rounded green leaf clusters, several visible dark magenta berries, short woody stems, friendly readable silhouette, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307786082,
+  "progress": 100,
+  "started_at": 1793307786086,
+  "finished_at": 1793307803048,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18979-353a-7791-ba9a-5163d2fc97d6/output/model.glb?Expires=4946832000&Signature=X~DfC1QQ~2~vo9WNDeXDB1pXGxufnqCHj026Gb73rDJ5Zuf7IUqfObujkabGqBepdK40EmyXbkam8HiQbxoRtjdaEHA~gTOsM-7ZbhxzTz04NOCkRixLjDEf8tAoUFs6fpe1OMMY-MEDmrJVAdRLlkhGBTIeyHREj~RuuL1Kyfydxf~jvZilxGDjYcrEixhNndmAK0WsgQHEesHbPajfZeP5PW-mq07X9Hz-hw1jvJ6R5wYrf3DZz30Ew9-biiCu9SD9NzbJPWPzGZ8na8PHR9kipyd-D3GJR8J2eyaB~epL~Uh5JT60rBCsJXnKKljJ6~tsf0Xq13NWQlNDisPSZg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18979-353a-7791-ba9a-5163d2fc97d6/output/preview.png?Expires=4946832000&Signature=oFsFfi6YaKp61jimc8Z2WzUuAlIR5qHLLwarxt1RHDUR2G1c4lykaTnckeDsqSbEIykgpzCRYleEvwBEaciAuCgxcjYkLx-32MFO3onOyflCNwTQnnpheQbaYHot~5xygQ9xEsD3ejBWFZfgcS67bQWDKwxpHbziHj6Eme25pOPn2xjbiCXocjZ8eMJoQ3yhuXeVgT2Jhg3YmueeqvUHINRLw-LxretP6CJABuQasXnCL7gsXUN64iWPSekCMgvzNsdMvU3kaMpmEGYc6uPUe-3KQc6QJI1GXZuApwZJGS81ay29g-UFjkcw0X~6g27VBRFxVqbWlsl7aw5Q23tpqQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

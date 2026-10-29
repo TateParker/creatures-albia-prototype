@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "Tree Smart Topology",
+  "folder": "20261029_164611_tree-smart-topology_01a18969",
+  "root_task_id": "01a18969-ace3-70ef-a4b2-573eeed729ae",
+  "created_at": "2026-10-29T20:46:11.597Z",
+  "updated_at": "2026-10-29T20:47:41.160Z",
+  "tasks": [
+    {
+      "task_id": "01a18969-ace3-70ef-a4b2-573eeed729ae",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a18969-ace3-70ef-a4b2-573eeed729ae.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T20:46:30.221Z",
+      "updated_at": "2026-10-29T20:46:39.640Z"
+    },
+    {
+      "task_id": "01a1896a-7e1d-70c2-8f36-329c545d3776",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a18969-ace3-70ef-a4b2-573eeed729ae",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a1896a-7e1d-70c2-8f36-329c545d3776.json",
+      "operation_id": "habitat-tree-refine-20261029",
+      "created_at": "2026-10-29T20:46:59.551Z",
+      "updated_at": "2026-10-29T20:47:41.160Z"
+    }
+  ]
+}

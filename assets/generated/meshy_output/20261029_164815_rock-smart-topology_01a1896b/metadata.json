@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "Rock Smart Topology",
+  "folder": "20261029_164815_rock-smart-topology_01a1896b",
+  "root_task_id": "01a1896b-8b42-7165-aa71-a43800ee99ae",
+  "created_at": "2026-10-29T20:48:15.536Z",
+  "updated_at": "2026-10-29T20:50:45.680Z",
+  "tasks": [
+    {
+      "task_id": "01a1896b-8b42-7165-aa71-a43800ee99ae",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a1896b-8b42-7165-aa71-a43800ee99ae.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T20:48:35.441Z",
+      "updated_at": "2026-10-29T20:48:44.474Z"
+    },
+    {
+      "task_id": "01a1896d-1258-72c1-bb8d-d97d9697eec7",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a1896b-8b42-7165-aa71-a43800ee99ae",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a1896d-1258-72c1-bb8d-d97d9697eec7.json",
+      "operation_id": "habitat-rock-refine-20261029",
+      "created_at": "2026-10-29T20:49:48.564Z",
+      "updated_at": "2026-10-29T20:50:45.680Z"
+    }
+  ]
+}

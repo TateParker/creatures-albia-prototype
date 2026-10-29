@@ -1,0 +1,23 @@
+{
+  "id": "01a1896b-8b42-7165-aa71-a43800ee99ae",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2986904037,
+  "prompt": "A reusable low-poly mossy boulder for an original cozy fantasy habitat, rounded faceted stone with subtle gray-green surface texture, simple readable silhouette, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793306890653,
+  "progress": 100,
+  "started_at": 1793306890659,
+  "finished_at": 1793306909182,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896b-8b42-7165-aa71-a43800ee99ae/output/model.glb?Expires=4946832000&Signature=Pdsv7aaGdddYZM8q-AnQ0n46VGF10~1SjpCXZqEzhSelQXrMxdRicmkLCyaEKRXN2xzk2NtA-Vm~-gsDa7XsXQTwA63zTUhASKqzQD2oTsy15XjlocdkLdJHCaTyFW46JcDTMczJja0TgYAuK0bv1m11nSAS0sJoyKBQilutIV752BZJ430AgJRk-bKyxWItGRfduuS3V4YaLvlLGuzDqi447E6AkXwprED6~aw-GpDXEha08pFsMTuroXBgroCgAMHjUczdd5kRt3-7UpLBhFkyoMBbuqtpPZajATAJMMDD9av3UX~f-eHtkJaiJ1WHIvpMjwNpDSbFEGk0XuUoMA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896b-8b42-7165-aa71-a43800ee99ae/output/preview.png?Expires=4946832000&Signature=NkbsPnwNDQzbbwdz1caerK1mBq0KugwWGD0oiKYNhdFCB73XY9L4VHbn~OM6F9asbe0He0Ve7-KWtmUzYVtUwOGpIWcZkySL4WScrOaLoArOYmuDtyL0eSqJKnPyqLicG0OAzB5WHMXKNrqYRmrK159RgH0IJTo2uW95s3mKidaAOppSKS91scAwFFTxr3txWB7VIIucRG-JoZMlr-EbXK8NkBaePIn-oUneho73AXwcDQ5fE0jVbg688mYjgmaY82ldQtMnENF4DTUEK3A3XPqKI7aP6xQJeFTzmKaYOu2LYHVbl4wMpyr-NJcXJSUxg2lCvMM-rvCsAZac1ad-Uw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

@@ -1,0 +1,764 @@
+{
+  "schema_version": "meshy-habitat-requests/v1",
+  "cli_version": "0.4.0",
+  "workspace": "assets/generated",
+  "output_root": "assets/generated/meshy_output",
+  "approved_credit_ceiling": 420,
+  "package_admission_authorized": true,
+  "runtime_norn_replacement_authorized": true,
+  "assets": [
+    {
+      "name": "meadow_ground_tile",
+      "label": "Meadow ground tile/material",
+      "prompt": "A modular soft low-poly game ground tile for an original cozy fantasy habitat, rolling meadow grass with subtle clover and moss color variation, flat square surface, clean edges, no rocks or props, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 20,
+        "refine": 10,
+        "total": 30
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "standard",
+        "preview_task_id": "01a1895b-869a-72dc-adef-3c29f4b6f8b0",
+        "preview_credits": 20,
+        "refine_task_id": "01a1895d-93cc-74c6-853d-14c5dd8f1790",
+        "refine_credits": 10,
+        "actual_total_credits": 30,
+        "triangle_count": 7784714,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_163047_meadow-ground-tile_01a1895b",
+        "model_path": "assets/generated/meshy_output/20261029_163047_meadow-ground-tile_01a1895b/model.glb",
+        "review_status": "over-dense-review-only",
+        "review": "Lime-green grass slab; 7.78M triangles. Not suitable for runtime as-is."
+      }
+    },
+    {
+      "name": "path_segment",
+      "label": "Path segment",
+      "prompt": "A modular low-poly worn earth and smooth stepping-stone path segment for an original cozy fantasy habitat, softly rounded edges and muted warm brown tones, clean repeatable ends, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 20,
+        "refine": 10,
+        "total": 30
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "standard",
+        "preview_task_id": "01a18966-8bfa-766f-b957-8530d352403d",
+        "preview_credits": 20,
+        "refine_task_id": "01a18967-786e-73b5-8bbf-11172be94ecf",
+        "refine_credits": 10,
+        "actual_total_credits": 30,
+        "triangle_count": 203876,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_164248_path-segment_01a18966",
+        "model_path": "assets/generated/meshy_output/20261029_164248_path-segment_01a18966/model.glb",
+        "review_status": "over-dense-review-only",
+        "review": "Smooth peach stepping stones; 203,876 triangles. Needs topology reduction before runtime use."
+      }
+    },
+    {
+      "name": "tree",
+      "label": "Tree",
+      "prompt": "A reusable stylized low-poly broadleaf tree for an original cozy fantasy habitat, warm tapered trunk and clustered green canopy with soft leaf color variation, sturdy simple silhouette, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 8000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a18969-ace3-70ef-a4b2-573eeed729ae",
+        "preview_credits": 5,
+        "refine_task_id": "01a1896a-7e1d-70c2-8f36-329c545d3776",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 7065,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_164611_tree-smart-topology_01a18969",
+        "model_path": "assets/generated/meshy_output/20261029_164611_tree-smart-topology_01a18969/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Two-tier green canopy and brown trunk; compact low-poly silhouette."
+      }
+    },
+    {
+      "name": "rock",
+      "label": "Rock",
+      "prompt": "A reusable low-poly mossy boulder for an original cozy fantasy habitat, rounded faceted stone with subtle gray-green surface texture, simple readable silhouette, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 3000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a1896b-8b42-7165-aa71-a43800ee99ae",
+        "preview_credits": 5,
+        "refine_task_id": "01a1896d-1258-72c1-bb8d-d97d9697eec7",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 2432,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_164815_rock-smart-topology_01a1896b",
+        "model_path": "assets/generated/meshy_output/20261029_164815_rock-smart-topology_01a1896b/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Rounded faceted boulder; texture spots are bright yellow-green rather than muted moss."
+      }
+    },
+    {
+      "name": "nest",
+      "label": "Nest",
+      "prompt": "A small woven grass nest bowl for a gentle fantasy creature habitat, low-poly braided natural fibers, shallow oval interior, warm straw and brown color variation, no eggs, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 5000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a1896f-11cd-74de-ba2c-330a97386994",
+        "preview_credits": 5,
+        "refine_task_id": "01a1896f-cf0d-722c-9f54-f6f6eae9247e",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 4948,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_165208_20261029-nest-smart-topology-0_01a1896f",
+        "model_path": "assets/generated/meshy_output/20261029_165208_20261029-nest-smart-topology-0_01a1896f/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Readable woven grass bowl; no egg included."
+      }
+    },
+    {
+      "name": "honey_fruit",
+      "label": "Honey fruit",
+      "prompt": "A plump golden-orange honey fruit for a cozy fantasy creature habitat, low-poly organic round body, short brown stem and one small green leaf, softly mottled edible skin texture, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 3000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a18971-0f1d-70c7-b445-a4e116d522c8",
+        "preview_credits": 5,
+        "refine_task_id": "01a18971-9266-74e6-8001-6d133874cbf6",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 3129,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_165415_20261029-honey-fruit-smart-top_01a18971",
+        "model_path": "assets/generated/meshy_output/20261029_165415_20261029-honey-fruit-smart-top_01a18971/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Gold-orange round fruit with brown stem and green leaf."
+      }
+    },
+    {
+      "name": "spinner",
+      "label": "Spinner",
+      "prompt": "A charming low-poly wind-up spinner toy for a cozy fantasy habitat, small blue base, brass axle, colorful cross-shaped spinning arms and round center, clear separable shapes, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 5000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a18973-49ba-731b-902e-f09bc3c9e38a",
+        "preview_credits": 5,
+        "refine_task_id": "01a18973-ebee-744a-866a-666434e182a2",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 5263,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_165641_20261029-spinner-smart-topolog_01a18973",
+        "model_path": "assets/generated/meshy_output/20261029_165641_20261029-spinner-smart-topolog_01a18973/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Blue base, brass hub, and bright radial arms; more spokes than the cross-shaped prompt."
+      }
+    },
+    {
+      "name": "drawing_station",
+      "label": "Drawing station",
+      "prompt": "A compact freestanding wooden drawing station for a cozy fantasy creature habitat, sturdy easel-like frame, blank pale marking board and small lower shelf, leave the board face plain and unobstructed for a live texture, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 5000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a18974-f925-7653-8875-930d4e3c0205",
+        "preview_credits": 5,
+        "refine_task_id": "01a18975-9693-736a-952d-b4966b4c7506",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 4580,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_165832_20261029-drawing-station-smart_01a18974",
+        "model_path": "assets/generated/meshy_output/20261029_165832_20261029-drawing-station-smart_01a18974/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Wood-framed easel and blank board; keep the live runtime board texture engine-authored."
+      }
+    },
+    {
+      "name": "charcoal_tool",
+      "label": "Charcoal tool",
+      "prompt": "A short handmade charcoal drawing stick with a simple small wooden rest, low-poly soft fantasy game prop, dark charcoal tip and warm wood, no marks or lettering, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 2000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a18976-550d-7087-a5c3-5dd74b8a13c0",
+        "preview_credits": 5,
+        "refine_task_id": "01a18976-dc4f-75f0-bd7b-d3a98c430e33",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 2100,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_170003_20261029-charcoal-tool-smart-t_01a18976",
+        "model_path": "assets/generated/meshy_output/20261029_170003_20261029-charcoal-tool-smart-t_01a18976/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Wood handle and dark tip; separate wooden rest is not visibly represented."
+      }
+    },
+    {
+      "name": "egg",
+      "label": "Egg",
+      "prompt": "A single intact, closed, smooth fantasy creature egg for a cozy low-poly game. A complete continuous hard outer shell, fully sealed all the way around with no interior visible. Symmetrical upright oval, gently tapered at the top, softly rounded base. Uniform uninterrupted shell surface from crown to base, softly mottled pale cream with delicate warm golden speckles. No crack, no opening, no hole, no broken shell, no exposed interior, no hatching, no cutaway, no nest, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 3000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a18987-b3c8-7793-a7f8-5fc11e51e35c",
+        "preview_credits": 5,
+        "refine_task_id": "01a18988-3a79-7102-9d29-38bf157d81cd",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 3153,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_171906_egg-closed-shell-retry_01a18987",
+        "model_path": "assets/generated/meshy_output/20261029_171906_egg-closed-shell-retry_01a18987/model.glb",
+        "thumbnail_path": "assets/generated/meshy_output/20261029_171906_egg-closed-shell-retry_01a18987/thumbnail.png",
+        "review_status": "reviewed-placeholder",
+        "review": "Preview and refined thumbnail show a complete closed shell with no visible crack or opening; visual review is limited to the rendered thumbnail."
+      },
+      "previous_prompt": "A smooth pale cream fantasy creature egg for a cozy low-poly game, softly mottled shell with a faint warm golden highlight, symmetric oval, no cracks, no nest, no text, no background.",
+      "previous_generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a18977-9e43-731c-87d9-f4a14929b409",
+        "preview_credits": 5,
+        "refine_task_id": "01a18978-2841-7724-8798-27c88a82fb54",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 3128,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_170125_20261029-egg-smart-topology-01_01a18977",
+        "model_path": "assets/generated/meshy_output/20261029_170125_20261029-egg-smart-topology-01_01a18977/model.glb",
+        "review_status": "superseded-defective-placeholder",
+        "review": "Large opening and small lower crack; retained for comparison and not used as the intact egg candidate."
+      }
+    },
+    {
+      "name": "berry_bush",
+      "label": "Berry bush",
+      "prompt": "A reusable low-poly berry bush for a cozy fantasy creature habitat, rounded green leaf clusters, several visible dark magenta berries, short woody stems, friendly readable silhouette, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 8000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a18979-353a-7791-ba9a-5163d2fc97d6",
+        "preview_credits": 5,
+        "refine_task_id": "01a18979-d598-71ec-a776-5373138b47a7",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 8435,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_170309_20261029-berry-bush-smart-topo_01a18979",
+        "model_path": "assets/generated/meshy_output/20261029_170309_20261029-berry-bush-smart-topo_01a18979/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Leafy branches with bright magenta berries, clearly readable foraging target."
+      }
+    },
+    {
+      "name": "spring",
+      "label": "Spring",
+      "prompt": "A small clear-water spring for a low-poly fantasy habitat, shallow blue pool, pale stone rim and several translucent aqua glassy shards, compact ground prop, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 5000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a1897a-d349-757b-a8d5-9d570ca76470",
+        "preview_credits": 5,
+        "refine_task_id": "01a1897b-6e77-7068-8a08-fdfe75584b47",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 5067,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_170455_20261029-spring-smart-topology_01a1897a",
+        "model_path": "assets/generated/meshy_output/20261029_170455_20261029-spring-smart-topology_01a1897a/model.glb",
+        "review_status": "partial-placeholder",
+        "review": "Pale stone ring and aqua interior stones; no flat water surface generated."
+      }
+    },
+    {
+      "name": "echo_bloom",
+      "label": "Echo bloom/curiosity landmark",
+      "prompt": "A curious low-poly fantasy flower landmark for a gentle creature habitat, tall green stem, six soft aqua and warm gold petals around a glowing golden heart, distinctive simple silhouette, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 5000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a1897c-40bb-708a-9cfa-fd21b47fa58e",
+        "preview_credits": 5,
+        "refine_task_id": "01a1897c-de0c-72ea-a238-3adae72b9047",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 5054,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/20261029_170630_20261029-echo-bloom-smart-topo_01a1897c",
+        "model_path": "assets/generated/meshy_output/20261029_170630_20261029-echo-bloom-smart-topo_01a1897c/model.glb",
+        "review_status": "reviewed-placeholder",
+        "review": "Yellow six-petal flower, gold center, green stem; no emissive bloom established in GLB preview."
+      }
+    },
+    {
+      "name": "norn_species_candidate",
+      "label": "Norn species candidate",
+      "prompt": "An original gentle low-poly fantasy creature species candidate for a cozy habitat, small rounded quadruped body, large expressive eyes, soft ear-like head tufts, smooth cream and moss-green material variation, neutral A-pose with four limbs clearly separated, full body centered, no base, no text, no background.",
+      "preview": {
+        "mode": "preview",
+        "pose_mode": "a-pose",
+        "target_formats": [
+          "glb"
+        ],
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "target_polycount": 10000,
+        "topology": "triangle"
+      },
+      "refine": {
+        "mode": "refine",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "target_formats": [
+          "glb"
+        ]
+      },
+      "estimated_credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "candidate_only": false,
+      "runtime_replacement_authorized": true,
+      "generation": {
+        "status": "generated",
+        "pipeline": "smart-topology-t2.5",
+        "preview_task_id": "01a1897e-3f2a-77e0-a6a1-5ff5fa44f12a",
+        "preview_credits": 5,
+        "refine_task_id": "01a1897f-20f9-715a-b590-7972ffe5894e",
+        "refine_credits": 10,
+        "actual_total_credits": 15,
+        "triangle_count": 10532,
+        "texture_resolution": "2k",
+        "pbr_maps": [
+          "base_color",
+          "metallic",
+          "roughness",
+          "normal"
+        ],
+        "output_project": "assets/generated/meshy_output/review-candidates/norn/20261029_170840_norn-review-candidate-20261029_01a1897e",
+        "model_path": "assets/generated/meshy_output/review-candidates/norn/20261029_170840_norn-review-candidate-20261029_01a1897e/model.glb",
+        "review_status": "approved-and-admitted-runtime-model",
+        "review": "User approved the Norn replacement. Tangents were exported in Blender 5.2.2; geometry remains 10,532 triangles with UVs and 2K PBR textures. Package pkg_33b71a92373ab987f79818bf was validated and admitted to godot/assets/generated/norns/albia-norn. The static model has no skin or rig; CharacterBody3D movement and the scripted drawing effector remain, with the procedural geometry builder retained as a load fallback.",
+        "candidate_only": false,
+        "runtime_replacement_authorized": true,
+        "runtime_model_path": "godot/assets/generated/norns/albia-norn/model.glb",
+        "package_id": "pkg_33b71a92373ab987f79818bf",
+        "package_license": "LicenseRef-Meshy-Private"
+      }
+    }
+  ],
+  "generation_status": "completed",
+  "credits_spent_so_far": 255,
+  "projected_total_credits": 255,
+  "remaining_approved_ceiling": 165,
+  "latest_balance": 860,
+  "balance_checked_on": "2026-10-29",
+  "license_status": "No separate license receipt is attached to the task snapshots; verify applicable Meshy terms before redistribution.",
+  "package_admission_scope": "Norn species package only",
+  "package_admissions": [
+    {
+      "package_id": "pkg_33b71a92373ab987f79818bf",
+      "asset_id": "albia_norn_species",
+      "destination": "godot/assets/generated/norns/albia-norn",
+      "admitted_at": "2026-10-29T21:27:41.327Z"
+    }
+  ],
+  "local_processing": [
+    {
+      "asset": "meadow_ground_tile",
+      "method": "Blender 5.2.2 Decimate",
+      "source": "assets/generated/meshy_output/20261029_163047_meadow-ground-tile_01a1895b/model.glb",
+      "target_triangles": 50000,
+      "actual_triangles": 185635,
+      "output": "assets/generated/meshy_output/topology-candidates/ground-tile-50000-triangles.glb",
+      "uvs_and_pbr_preserved": true
+    },
+    {
+      "asset": "path_segment",
+      "method": "Blender 5.2.2 Decimate",
+      "source": "assets/generated/meshy_output/20261029_164248_path-segment_01a18966/model.glb",
+      "target_triangles": 20000,
+      "actual_triangles": 19999,
+      "output": "assets/generated/meshy_output/topology-candidates/path-segment-20000-triangles.glb",
+      "uvs_and_pbr_preserved": true
+    },
+    {
+      "asset": "norn_species_candidate",
+      "method": "Blender 5.2.2 glTF export with tangents",
+      "source": "assets/generated/meshy_output/review-candidates/norn/20261029_170840_norn-review-candidate-20261029_01a1897e/model.glb",
+      "output": "assets/generated/meshy_output/topology-candidates/norn-with-tangents.glb",
+      "geometry_changed": false,
+      "validation_passed": true
+    }
+  ]
+}

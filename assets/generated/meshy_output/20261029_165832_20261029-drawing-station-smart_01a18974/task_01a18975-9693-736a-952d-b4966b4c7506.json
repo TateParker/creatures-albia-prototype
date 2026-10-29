@@ -1,0 +1,30 @@
+{
+  "id": "01a18975-9693-736a-952d-b4966b4c7506",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 514238932,
+  "prompt": "A compact freestanding wooden drawing station for a cozy fantasy creature habitat, sturdy easel-like frame, blank pale marking board and small lower shelf, leave the board face plain and unobstructed for a live texture, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307547303,
+  "progress": 100,
+  "started_at": 1793307547310,
+  "finished_at": 1793307576039,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18975-9693-736a-952d-b4966b4c7506/output/model.glb?Expires=4946832000&Signature=ZHb2xDU-ulDxrZoJwuqaXS-fdh0yq487YqMkF~XpvrWNJCRgG68G7UKu06BN5AGPiUIzWPwSJbxPlIwvTu2E9IOV5psJDXfbvAVn99rD1EEylYsBf0miGpfaK5iYhIL5KSAdoFmCQ60IjxDmyIbDqUoPb~V-eKsmP5V7KNgaVScGI-x-57euPeriKrqpiUEatMvbyqjZ0LXlL~TOBPgjc2Kwj65SwPHWbPjgiSOPpgcolw1doC2XM5cQEzeXui1icZ0khNUVJ9k~~vitDacyXhf9jgmzrPv1Kzwf~nEAOQf0kr5OYLwlX~iAjOjkDZRTdFkieMM7J0VF85GCN-Fj2Q__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18975-9693-736a-952d-b4966b4c7506/output/preview.png?Expires=4946832000&Signature=qDh-BpAggiXhGfJQe8GcNA7KBoYpSndNnaSLemjnVGgwS1Ot8wBLlojRhFaiOfR1k-tBLQDSPhA3iIBhLIJoVH~BEHnfEsSGdyjO1eMpwzhJHnrPXXFd1rJHG~9fso3hutO6VK425BtqmD9PM41uSiV09T5aYFqsrz02jPDKtWKYWibSxDo7jsSpM21LYvESuTYW3irxF9QTFnThsLUuNp-yeX1bf~6xH97E-QyYA6Skhd-6cZxAzcr9P3ZyVDB7ns2pcOkx-PWG2CrK8tYD-HLwFtcrTnejXUmTyWFzN3IPG2Odk5G9Y74qkKpWPwhhN6pC1xXjxu-FbuCDg1O6ng__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18975-9693-736a-952d-b4966b4c7506/output/texture_0.png?Expires=4946832000&Signature=PfBPWcuhRWlGzsWxipuaCo5jHGXbhMYtQmKDgW~o9RqHDUwWtkcZAjdi6utj1tYpb4iyaYmSH4SYd8NVTS-Jh2K2VGExCspd2bdY-s2w5Ty1uXDrS389Ru8ejf4DhzUF19dTurUiVHgCvQ5nmhpTNOw~unf4Y9nYdaw5UOfxwNuC10FF1uspVG0sLSdhmd8PaqTkln~yNhLxKxKOhYoVm5hPbUAJsfkD-qnk0rHQgZT3-eoQ7W8yt~scHpvHnVsA5Qk8Ch3OjWOR8BDoNyx5NWjtygJKBWDGMH2dSaESXANFo8GVOy5f-BbF29EBF1nE1o8lSRcWQNhfOe477xhYlg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18975-9693-736a-952d-b4966b4c7506/output/texture_0_metallic.png?Expires=4946832000&Signature=O~p8xtNzDl9cOWr~BvcqiRdL6c194gKQ4w62YQ4SQQx69oP6K4H-U1TP5IBc5YsKIfb8p24L0NV0oGeckK5Q9jusw9IEe0i5JmLt59TvDM4Eerz5GdGfjz9J2RDrq54mao6K2jaNcXPpqTNylfspowQ-0NgYq~v2alM1ChBX5tB-c-r3vSKXJEZGgzm-PoJMFdDwuvv65COs5KXpPJMjWv7unTdlrxym75FwXKOzca-MjlCva5NM3eCiklXe3lggKDvMDGXncZ5D9iJI4YXtY9aXjn03dJeCt~VyuuK2Ai4XsIUmCa3k~nmce6WFSg16tewaBgCwmkMPy3Z8679IlQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18975-9693-736a-952d-b4966b4c7506/output/texture_0_roughness.png?Expires=4946832000&Signature=hFSF8Y8HxO34gJzqX9sXl8kb8AH2B--tRVlVLWBVcLTsAhu2ZHY1xhVExfiqcj64igAkgtSvfxtN3IJU9Ma8UbdSfiiXDyaOmCrPJpAp2~O2niFidPDkuBiOZ2WHHP6PNuYUQtpnCknJWG9LNUtx5-89L-qcJYfrQcHNKY0lkkMfH-Pcun2HrDOsx2-OSJ01slapMBMcDcAiVos6Vk4MeOHj-zr6Tu~OKNy-QKw~P4LghMGRvkeP5H~cD3lqebtBowBrIcUfR~SPvERQXluugdDVMZZGOH-LGsE2QtrCUas5uKKfEXmZtFFDrIpemKxRqppl43lLKKIAnRGySi1zKQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18975-9693-736a-952d-b4966b4c7506/output/texture_0_normal.png?Expires=4946832000&Signature=AMqxTv7jkC8vlJf1u9UG9bRimB~-Am9cZRa~Cfn1QdDp7A5TSKqiudONvGOt~Al-nd8-fuuzdtN6d~GCmWVz3HWF70a3M9NEqeDuBhP1np9an0Eyty31bJCwCHByOr4d5G-3eN-wOAjzZzpptf97t1b4LfZ9TacyYcNKp78g8Wg5RC8KwQUE~p8GOag0IBZs-l~5qm6g~ro~wfcxr0VcKzCcZOecFRPUlqv4g5OA0ul9sxQ1I2TY5XMqVGj2hwa-3~Ll-iOHUfi0qFlnGANLxu34wO8D2MApjA57fsTCrcDOnkXgTu~CoZxp8b25VHtQq741wYSjVndKR~jbQY3ecA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

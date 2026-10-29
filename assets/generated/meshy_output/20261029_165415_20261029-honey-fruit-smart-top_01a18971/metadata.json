@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "20261029_honey-fruit-smart-topology_01a18971",
+  "folder": "20261029_165415_20261029-honey-fruit-smart-top_01a18971",
+  "root_task_id": "01a18971-0f1d-70c7-b445-a4e116d522c8",
+  "created_at": "2026-10-29T20:54:15.559Z",
+  "updated_at": "2026-10-29T20:56:19.050Z",
+  "tasks": [
+    {
+      "task_id": "01a18971-0f1d-70c7-b445-a4e116d522c8",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a18971-0f1d-70c7-b445-a4e116d522c8.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T20:54:28.169Z",
+      "updated_at": "2026-10-29T20:54:32.961Z"
+    },
+    {
+      "task_id": "01a18971-9266-74e6-8001-6d133874cbf6",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a18971-0f1d-70c7-b445-a4e116d522c8",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a18971-9266-74e6-8001-6d133874cbf6.json",
+      "operation_id": "habitat-honey-fruit-refine-20261029",
+      "created_at": "2026-10-29T20:54:43.489Z",
+      "updated_at": "2026-10-29T20:56:19.050Z"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "norn-review-candidate-20261029_01a1897e",
+  "folder": "20261029_170840_norn-review-candidate-20261029_01a1897e",
+  "root_task_id": "01a1897e-3f2a-77e0-a6a1-5ff5fa44f12a",
+  "created_at": "2026-10-29T21:08:40.270Z",
+  "updated_at": "2026-10-29T21:10:12.024Z",
+  "tasks": [
+    {
+      "task_id": "01a1897e-3f2a-77e0-a6a1-5ff5fa44f12a",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a1897e-3f2a-77e0-a6a1-5ff5fa44f12a.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T21:09:10.077Z",
+      "updated_at": "2026-10-29T21:09:14.935Z"
+    },
+    {
+      "task_id": "01a1897f-20f9-715a-b590-7972ffe5894e",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a1897e-3f2a-77e0-a6a1-5ff5fa44f12a",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a1897f-20f9-715a-b590-7972ffe5894e.json",
+      "operation_id": "habitat-norn-review-candidate-refine-20261029",
+      "created_at": "2026-10-29T21:09:31.923Z",
+      "updated_at": "2026-10-29T21:10:12.024Z"
+    }
+  ]
+}

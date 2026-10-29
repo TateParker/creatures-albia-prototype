@@ -1,0 +1,77 @@
+{
+  "assetId": "albia_norn_species",
+  "category": "creature",
+  "description": "Meshy-generated static Norn species placeholder. In Godot, the CharacterBody3D continues to drive locomotion and interaction; the model has no skin or rig. The original generated GLB remains preserved separately.",
+  "displayName": "Albia Norn Species",
+  "inspection": {
+    "animationCount": 0,
+    "boundingBox": {
+      "max": [
+        0.34790000319480896,
+        0.4753420054912567,
+        0.3889159858226776
+      ],
+      "min": [
+        -0.3498539924621582,
+        -0.47582998871803284,
+        -0.3889159858226776
+      ],
+      "sizeMeters": [
+        0.6977539956569672,
+        0.9511719942092896,
+        0.7778319716453552
+      ]
+    },
+    "boundingBoxEmpty": false,
+    "fileBytes": 6225380,
+    "filePath": "model.glb",
+    "generator": "glTF-Transform v4.5.1",
+    "hasNormals": true,
+    "hasSkin": false,
+    "hasTangents": true,
+    "hasUVs": true,
+    "materialCount": 1,
+    "meshCount": 1,
+    "pbr": {
+      "hasBaseColorTexture": true,
+      "hasEmissiveTexture": false,
+      "hasMetallicRoughnessTexture": true,
+      "hasNormalTexture": true,
+      "hasOcclusionTexture": false
+    },
+    "primitiveCount": 1,
+    "sceneGraphFallback": false,
+    "textureCount": 3,
+    "textureResolutions": [
+      {
+        "bytes": 1881137,
+        "height": 2048,
+        "mimeType": "image/jpeg",
+        "name": "Image_2",
+        "width": 2048
+      },
+      {
+        "bytes": 2767485,
+        "height": 2048,
+        "mimeType": "image/jpeg",
+        "name": "Image_0",
+        "width": 2048
+      },
+      {
+        "bytes": 1149838,
+        "height": 2048,
+        "mimeType": "image/jpeg",
+        "name": "Image_1",
+        "width": 2048
+      }
+    ],
+    "triangleCount": 10532,
+    "undrawnMeshCount": 0,
+    "undrawnPrimitiveCount": 0,
+    "undrawnTriangleCount": 0,
+    "vertexCount": 7539,
+    "warnings": []
+  },
+  "license": "LicenseRef-Meshy-Private",
+  "schema": "game_dev.asset_metadata.v1"
+}

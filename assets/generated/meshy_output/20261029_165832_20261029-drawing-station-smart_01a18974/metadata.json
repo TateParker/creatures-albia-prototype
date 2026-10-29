@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "20261029_drawing-station-smart-topology_01a18974",
+  "folder": "20261029_165832_20261029-drawing-station-smart_01a18974",
+  "root_task_id": "01a18974-f925-7653-8875-930d4e3c0205",
+  "created_at": "2026-10-29T20:58:32.980Z",
+  "updated_at": "2026-10-29T20:59:43.598Z",
+  "tasks": [
+    {
+      "task_id": "01a18974-f925-7653-8875-930d4e3c0205",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a18974-f925-7653-8875-930d4e3c0205.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T20:58:51.945Z",
+      "updated_at": "2026-10-29T20:58:56.485Z"
+    },
+    {
+      "task_id": "01a18975-9693-736a-952d-b4966b4c7506",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a18974-f925-7653-8875-930d4e3c0205",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a18975-9693-736a-952d-b4966b4c7506.json",
+      "operation_id": "habitat-drawing-station-refine-20261029",
+      "created_at": "2026-10-29T20:59:06.703Z",
+      "updated_at": "2026-10-29T20:59:43.598Z"
+    }
+  ]
+}

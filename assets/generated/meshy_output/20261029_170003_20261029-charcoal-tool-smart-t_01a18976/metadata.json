@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "20261029_charcoal-tool-smart-topology_01a18976",
+  "folder": "20261029_170003_20261029-charcoal-tool-smart-t_01a18976",
+  "root_task_id": "01a18976-550d-7087-a5c3-5dd74b8a13c0",
+  "created_at": "2026-10-29T21:00:03.120Z",
+  "updated_at": "2026-10-29T21:01:08.074Z",
+  "tasks": [
+    {
+      "task_id": "01a18976-550d-7087-a5c3-5dd74b8a13c0",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a18976-550d-7087-a5c3-5dd74b8a13c0.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T21:00:15.167Z",
+      "updated_at": "2026-10-29T21:00:19.482Z"
+    },
+    {
+      "task_id": "01a18976-dc4f-75f0-bd7b-d3a98c430e33",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a18976-550d-7087-a5c3-5dd74b8a13c0",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a18976-dc4f-75f0-bd7b-d3a98c430e33.json",
+      "operation_id": "habitat-charcoal-tool-refine-20261029",
+      "created_at": "2026-10-29T21:00:30.104Z",
+      "updated_at": "2026-10-29T21:01:08.074Z"
+    }
+  ]
+}

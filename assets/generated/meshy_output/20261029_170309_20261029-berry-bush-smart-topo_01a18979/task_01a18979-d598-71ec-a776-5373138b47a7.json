@@ -1,0 +1,30 @@
+{
+  "id": "01a18979-d598-71ec-a776-5373138b47a7",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2915506228,
+  "prompt": "A reusable low-poly berry bush for a cozy fantasy creature habitat, rounded green leaf clusters, several visible dark magenta berries, short woody stems, friendly readable silhouette, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307825586,
+  "progress": 100,
+  "started_at": 1793307825593,
+  "finished_at": 1793307856856,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18979-d598-71ec-a776-5373138b47a7/output/model.glb?Expires=4946832000&Signature=X3hnm19ubBVA5n7ptQWM~RIupxklAG0AH9bIs1h8ZwBMnvSAA20G~C7zJmwjbmIPVQwu4~r4xk9lfBE5QanCFhqQJttyxIokTp4Ly2picAQHWvh3x30VeOWYFWG9~uBQEUbVnpEdVg41IO~Z0hK2Hn5qQQWtBAknLigrte6IEd-JJ700RglQwhxbIveaCDhy2OJqA~BCirYdGjMoJCDqN7V0lqfD6rSG~D2JUW1xeN-BuhhZWKZ798XEjp6d7XqC9UwY9LJ7GMhXndKBUcQkxsgfeltwSzoXoBcDl8El8fJAVBF7qE1PfeL9loAoJqwqln0KA77xxY5ivzMN5~Gffw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18979-d598-71ec-a776-5373138b47a7/output/preview.png?Expires=4946832000&Signature=J67SxSx9T8DCr5WgboQlqFsagOKuLbWmv9K1kCVotYMIngSB2HRsnyDnta6ZswmybVFw-96vL9fU~k~SXAkzWqDHp0HqJoh4i8zng8q2labVb3EOQW3-v~JA0xmn3z1mDzHhTMfEX8vFN10839iOEWN9c1XI8jWsa4uT9zvinxGH~6asbcVnPbwEvjE1M9AE93gTrKFyFpEiKFpDOPEcveIwEFn619WhnuPiWZzbvmbMec5thz2qj6MtYKwM4ftlQKBdGGV9gIH0mxSfQUYU2TbnGX6zVP1f5HH86u~BDPVLEFr4K2~SNIwcTHmtgUFQlmQklPeL6PZPYG6RueM0kw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18979-d598-71ec-a776-5373138b47a7/output/texture_0.png?Expires=4946832000&Signature=gdI59Rfe~jK2mpBrc0ey4BDuvqNkSeBCtUXXDRAWWtP9QsBuUHi6mfHpIklvwicaHD1Xz1HuZpuyYzSR2Pw13y7pxEEtErTVNdS~sCqNkjFVfJ6CqYjLYzlWvBqXKjzF7PIU9IvmwV1NKtS4rX8nJ-UmI~Qe8kbhRO4I6kvfuysIxfA7MSDvBdJS5dQwHyuZZvQY-mpjP07heFrpvAoWQRPU~vNk9zKikHnCxqYE5tI2f87mY1Iq6E1XgED63wx3LNlJRJK5FkQyKO9Sw9fBRkBQLTXG6uOXGZNw6B0LRkDuNvKzN~Uo-iBySG2MnbWrW9CEgVHZR0clvK2Qf9iSPQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18979-d598-71ec-a776-5373138b47a7/output/texture_0_metallic.png?Expires=4946832000&Signature=qhEtwB607n6IqDiXKaWjwa6gcvvQUoCxbuyzmjITZG45wDHu6foHERWP0P8h7fjWbToOR2tnfrNWqAQmHESqwktxljBigxoTiJGKlWaS5-QiC3aUVI7auM-lfOSIVgGLfAeoSCV4sKOeVxxKozmrLIPpxMfXoWtAvYCVHHH47e06CFtpWBf6PGEAG6C2okaMoSKuYoIWGnXQm4O-aXHinR4u6DxbP6Iwy0JgHQQD3ape298BpCwwaiQAC4yui61JEwqTaDKM~GCK0rN7exNpdkT-VD2ICEjWtHr2CHMHsvFkplCnoVBHb9mfuGURriV4Ce522D5ogsGLsUKLBWzviw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18979-d598-71ec-a776-5373138b47a7/output/texture_0_roughness.png?Expires=4946832000&Signature=GYPq-yyvZLpOqiiy4QBqcGRw~Pbp-BLgdI~-OmCqndoQOJQM7MPctWC2-Kvyas-rfSxSLlmqJp4dov28QrFNyuSQDpjJQNh-kDv8Xo-M6M3hkge3I7ZPA7wMCEXcwp9FT-9IPkuvJEZpcEOpNgSoGkl3ZysuDspYoysEV5WPdQ1aeF~odJS9~Kemu2BG-r4U8I9ULTalDgY546mo~HHBfJEa8HHyFQZYY7hcyL3KKeQ0vtSC~yEUvQCkM0d0kq5ZkzVSKs~poiyj2r7NC-QeUEMf4EbPzoqfcYUn008eg9KpsMHGA22m76wolZeY0eXlGJkDAyXK6yVwWxgPGyFJIg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18979-d598-71ec-a776-5373138b47a7/output/texture_0_normal.png?Expires=4946832000&Signature=P~expdqE~ujIzSdQlXCnqzow0DciYrTzpF7dZwkV6qnMCiniBGAsCJ68EDZbcVg-AwvM0hjv9lXzu4kLvy3UP7Eswh~h8uyuiqw9WZAwm-q1N-NFu-Bh0Bm~IgI0QQxwtw3eIxXwGHtK-STYjSNVDPDOObO3uVfLlmqqz~LHwqUBG3Z6j0Bms9Pn9VthY7Ecp4uLxJTNsyZWNt-BLsDlM2K9jHdrVtkAEZc3jhaDamNe-2oFnQYIHrHv6RG73LeMwEH28lyyCEkLwxyStfQHBcfxJ3sK3FxTc7tDFbeDcFirF8SH3WwUZgv-CnSZQgyqHHMGjW-wCUT0lsedMKrdqQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

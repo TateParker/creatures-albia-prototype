@@ -1,0 +1,47 @@
+{
+  "assetId": "albia_norn_species",
+  "category": "creature",
+  "description": "Meshy-generated static Norn species placeholder. In Godot, the CharacterBody3D continues to drive locomotion and interaction; the model has no skin or rig. The original generated GLB remains preserved separately.",
+  "displayName": "Albia Norn Species",
+  "files": [
+    {
+      "bytes": 6225380,
+      "kind": "model",
+      "path": "model.glb",
+      "sha256": "3abc254102a302319be41cf914ed0f0139b23c9490f305b7f8cad04c4bd181be"
+    },
+    {
+      "bytes": 2017,
+      "kind": "metadata",
+      "path": "metadata.json",
+      "sha256": "957d77d6712761a325c206149655a790b099271b46ce509a7a7253e6d93f4899"
+    },
+    {
+      "bytes": 1265,
+      "kind": "provenance",
+      "path": "provenance.json",
+      "sha256": "aa076ea15884160220df1f6f73a71da84fe9269c81a15e39f4aead614e34da08"
+    },
+    {
+      "bytes": 3579,
+      "kind": "validation",
+      "path": "validation.json",
+      "sha256": "ea22623256f4d5a2350afd331aacfa218cdda4d64b4f164b9838331318fe8654"
+    }
+  ],
+  "license": "LicenseRef-Meshy-Private",
+  "model": "model.glb",
+  "packageId": "pkg_33b71a92373ab987f79818bf",
+  "provenance": {
+    "origin": "generated",
+    "provider": "Meshy",
+    "sourceJobId": "01a1897f-20f9-715a-b590-7972ffe5894e"
+  },
+  "schema": "game_dev.asset_package.v1",
+  "validation": {
+    "errorCount": 0,
+    "passed": true,
+    "warningCount": 0
+  },
+  "version": "1.0.0"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "01a18967-786e-73b5-8bbf-11172be94ecf",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "standard",
+  "seed": 407666604,
+  "prompt": "A modular low-poly worn earth and smooth stepping-stone path segment for an original cozy fantasy habitat, softly rounded edges and muted warm brown tones, clean repeatable ends, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793306622075,
+  "progress": 100,
+  "started_at": 1793306622083,
+  "finished_at": 1793306652917,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18967-786e-73b5-8bbf-11172be94ecf/output/model.glb?Expires=4946832000&Signature=DsH7ZiKAD8j3Dj1Eb4SOrydZnSTFAsb0DuCQuycF4q3-H8fDLi--grZ-TkmogmCWcvR27nIXrjh4fmgBqmc8LRCpYtSpdYw2dHD0cbtOesdHzmdxAAQxwFQD96IVVTuoay24iUgWsjB350rUlpi4G2Dlvrj8c9xeowvEgRiUaQGOPdDETcdvtjRbsacDmxt0rcOWDcuTxCcPc-XrqNYo01yLZMiKJoxIVNgHRDt194~nSINKBNuERsrgMSodWWtcayXEc2wcWND8BPQxytDkMK3k8aXELxWSy9Tknp3y-rb-yf~O1ZhpWA3UJMXi8kOaEBH9mLGu2GYnV6Uxrcohlw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18967-786e-73b5-8bbf-11172be94ecf/output/preview.png?Expires=4946832000&Signature=iXCnPSyA1ZV12ehzvMyF0EyBns9HRoPiFnKQ~iw0Dqu-L223jCprpdcjERSQBzTzXHvbqRLWCV86GHXG39njiHzKNTwDhY5pVsV9xSCMochyQ1G~Ud7v3Z-HaS~iQQvM2tv~vBGBrd3vXDi38drcXjadcaBSYdO2dxSF-xePifTuJCtXxwR8SQsNFJMxNQMcdzpu039jZ~npVtmppWFMuqpzG5kgFAke1EScu43utbl98b8oS5R5WG8h2Tl7eqmhe2TaonQqwIZYxifJmiftd55R3eR3mMD52n6ARfHfkdmWcKGAVCHBxrlUDUeWwh~FjG8PeaBIoOXpgCm8SVbgOA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18967-786e-73b5-8bbf-11172be94ecf/output/texture_0.png?Expires=4946832000&Signature=FXqh1fS3Yv4ZyQrtAytHHsf2rz7KR~t317jn6jq1xJoHs4qSBI53YbnHh4qB27xV0~mbdZEHqLmk~Ncm05ehP51EFgguNZ-9K2E~vZuIWV7ArKjLH1vPP7Q2u7FRKKjRkVX9P8Iyrd9l4bGpoenLCZJYQOI4hjmwPfZp99xSQ1fkCDDIXtmndq5wrJ-ifuMIpP7MA2VyyqJeT2r9jDbMabt7juQXpYAeAWkm7eWz9EOSzk7-lQKY13nVjCNaNKogGB4doKIwXOvF6w3XjFxXzUa7Yx8vlKDPs4dGFQrQ3Zz9xStVedzfY9fDjnxkatnAv-Cm1FA02YqbucLxs0hDew__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18967-786e-73b5-8bbf-11172be94ecf/output/texture_0_metallic.png?Expires=4946832000&Signature=LfZiSIiyTTMumgdZuYFtTE0cyikgaj9v6DCA4jsyeYPLkU8N7dY010WB3T2WslFfuFt7Aa2CurlTW0sjQy4VJ-zbbk2pBNdq~nC4Zibg-o0mmpfUVM5M7T6WsCbInxI3r7yL9osBgwIFX25caEkT~CiDZ5CYPV3lq-A8UCrFsYezR54UWH3GtnG1SVTQUvNctGhrDuGm-xWxWg6kGGzgG66jQWnhr4k77ZtNa7M13RaMT0QHeE3gIaf~XGuL6QVmtGxsdNI4uyJmuHcKTw2qSmWXVd4lNiHsut0Mb1MWfjQblEGAAJ6Qnn4UK6zP0SbAGSdgW0NGQ-V1qEUVvRChPA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18967-786e-73b5-8bbf-11172be94ecf/output/texture_0_roughness.png?Expires=4946832000&Signature=k9ngBSy0dz~Z9CuJ918LcV-XalyFRavQWk2yBRief3CTX9~g9vR4r682tPH-nd2onBuMOCyS4k4krD2p8Q7-W5T9Pducc6nE2weSmo1t8~tLwg50K74~55KKNbw3Z7jLEx53GisfPdZQSHhE9opjPn0apNtPfjVY6jB3UJP82Wm9zNJgv0FhiDXIjkbn0dLoSgwhGhjXNkNuGjmAMkSPqA44L7o0Olyv~Ns0lUofo-z97G706tqgwhZiRpPUClDbK97taXOuLX0b-X5AUTDRSVqQ9iH9-IbIf2OMJRJ0M7TqJoZbSHl4~q3IVhPJpAPKAroa~Wv5EDbSN4-PmQmg8Q__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18967-786e-73b5-8bbf-11172be94ecf/output/texture_0_normal.png?Expires=4946832000&Signature=CC-qtWYXwDiACV22SY0HaB~tMMad3Z7Dk~QKvpR3ULsB8UXHLxmd2tvmFBoDSQniRY0hA-TcGWnPTdZA0jFV3rOBT4CvDzWmVo8iOl9GQ9n8X1GI0kX~lNsOHyeQSBkU9X0yQPUgAbogexn2W-V~iYoIlTz-UbVRwRu~zVmYJN5k1YhZW2oRBskjzCdhs7bi9L7WFAxg3Uir~p4v6G9KcVr8tfYGkr-dko-JLkQ4IkJSVPxkoo2TJJ-HrxcqtFfNHsSKfk1JoQDrofj17aLlxvHHjsxpxVkok~-rb4FhmRJLgyM7xcfxWroTq4JVkk2KwLKvq66c8M4hSVmgICZzEQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

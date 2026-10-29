@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A charming low-poly wind-up spinner toy for a cozy fantasy habitat, small blue base, brass axle, colorful cross-shaped spinning arms and round center, clear separable shapes, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 5000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

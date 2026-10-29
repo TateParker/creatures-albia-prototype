@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "20261029_echo-bloom-smart-topology_01a1897c",
+  "folder": "20261029_170630_20261029-echo-bloom-smart-topo_01a1897c",
+  "root_task_id": "01a1897c-40bb-708a-9cfa-fd21b47fa58e",
+  "created_at": "2026-10-29T21:06:30.191Z",
+  "updated_at": "2026-10-29T21:08:16.496Z",
+  "tasks": [
+    {
+      "task_id": "01a1897c-40bb-708a-9cfa-fd21b47fa58e",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a1897c-40bb-708a-9cfa-fd21b47fa58e.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T21:06:38.271Z",
+      "updated_at": "2026-10-29T21:06:42.652Z"
+    },
+    {
+      "task_id": "01a1897c-de0c-72ea-a238-3adae72b9047",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a1897c-40bb-708a-9cfa-fd21b47fa58e",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a1897c-de0c-72ea-a238-3adae72b9047.json",
+      "operation_id": "habitat-echo-bloom-refine-20261029",
+      "created_at": "2026-10-29T21:07:03.721Z",
+      "updated_at": "2026-10-29T21:08:16.496Z"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A small woven grass nest bowl for a gentle fantasy creature habitat, low-poly braided natural fibers, shallow oval interior, warm straw and brown color variation, no eggs, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 5000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

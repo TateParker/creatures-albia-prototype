@@ -1,8 +1,9 @@
 extends SceneTree
 
 const HabitatScene = preload("res://scenes/main.tscn")
+const Cognition = preload("res://scripts/norn_cognition.gd")
 const SAVE_PATH := "user://albia_norn_save.json"
-const OUTPUT_DIRECTORY := "C:/Users/Quad/Documents/Codex/2026-10-29/audit-review-and-verify-this-report-2/outputs/drawing-preview-recordings"
+const OUTPUT_DIRECTORY := "user://recordings/expanded-habitat-review/drawing"
 
 var _world: Node
 var _previous_save_exists := false
@@ -36,6 +37,7 @@ func _record_drawing_preview() -> void:
 	_world.set_process(false)
 	_world.set("paused", false)
 	_world.set("simulation_speed", 1.0)
+	_world.set("_camera_offset", Vector3(10.0, 8.0, 11.0))
 	var recorder: Object = _world.get("video_recorder")
 	if recorder == null:
 		_fail("The local video recorder is unavailable.")
@@ -67,16 +69,21 @@ func _record_drawing_preview() -> void:
 	var walking_actor: NornActor = profile.get("actor") as NornActor
 	for decision_step in range(72):
 		_world.set("simulation_time", float(_world.get("simulation_time")) + 0.2)
+		if decision_step % 25 == 0:
+			_world.call("guide_to", "drawing_surface")
 		_world.call("_run_decision", profile)
 		_world.call("_refresh_ui")
 		var current_decision: Dictionary = profile.get("current_decision")
 		var drawing_selected := str(current_decision.get("actionId", "")) == "draw"
 		var near_surface: bool = walking_actor.global_position.distance_to(surface_item.global_position) <= 1.05
+		if drawing_selected and walking_actor.global_position.distance_to(surface_item.global_position) <= NornActor.ARRIVAL_DISTANCE:
+			_world.call("_execute_draw_step", profile, Cognition.draw_motor_command(profile.get("cognition_state")))
 		_saw_draw_decision = _saw_draw_decision or drawing_selected
 		_saw_approach = _saw_approach or (drawing_selected and not near_surface)
 		_saw_contact = _saw_contact or (drawing_selected and near_surface and drawing_surface.call("get_stroke_count") > 0)
 		for frame in range(12):
 			await process_frame
+			_world.call("_update_camera")
 		near_surface = walking_actor.global_position.distance_to(surface_item.global_position) <= 1.05
 		_saw_contact = _saw_contact or (drawing_selected and near_surface and drawing_surface.call("get_stroke_count") > 0)
 	if not _saw_draw_decision or not _saw_approach or not _saw_contact or drawing_surface.call("get_stroke_count") < 1:
@@ -90,11 +97,11 @@ func _record_drawing_preview() -> void:
 	_world.call("toggle_pause")
 	_world.call("save_game")
 	var saved_record := _read_save()
-	if saved_record.is_empty() or saved_record.get("version", -1) != 6:
-		_fail("The rendered walkthrough did not write a version-6 save.")
+	if saved_record.is_empty() or saved_record.get("version", -1) != 7:
+		_fail("The rendered walkthrough did not write a version-7 save.")
 		return
 	if not _deep_values_match(saved_record.get("drawingSurface", {}), surface_record):
-		_fail("The version-6 save omitted or changed the visible board data.")
+		_fail("The version-7 save omitted or changed the visible board data.")
 		return
 	for frame in range(12):
 		await process_frame

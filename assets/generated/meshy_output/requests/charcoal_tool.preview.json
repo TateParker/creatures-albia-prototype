@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A short handmade charcoal drawing stick with a simple small wooden rest, low-poly soft fantasy game prop, dark charcoal tip and warm wood, no marks or lettering, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 2000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

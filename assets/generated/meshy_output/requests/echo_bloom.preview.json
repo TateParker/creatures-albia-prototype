@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A curious low-poly fantasy flower landmark for a gentle creature habitat, tall green stem, six soft aqua and warm gold petals around a glowing golden heart, distinctive simple silhouette, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 5000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

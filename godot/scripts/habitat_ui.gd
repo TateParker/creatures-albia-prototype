@@ -33,6 +33,9 @@ var _language_label: Label
 var _status_label: Label
 var _fruit_button: Button
 var _spinner_button: Button
+var _berry_button: Button
+var _spring_button: Button
+var _echo_bloom_button: Button
 var _praise_button: Button
 var _scold_button: Button
 var _teach_mode_button: Button
@@ -68,8 +71,9 @@ func update_view(view: Dictionary) -> void:
 	var teaching_mode := bool(view.get("teachingMode", false))
 	var life_stage := str(view.get("lifeStage", "none"))
 	if has_focus:
-		_chemistry_label.text = "Needs   Hunger %3.0f    Curiosity %3.0f    Fatigue %3.0f\nBody   Glucose %3.0f    Reward %3.0f    Stress %3.0f" % [
+		_chemistry_label.text = "Needs   Hunger %3.0f    Thirst %3.0f\nCuriosity %3.0f    Fatigue %3.0f\nBody   Glucose %3.0f    Reward %3.0f    Stress %3.0f" % [
 			float(chemistry.get("hunger", 0.0)),
+			float(chemistry.get("thirst", 0.0)),
 			float(chemistry.get("curiosity", 0.0)),
 			float(chemistry.get("fatigue", 0.0)),
 			float(chemistry.get("glucose", 0.0)),
@@ -107,11 +111,17 @@ func update_view(view: Dictionary) -> void:
 	_status_label.text = str(view.get("status", ""))
 	_fruit_button.text = "Teach fruit" if teaching_mode else "Guide to fruit"
 	_spinner_button.text = "Teach spinner" if teaching_mode else "Guide to spinner"
+	_berry_button.text = "Teach berries" if teaching_mode else "Guide to berries"
+	_spring_button.text = "Teach spring" if teaching_mode else "Guide to spring"
+	_echo_bloom_button.text = "Teach echo bloom" if teaching_mode else "Guide to echo bloom"
 	_praise_button.text = "Teach Praise" if teaching_mode else "Praise"
 	_scold_button.text = "Teach Scold" if teaching_mode else "Scold"
 	var feedback_ready := bool(view.get("feedbackReady", false))
 	_fruit_button.disabled = not has_focus
 	_spinner_button.disabled = not has_focus
+	_berry_button.disabled = not has_focus
+	_spring_button.disabled = not has_focus
+	_echo_bloom_button.disabled = not has_focus
 	_praise_button.disabled = not has_focus or (not feedback_ready and not teaching_mode)
 	_scold_button.disabled = not has_focus or (not feedback_ready and not teaching_mode)
 	_teach_mode_button.text = "Cancel teaching" if teaching_mode else "Teach word"
@@ -304,7 +314,7 @@ func _build_ui() -> void:
 	layout.add_theme_constant_override("separation", 5)
 	scroll.add_child(layout)
 	var title := Label.new()
-	title.text = "NEW ALBIA  ·  SUNMEADOW"
+	title.text = "NEW ALBIA  ·  THREE REGIONS"
 	title.add_theme_font_size_override("font_size", 19)
 	title.add_theme_color_override("font_color", Color(0.96, 0.84, 0.57))
 	layout.add_child(title)
@@ -417,6 +427,12 @@ func _build_ui() -> void:
 	layout.add_child(controls)
 	_fruit_button = _add_button(controls, "Guide to fruit", func() -> void: habitat.call("select_hud_target", "fruit", _word_input.text))
 	_spinner_button = _add_button(controls, "Guide to spinner", func() -> void: habitat.call("select_hud_target", "spinner", _word_input.text))
+	_berry_button = _add_button(controls, "Guide to berries", func() -> void: habitat.call("select_hud_target", "berry_bush", _word_input.text))
+	_berry_button.tooltip_text = "Guide the focused Norn to the berry bush or teach a word for berries."
+	_spring_button = _add_button(controls, "Guide to spring", func() -> void: habitat.call("select_hud_target", "spring", _word_input.text))
+	_spring_button.tooltip_text = "Guide the focused Norn to the spring or teach a word for water."
+	_echo_bloom_button = _add_button(controls, "Guide to echo bloom", func() -> void: habitat.call("select_hud_target", "echo_bloom", _word_input.text))
+	_echo_bloom_button.tooltip_text = "Guide the focused Norn to the curiosity landmark or teach it a word."
 	_praise_button = _add_button(controls, "Praise", func() -> void: habitat.call("select_hud_target", "praise", _word_input.text))
 	_scold_button = _add_button(controls, "Scold", func() -> void: habitat.call("select_hud_target", "scold", _word_input.text))
 	_pause_button = _add_button(controls, "Pause", func() -> void: habitat.call("toggle_pause"))
@@ -433,7 +449,7 @@ func _build_ui() -> void:
 	_recording_label.add_theme_color_override("font_color", Color(0.94, 0.53, 0.42))
 	layout.add_child(_recording_label)
 	var instruction := Label.new()
-	instruction.text = "Camera: WASD / arrows · Zoom: mouse wheel · Space: pause"
+	instruction.text = "Camera: WASD / arrows pauses follow · Select a Norn to resume · Zoom: mouse wheel · Space: pause"
 	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	instruction.add_theme_font_size_override("font_size", 12)
 	instruction.add_theme_color_override("font_color", Color(0.68, 0.76, 0.7))
@@ -668,6 +684,12 @@ func _target_display_name(target_id: String) -> String:
 			return "fruit"
 		"spinner":
 			return "spinner"
+		"berry_bush":
+			return "berries"
+		"spring":
+			return "spring"
+		"echo_bloom":
+			return "echo bloom"
 		"praise":
 			return "Praise"
 		"scold":

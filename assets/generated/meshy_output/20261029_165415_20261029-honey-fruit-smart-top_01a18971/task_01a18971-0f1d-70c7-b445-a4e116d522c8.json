@@ -1,0 +1,23 @@
+{
+  "id": "01a18971-0f1d-70c7-b445-a4e116d522c8",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 3798473957,
+  "prompt": "A plump golden-orange honey fruit for a cozy fantasy creature habitat, low-poly organic round body, short brown stem and one small green leaf, softly mottled edible skin texture, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307252207,
+  "progress": 100,
+  "started_at": 1793307252214,
+  "finished_at": 1793307268611,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18971-0f1d-70c7-b445-a4e116d522c8/output/model.glb?Expires=4946832000&Signature=XesVbAAFr3DqMEGl6Ws6UOLL~pQothSb2oK8hmUWOIu3MwGtizCTFvH~fXZAJ3PiFNLUb0x1Cq34WNfOsIqdDgA7XIoT-Qpy40jKnzjZgkYEP7p~6mNGcZG~9h5QO4XJGofBRDYrPwbI1pq~RSw7t6DTRsxYMrzdXKAEtQdas1M45Nph0i4XCVcLW7pg3-NY0yZe8yCcAZl9TcKM-8Byv~swPIWEmegNzr-4GhwlYIPlnPdQiFMnlag50gkNeOs6fC5oHghnL1i2dhS6MEJyUbU3SAajb96kovef1ndOBPCbORIt5cu7orisEGIFG69rRTRZrd~Tb5VJQrVAWTtxrQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18971-0f1d-70c7-b445-a4e116d522c8/output/preview.png?Expires=4946832000&Signature=n7J90e7OAA0Tcx5JnSsStGFj~eamxzzOlT3JeZzM4RZOKQq7Mfk6tvvJwehFlTcNATp8Wx5JTV9gJWssuL-5J8aLxCkFizTiMw5uxp09ZiIpHfmpwAwQvFum4EOKh38wZWm~Pp0509lNcv~w05cliji7jhUevveDb~bYtzA6adM3xk72TvvIPIcYQVho0OkmVbO0IRTfuo5BD4jF-vKB8Hfq2i7y8UHCIOodkZZ7XUVlWOLlB6kZqkt9nH~KxsecymdMB90QVYcUr8vIncg922Umk81s9PZRM~jcLUD7YiifDbPZKiMcDdJEB0cWkyzfNs4xw97S8o-5ffTieISwVg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

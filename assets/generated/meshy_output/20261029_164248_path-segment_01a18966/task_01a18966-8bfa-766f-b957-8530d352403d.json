@@ -1,0 +1,23 @@
+{
+  "id": "01a18966-8bfa-766f-b957-8530d352403d",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "standard",
+  "seed": 273922080,
+  "prompt": "A modular low-poly worn earth and smooth stepping-stone path segment for an original cozy fantasy habitat, softly rounded edges and muted warm brown tones, clean repeatable ends, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793306563494,
+  "progress": 100,
+  "started_at": 1793306563501,
+  "finished_at": 1793306589698,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18966-8bfa-766f-b957-8530d352403d/output/model.glb?Expires=4946832000&Signature=WVf9PiJEcTSBHfVWpH1QfbCGnF5vvEnh8s967HXY1fwz5DJDqYBE1ALVRo6730xps~XwGa4M-xrYFfvgoWT8IS~YnECxK1CVgdyPyThxww7C28p4eTCRP6a58~wtU6eeCFabq49cD7rIvtpURDK21nkVYlrK2wpMb9kOVJEzCVk9X4UB6rJ-z5HdQcm8QO~XvRzklOdWjgGC042h3BTRbqQjeMiRNSSIWvuBSMg2GWAyOp-RJGCgAgZzWuoG~iFWfzyFZ2Rzdsn0ccv~E1ipLbfdFnCDFzAl31-0b-SP8PHxgSDd1OYxvoG9sxRXxMoU4F1nWgKablgRvUA0kot9FQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18966-8bfa-766f-b957-8530d352403d/output/preview.png?Expires=4946832000&Signature=WsTpvuhKsECqaJ9lUJUyQBOtC4cm-JyNbvcSaQjtnjpsYvpqpO7nOLvQbDO9gxpn4bu46Nbm1ElYIfJUtPNOg8Pe59i~3l7w3-v2Gw-CFwS6LdR1i2AEHfJzVOhhU6L~76g3UBQ-LGToKXrYO5tQMOQe-RK6KArQU-tWAMbTp1lxgjxtKfUN75JsTQUfHKaZTrDXGZXst3MXZm7tHnsoSi-tmtB~CrB-qrO2P7LhZsidZTZvm01E3vmNahCpZJ37lQt0aylrnqdoXMxts2OZXqk9YkjsHA22vwf9nl~pd3uOK7B-b1VH5N7-zjtfI1hEHDhB9D6roo9~1fppB5kG-Q__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 20
+}

@@ -1,0 +1,23 @@
+{
+  "id": "01a18974-f925-7653-8875-930d4e3c0205",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2861155906,
+  "prompt": "A compact freestanding wooden drawing station for a cozy fantasy creature habitat, sturdy easel-like frame, blank pale marking board and small lower shelf, leave the board face plain and unobstructed for a live texture, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307508948,
+  "progress": 100,
+  "started_at": 1793307508956,
+  "finished_at": 1793307526211,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18974-f925-7653-8875-930d4e3c0205/output/model.glb?Expires=4946832000&Signature=a7WkmeEPsEIBCXHebpuvtRG6vqQJ9BfqUQpysKC5FiNfrmtRm4J-NyuFIVmmSzaN8LwJ0T8ZUAhdEAqv5hP4ZgyGVFkxZSpQdGSTNDlzuoUY4A~90mHo5Teir2dU1RDUs~J~PFD3yfRztqn6yFCdRa4QPBTzxxra1Fh6LQ2el9sUbW8O~z7Qat4MYdezMo2Mjr2LWcYc2PR2EABGy0KDguGq7kyPhEftwdTlyaqVkVN~wUn23E39CEP1ToXmBHWy7p7QeUvEAs~DRRg~OUVV3Jg2hZxlDSVKi8uic9NNXrQWwpgOA-eReiIYnUTzVuTiCbk8X3xW-c8OE0a-hNom7A__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18974-f925-7653-8875-930d4e3c0205/output/preview.png?Expires=4946832000&Signature=AZVGE3DVWiQFjc2GBGoor7UcwS2pO32YYXs7c69IVrJWWeSb1KXI-tane0H1pEtWoJCYgPCOXkOMkw6A9LWqr9MVZB9ILojNzGcGqqquteFdKePS2rH43ItzwX~5PzL5POP1BSAGhuUrQDJ-Fn1kttO8uMjLCUBy3MxFnHigZyXVP5P-McXflBGghqvnvQrkSuSydWmxzHrNcC-j-ukEVhn-yFMDFpRnV1bWpXP22xMx42oP80BVS6rK5r57vRjAHSntMKpZ8J0fZc4~lp8jzR7Pb60cos-U3AqxNtkC9AxFvEAhsnryuqyRFTyHL38Y83XrFyma375~nhLUS2IHqg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

@@ -1,0 +1,23 @@
+{
+  "id": "01a18977-9e43-731c-87d9-f4a14929b409",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2703005577,
+  "prompt": "A smooth pale cream fantasy creature egg for a cozy low-poly game, softly mottled shell with a faint warm golden highlight, symmetric oval, no cracks, no nest, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307681937,
+  "progress": 100,
+  "started_at": 1793307681941,
+  "finished_at": 1793307696729,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18977-9e43-731c-87d9-f4a14929b409/output/model.glb?Expires=4946832000&Signature=pqtzebdEjMR5-5nH3QdhQ8Ba1oNY7t2WJrKYOxXkBXG9f6150Hc65eUh0oYbarKIEJfHIGmFf28GlNWESuav7sJoBwq5ZOvWOJKqZmZl2omNQIWM2Fc1hf4uB7FQ1-vGtbypV0Zs36GUpWrT7kbjTTxFbW0sO-3dcdNL8VpNVF5IRpVm~6O7VhAwBbDmcEEPYOMzZUA3ylojPiLSYGNuUX38HorcXNAA5dg1MRxaElP3xrpUH8ghUOyRxIFRYipsvqcio028ctD5wMYf30RFDsY6m5PJ1KNhsfmsynGOOt4~lyRO3xyyGd0yXOYfuhJYUVNiuEMO8F0ceMT25xhIiw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18977-9e43-731c-87d9-f4a14929b409/output/preview.png?Expires=4946832000&Signature=h2HRbhsP73VOGuEoFcloFvb-kRUwv~Ri0XJUK3lpBsGMChXMMOhv8L9~7NePzIlelxneAROjJzQ1SduECTQbFEy2jsX7Ev2tImKe7ulvGPkJrAShkz-nhTkP-VbQctp9rYoyXNd7Xn6kGyjGV3Tc~4W1pSxm9gyXNxuqRwRV9-6lMTUApkeikxbCsIr5xPAxubDi6fEGUXjZidHi4~ma4FRu8ak40qwr3uOKiJnQGBxjntX2udrb2pcK7N--oCmBmhCp4iq8Unj~8vi-j6g5~zyT7h30BZ4tNhfpp~8T7MGriSfH7r4YqaGCTMACQ03zdMuGZEfke8SMfcXLA8YjSQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

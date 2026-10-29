@@ -1,0 +1,23 @@
+{
+  "id": "01a1897c-40bb-708a-9cfa-fd21b47fa58e",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 1322485627,
+  "prompt": "A curious low-poly fantasy flower landmark for a gentle creature habitat, tall green stem, six soft aqua and warm gold petals around a glowing golden heart, distinctive simple silhouette, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307985768,
+  "progress": 100,
+  "started_at": 1793307985774,
+  "finished_at": 1793307998233,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897c-40bb-708a-9cfa-fd21b47fa58e/output/model.glb?Expires=4946832000&Signature=qQGT0iJwk5M4O707MEIhVDCLYGFiUWI0iHqa~Bo0isw7wP-0eBNrxtsA0947LSKtpqJN1QjcxOvwfFJa~fRVwomLy4FlKheSwlNgiegFF5059MyuvO1A2JHjnRLJhEIRoK8kjiByivKmLTM0DtGI0EHuUcomraDmnI6WzmlbnPB8OIz4lmrX5-HNHFUSum3ah6yp6DBuy2toxWdP2DmJ~jrn5NloTdHqUuphhKGj-2aZPlUg5a7xjNmPAlxR6iPS-X~KsZO7UFfBTEa1VEBa3uOc~qhf94h2L32jkhcQ~4rGpH6DdGMmDQkBxoxSsojj3bh3KQK4uUwx5VyjzZ9sfg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897c-40bb-708a-9cfa-fd21b47fa58e/output/preview.png?Expires=4946832000&Signature=ZaFy~tkHqYlnJ3CVq5VeYXl3hs5EqwS6Sz4ol0AWpbbxlKm132TNPB7CSil8nTqEgk0O4YGFLMCr3lori-6JmxWlCJ0So4CD74F~YArOJ1EeRI0fgaDjKH4CpsAYDaTKWG2C5SljVnvb1nlU9TpPaatDiwhpUSuTQmRMpaLHlwYw4IDmJTB7lBBozdcflcnnT9XZa01rvueEfLCdrACnqX08eZmSXV4-H0XAq31mAHBtWuVXfr10jHoFVdvklnEXD60Cq63FgaVYFiD7D9VYui0S4ICBG6u9njn0Ki2AKlrGplpKc~o~9A1PRFg~-r8EI~AKBBAWJh8ptDlkHUnbOQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

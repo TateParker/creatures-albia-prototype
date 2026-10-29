@@ -1,0 +1,23 @@
+{
+  "completedAt": "2026-10-29T21:27:33.158Z",
+  "destination": {
+    "assetId": "albia_norn_species",
+    "version": "1.0.0"
+  },
+  "evidence": {
+    "blenderNormalizationPerformed": false,
+    "gpuImportTestPerformed": false,
+    "humanVisualReviewPerformed": false,
+    "modelBytesCopiedAndHashed": true,
+    "policyValidationCompleted": true,
+    "staticInspectionCompleted": true
+  },
+  "manifestSha256": "a155a24923a4b150099c9e8d0504d763ce59afff22b5cd31e0eba12d47db66c7",
+  "packageId": "pkg_33b71a92373ab987f79818bf",
+  "schema": "game_dev.package_receipt.v1",
+  "source": {
+    "bytes": 6225380,
+    "fileName": "norn-with-tangents.glb",
+    "sha256": "3abc254102a302319be41cf914ed0f0139b23c9490f305b7f8cad04c4bd181be"
+  }
+}

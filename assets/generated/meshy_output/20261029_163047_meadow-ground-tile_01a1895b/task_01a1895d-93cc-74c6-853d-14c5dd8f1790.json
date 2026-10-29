@@ -1,0 +1,30 @@
+{
+  "id": "01a1895d-93cc-74c6-853d-14c5dd8f1790",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "standard",
+  "seed": 3959661388,
+  "prompt": "A modular soft low-poly game ground tile for an original cozy fantasy habitat, rolling meadow grass with subtle clover and moss color variation, flat square surface, clean edges, no rocks or props, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793305973728,
+  "progress": 100,
+  "started_at": 1793305973734,
+  "finished_at": 1793306438980,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1895d-93cc-74c6-853d-14c5dd8f1790/output/model.glb?Expires=4946832000&Signature=Oy8nk-jGmhW~RF3epb5P1ZogUxZA-3qmz3oV5WML38Q3XLc9GeTu9tODG1i7BQ5dsKZjj6nG4vLxtckTl0wKnyQKYkeGSxmyOAD~kozXf16EJOu6yGsfpo8RXfcfwpnU~EL5ttRZPw63Yxn1jON2ay72LJP4oPdtpuPMDegwFMwSV~xnnJW6gKBld~Jb6aQJX38JVlu7LWduGb57h6EWKePw0VaxgQfHrq-HVI4DDdFNNKy~FQG-m2fOSdC3wrwBpossIcnZnNFgevrKYrbk0Wl7FUPOhC--8RndTrlSWDDEHHm73L7UspMx~k~RB7WVwdFHAqz6jPQzhnFx15z1bg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1895d-93cc-74c6-853d-14c5dd8f1790/output/preview.png?Expires=4946832000&Signature=Qv2Doj5VRgh3FrEVNtTgJJtITRB~W-TArfMb30GR8leOZgU6qYRPam6eCUUTksQFHWXnj5jb2lI-Cb46MQVY9oUuvvJmCcQZ5GunZHbG39zKz8L0yoZJ8bkeLrSMdKpDe3zcah2h0XxzDaQVvSKOyIMf5124zXNNmVQmqDlN~BgCw7jYeDFdN5VidseoNEOe4-D2FmJNYvdIeAmT28X79s0HQXExmn6Y3C3hs1Xe9UAbP4ZMgyT2jp4DaFdnAqUSVpVDMjms5WtIUzGjC-TuYRhHAIRpkY4HrgyZu9N7omd5YTAsoB-~GZbUx2R~-WaMx1ZT57bW1wJMrfo-IXg8qQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1895d-93cc-74c6-853d-14c5dd8f1790/output/texture_0.png?Expires=4946832000&Signature=eqYHo14jt8bITaoZ7gJyAgYK232DG7SklYz9wudtfYxNHtiAKV83bSLka~aPJFXUxkmRIDizpPkJDYFzygztUfYw1-4nKDMMcyb5VE7kqDjU3L~28fI3InV3QyD~wV0U~cwkg9huMUU7MUJxW5UaXAkrh1WXu0Dq~tHSmzNdg-vxlIteduiZC3uDAazcuSBNpMhCsashHpDS2cXYkG8Khc1Ze~cixYFR4dx3E3tHpN9hc9xqA-FEytrXy3xdCR3QAZrZcAoLAqjCaq~TecIoCL47QEHXbOlO4K4XfIwe3QzgVmS~lFhLNzt3iImlHZWe3ytwHytBhPi~PPyQjhk~6w__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1895d-93cc-74c6-853d-14c5dd8f1790/output/texture_0_metallic.png?Expires=4946832000&Signature=O0YfoysIc4-twoHMK6g5yZe4oklqjEtpkdrCC6osBx5IQNXRxcz6gW06ekPQvvOWwHmXMs9SUih2326vE1upLp00-2-SomdZ4Vnpzl4hw3ply8o6Km5WFmbkGgaHQSgZt5ADIydIkqUfvHIAk7FDcDQWnPwcWa9nbXCqiwiqVLmW~7gnGYjqL7g7sha0cMS-B6V9qhSg-~veOA-nmzF0wzrk20bkyLBn9ggxaE24kAGG5RijEyBFzt9PgiIHH~5VnSMcbGnUYvAUGgRKeMN2SICL1QqxbRrGKpyTHy-mPSydYl-o0RQWUDAUoGIsMAbhlbg4xwAdK4Uc23vnNsBmZw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1895d-93cc-74c6-853d-14c5dd8f1790/output/texture_0_roughness.png?Expires=4946832000&Signature=ElbWm7q0Nzvs0dHkukhFgMTFj~LgQBCexR~te1iQYMJzyfyQ33Yhr3SHlBc2~hzZD9AhU4SZcU-uY56vjByqc-q77Y5-5n2mvUE-McfV7-6EFukRI53vw8oF1zXVF0Mn5~52bwvGSeL49z~L4lb18Y9ruTsdaYAd5EzOWEkNX7y3dAhth6Gks6trQTJa6lvopQHY15lqqo0l8IAnylhi3PvVfiOpIHQY~3lFFEzgckUjGlgBPW5XhVvoHuPeG2vsfADnBv-Qg6hjRSkWjkATO0YluXhXUGYMt0X1GrEGBzYXI3XeE5pMj8gLfWJBMLqh4dNWJ3GXAcW36YTkBF-iPg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1895d-93cc-74c6-853d-14c5dd8f1790/output/texture_0_normal.png?Expires=4946832000&Signature=iB9yJsLuHzXuV0yWi6yJTDpDs3Iqg2e6QMoTAoFNYA85fWtxAl5~jj6HM5qTAInDVkbPpjdSU3Fepjc97OatLuT5PeUqXQMo-JfkqYk4nmjQuUM0zyTzfI9LMeWvAcmf4B9Wy3uZUZLoVXOV4elawAbqGLRxKwwVIwp0IOS4uX5KJKo7-mRpf88GNvkArTT5pZPIACPfLVnSTMmRBgvuxYxquBiB8ChjgFN9e4ejhtVDngH0dmWBE6q7neTIGMQICcT4SezKRsCFFYl3oL347KTI1ShuHL8EbiPzGPemrHURi8mh97G-jj~P1UW~U6QzOySk~-00pG0AIEPF4aRXLA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

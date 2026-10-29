@@ -1,0 +1,7 @@
+{
+  "cleanGeometry": false,
+  "normalizeMaterials": false,
+  "unwrapMissingUVs": false,
+  "targetTriangles": 50000,
+  "mergeDistance": 0
+}

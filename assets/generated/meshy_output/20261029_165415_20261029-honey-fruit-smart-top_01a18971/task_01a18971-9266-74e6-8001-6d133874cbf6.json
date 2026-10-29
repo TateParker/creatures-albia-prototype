@@ -1,0 +1,30 @@
+{
+  "id": "01a18971-9266-74e6-8001-6d133874cbf6",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 1295309217,
+  "prompt": "A plump golden-orange honey fruit for a cozy fantasy creature habitat, low-poly organic round body, short brown stem and one small green leaf, softly mottled edible skin texture, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307284084,
+  "progress": 100,
+  "started_at": 1793307315459,
+  "finished_at": 1793307350021,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18971-9266-74e6-8001-6d133874cbf6/output/model.glb?Expires=4946832000&Signature=gR~923QAKeWvidHt0AYCizrhWTuFUrYBjq066nBV3~ASRV7HcskvBOxeyFG64MLzTvQsd6zU4taUjvmFFnQVPjXOXzxtiQlnVy8o-53rnQ6ju1WqtcOwlODcGCKuEEXRxqdRGOCFewFpXa9QbXBgNHXAiBW7wMO5YrcLW-VSsipk6FSdeXTW5LTeVqitsWvH~IcuB3CgdDwIc-HXzEXy5CIx1zOuGfKmsATmBc0Y~IugBUibmuNrqf4i-7JqVRBIxm3Gq7ieIXkvzMHpDJvi3WIqNO85Q-vupcc0cRorslMdw13JwbiaVT3OBko-nrsdRsfMwvRKy-wVinfR3rugoA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18971-9266-74e6-8001-6d133874cbf6/output/preview.png?Expires=4946832000&Signature=juAjz7v-tEa3g90wn382~bvFgmN2mWqupL7cO4FtgDHtqE6e9Kx4IWRsKwvhb9aFcD280o~TCsNo2H6yFpf4O2HZdGIGWUB9~WkfoOdmciQqLEQNgKYPh4s6cJbcQnc2hw6zayAg8I1pVLaxE1fqc7On92ZF5XBxl8t-3mnd-9A2oEsH2gMDPUKf6XeZ8ANrbZLwOJqMH1F83w6Xx5dwUX2bXVA1-KLRXmZf8s2c6tAQClfluFRjzcPIRrhTNRTibnL7RdrB~FxeueqiOaOH7-3BfIcRhZxO2yTXPv1dEDHMebMkn09H9C0uiQ0M0W5xH536RH9XTyIa7E3ZYuWMLw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18971-9266-74e6-8001-6d133874cbf6/output/texture_0.png?Expires=4946832000&Signature=Cn5WKiVboBdw1QHooPZWlGttayiq2VKuTpJNg4in3Zs0lOX9PxFf-4-BJY44T1B2WpneBIUGfrRtTuSnzDIw-iN0s~21LXYVwBC-YfQjMFQNcKHT-RWcMkj0OdUNWaplXHp~0~XJ4zGT9W8QBOV2-Tr5DGNAugW9TKoTX-IUS2-bW9XG5xvp1TVwDKyjLPf3a-S5sp7uSHaKMvBcj8h6yk1VSERKdPBM01-p2RV~sd6AiayCgwXnudeV0Q2rEECdZDL8k~OScVWf0UrgIv9emHWxUB6R6ORep3glnYpkqY5gy7X2tOJj3~xhgYwyZcuRtJzKT8Bp9TGkiDg6gn9I2A__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18971-9266-74e6-8001-6d133874cbf6/output/texture_0_metallic.png?Expires=4946832000&Signature=RTq6~kdGQDUp0wgLW41Ehj23c9XwPEZTq1gQ3IK1LWC~EQiNqIHuRIXpYOCiEIL65kzs4Md7YblaOLfZ9DmW9R36nWxDcMMLCG-nKW2EKaUZKlHW7HylEMffn5Dt15Q0LjY~WhX~kudPZ~het8iMwPA-STSqes5UhBpBGS6UOqJD3jD-FCFu~5uf3A9JZNoVqa-VKLQDunkokUVuuZ5bFvGY8Gy~lcpedOurYxMovQ16Lt1~7CQW3bPvgs0ui8Q38cL~86OGdE5r8ggt2r1eMrYQ~KM-KTCMf49dli8UYgXeKiizeN3G9eNeOwHrcAghncldrBEPlUnu1z~05axaug__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18971-9266-74e6-8001-6d133874cbf6/output/texture_0_roughness.png?Expires=4946832000&Signature=UxeWySRUu5CKD5Sy-uIjBbr609ojDOmqaysyYc-fb8CrK3Niw7zt5VkJonyZhl3GFRlNQOJqOj9VpbJ3-3QkZVicaoxUk12a2M31H9WMbYuIdEsYIG2XJs4qsjjF-a2M2j1~iCjtxsw7Ffic91EWfQ~jbK8-dkABU8YPJfayaKLeL3UMuht6x4Qt-HK4gVqrpU9uoA-ZRRoZvGEircnRqX9u7bsFjfFJ331puD9tn2itNm0Y3hXL9gN9-jQziTq9kJBz0n2djOhpQCIq~VTbT5LU7PeZgXzBTMm8R4dNOqOKzIuW6q-F1hZ~XAToCnM0Rc3INoWVShV76MPq1IHSGg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18971-9266-74e6-8001-6d133874cbf6/output/texture_0_normal.png?Expires=4946832000&Signature=l3hHCYOwxiivC2bo9jp49nSLpatwRT4TqubEG8zgxqNHQRzXyg1xabInLJF4ceN-nLpbiLoLI16hsPL8bmd8OAchJNcaB6oFNzJnYnWurZk~A~57rcjoK85lVs~Ojb9vfyLv6uw81kqwRVuHt35HIuLoDuvp47eYJ2~zvD7-2nAl00Uqr7V4lIASfQvuY2Py7eXqkr2e2GsuCCvtLTa6eWzSS~HQ8jIWq5mbu~A-WMssaney9rzsbft220~szRinX9VgiOqluIn4q7LJkXINPnZkRPEOPZxss8sm2PIoTwMTbQjaVLBKU94Lh6PuEcq8j790mZ7-IpEjvwo8-Pfm2A__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

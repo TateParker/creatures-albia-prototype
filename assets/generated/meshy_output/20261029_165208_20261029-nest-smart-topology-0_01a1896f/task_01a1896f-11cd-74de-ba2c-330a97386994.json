@@ -1,0 +1,23 @@
+{
+  "id": "01a1896f-11cd-74de-ba2c-330a97386994",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2117340284,
+  "prompt": "A small woven grass nest bowl for a gentle fantasy creature habitat, low-poly braided natural fibers, shallow oval interior, warm straw and brown color variation, no eggs, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307121825,
+  "progress": 100,
+  "started_at": 1793307121830,
+  "finished_at": 1793307141868,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896f-11cd-74de-ba2c-330a97386994/output/model.glb?Expires=4946832000&Signature=bhh9QwFl9~5maXP3aFs2ErA1QJnzfWiKDslDAzGLRU0hk~Doj7IIRj1Q9Mn55TWhU4LoWqZnGqwW2fWBXQZVZ5rCetXYdOQRuf5Ctp2uOMbmjVVIcGVcdG93h3mTVY8JbSVobtYVhRpK1x8R~uWCx7vzHAo0pB4Un2lC~gcTSB-yCL-7swyEL7zbHdfZ3obq74HZKq88Cmv8JpMdb~27vGvrGeqwtg5b1feKcXZN--K3~XYF0iE-lTL1bh39j~f3ljJaxppCD8De2IM7i~-xkUAX8ztki-xX55ZSk8Hq08v1EXZRIY93cRbeqSJH7ioEXJDt0YniRJ2CAdpjRH4DMA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896f-11cd-74de-ba2c-330a97386994/output/preview.png?Expires=4946832000&Signature=Kza6F-BqooLjYkN9aAg~P7hYMuzDeZ-WCDCZeFweaLDkqNMSnTuKDwmqn5JNPcPXCRhecUjk5wSKdwnjU4yP1YjyTq65FXjUImqmjYujy0CWmXfEOFg5NSPQFJTotH-4WOMY1lRUYSiHsxaXU5XtiXNSOojycH~lfF1NnmLntzmbF760olurw2rKUJtlaCBn9ScsFLRliATzgc2RrxrDoO7om5eQMIBeDiUamWmprcI8pFHld-Ossppy1jsaXP9HLc0r8HYFJqEPnAQO5MnbeLtgh9Ag2FKUi4ArkVHEX0x5gd36N5Fp4mBGu89o6y47FUIa9H7Xchr3rXbAQWn8~A__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

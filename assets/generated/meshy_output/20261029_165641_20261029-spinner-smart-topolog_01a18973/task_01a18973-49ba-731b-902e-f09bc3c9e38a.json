@@ -1,0 +1,23 @@
+{
+  "id": "01a18973-49ba-731b-902e-f09bc3c9e38a",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 3111053437,
+  "prompt": "A charming low-poly wind-up spinner toy for a cozy fantasy habitat, small blue base, brass axle, colorful cross-shaped spinning arms and round center, clear separable shapes, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307398088,
+  "progress": 100,
+  "started_at": 1793307398098,
+  "finished_at": 1793307416517,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18973-49ba-731b-902e-f09bc3c9e38a/output/model.glb?Expires=4946832000&Signature=L7RuO8T9Y973GlajcA6ME1zJGX39uGr7uvOJsOIoPBiHADv2pkNWuDG03DvBX5Oi0MVKcblNKFV8TRuj5TETmHwCrJQlNcofnNhMsJhKBcscNxlOLZERSEQfLk6GeRVO57wCWv313PDj~ttHgyCF5DbISlHn24pbd74LVr5xOgSr4Vi6BQDrTObvg4WgqIUzBYmiaXAUrX5jzndc1i23YsFGvrSxtDezcrHahJuboIFBZ6J36L9JHFUlnmog0-2wbHBUiWqoAL3-4qgVZ8~av3NUvnn7ygV~XXhrVZDCXh9FTsDOQnwb27l7AePQNFiYBwsEfuGyRbVbB9w4Mgtzlw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18973-49ba-731b-902e-f09bc3c9e38a/output/preview.png?Expires=4946832000&Signature=P-tdyUi3uyxVdfNLW5ye~06eO7WjR9kMCnmcQZ5UZNlOKvoSjuvpzwgl5NW79rBq6HruTAwuE7Dj7u7hy0vJGO1ra~EGozM02wqES6ZqyMNQX5Gj1b8n4QanTuyWqQNEwjCVM6XjCLRXdiooMU41GhX3PZRKe5-6CF9hEmL4bQonzBLU3qI7ybO1Vp~0oonqYhd2Zg0EL7Yb0o3~I3wd4Lfii~EC2apq809Hft6L06AbvHe8fdF2I89FICaeqeCVh5955xoU1dkfWiE3iM-NbV6yG8xAaPsjC0WejLGAgasIJcdjxSSvx6e43q1YrLT5vb85JaLoDH6hDt4QTqNFMQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

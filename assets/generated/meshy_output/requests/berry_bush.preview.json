@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A reusable low-poly berry bush for a cozy fantasy creature habitat, rounded green leaf clusters, several visible dark magenta berries, short woody stems, friendly readable silhouette, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 8000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

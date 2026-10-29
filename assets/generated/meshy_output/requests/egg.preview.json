@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A smooth pale cream fantasy creature egg for a cozy low-poly game, softly mottled shell with a faint warm golden highlight, symmetric oval, no cracks, no nest, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 3000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

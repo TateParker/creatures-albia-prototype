@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "folder": "20261029_163047_meadow-ground-tile_01a1895b",
+      "prompt": "Meadow Ground Tile",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a1895b-869a-72dc-adef-3c29f4b6f8b0",
+      "created_at": "2026-10-29T20:30:47.312Z",
+      "updated_at": "2026-10-29T20:41:15.835Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_164248_path-segment_01a18966",
+      "prompt": "Path Segment",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18966-8bfa-766f-b957-8530d352403d",
+      "created_at": "2026-10-29T20:42:48.192Z",
+      "updated_at": "2026-10-29T20:44:37.303Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_164611_tree-smart-topology_01a18969",
+      "prompt": "Tree Smart Topology",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18969-ace3-70ef-a4b2-573eeed729ae",
+      "created_at": "2026-10-29T20:46:11.597Z",
+      "updated_at": "2026-10-29T20:47:41.160Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_164815_rock-smart-topology_01a1896b",
+      "prompt": "Rock Smart Topology",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a1896b-8b42-7165-aa71-a43800ee99ae",
+      "created_at": "2026-10-29T20:48:15.536Z",
+      "updated_at": "2026-10-29T20:50:45.680Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_165208_20261029-nest-smart-topology-0_01a1896f",
+      "prompt": "20261029_nest-smart-topology_01a1896f",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a1896f-11cd-74de-ba2c-330a97386994",
+      "created_at": "2026-10-29T20:52:08.176Z",
+      "updated_at": "2026-10-29T20:53:46.539Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_165415_20261029-honey-fruit-smart-top_01a18971",
+      "prompt": "20261029_honey-fruit-smart-topology_01a18971",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18971-0f1d-70c7-b445-a4e116d522c8",
+      "created_at": "2026-10-29T20:54:15.559Z",
+      "updated_at": "2026-10-29T20:56:19.050Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_165641_20261029-spinner-smart-topolog_01a18973",
+      "prompt": "20261029_spinner-smart-topology_01a18973",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18973-49ba-731b-902e-f09bc3c9e38a",
+      "created_at": "2026-10-29T20:56:41.214Z",
+      "updated_at": "2026-10-29T20:58:14.014Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_165832_20261029-drawing-station-smart_01a18974",
+      "prompt": "20261029_drawing-station-smart-topology_01a18974",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18974-f925-7653-8875-930d4e3c0205",
+      "created_at": "2026-10-29T20:58:32.980Z",
+      "updated_at": "2026-10-29T20:59:43.598Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_170003_20261029-charcoal-tool-smart-t_01a18976",
+      "prompt": "20261029_charcoal-tool-smart-topology_01a18976",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18976-550d-7087-a5c3-5dd74b8a13c0",
+      "created_at": "2026-10-29T21:00:03.120Z",
+      "updated_at": "2026-10-29T21:01:08.074Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_170125_20261029-egg-smart-topology-01_01a18977",
+      "prompt": "20261029_egg-smart-topology_01a18977",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18977-9e43-731c-87d9-f4a14929b409",
+      "created_at": "2026-10-29T21:01:25.174Z",
+      "updated_at": "2026-10-29T21:02:49.500Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_170309_20261029-berry-bush-smart-topo_01a18979",
+      "prompt": "20261029_berry-bush-smart-topology_01a18979",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18979-353a-7791-ba9a-5163d2fc97d6",
+      "created_at": "2026-10-29T21:03:09.525Z",
+      "updated_at": "2026-10-29T21:04:37.938Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_170455_20261029-spring-smart-topology_01a1897a",
+      "prompt": "20261029_spring-smart-topology_01a1897a",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a1897a-d349-757b-a8d5-9d570ca76470",
+      "created_at": "2026-10-29T21:04:55.259Z",
+      "updated_at": "2026-10-29T21:06:09.119Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_170630_20261029-echo-bloom-smart-topo_01a1897c",
+      "prompt": "20261029_echo-bloom-smart-topology_01a1897c",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a1897c-40bb-708a-9cfa-fd21b47fa58e",
+      "created_at": "2026-10-29T21:06:30.191Z",
+      "updated_at": "2026-10-29T21:08:16.496Z",
+      "task_count": 2
+    },
+    {
+      "folder": "20261029_171906_egg-closed-shell-retry_01a18987",
+      "prompt": "egg-closed-shell-retry",
+      "task_type": "text-to-3d-preview",
+      "root_task_id": "01a18987-b3c8-7793-a7f8-5fc11e51e35c",
+      "created_at": "2026-10-29T21:19:06.471Z",
+      "updated_at": "2026-10-29T21:21:58.957Z",
+      "task_count": 3
+    }
+  ]
+}

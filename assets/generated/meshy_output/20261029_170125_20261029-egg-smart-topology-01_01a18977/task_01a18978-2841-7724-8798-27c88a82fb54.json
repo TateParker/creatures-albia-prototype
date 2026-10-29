@@ -1,0 +1,30 @@
+{
+  "id": "01a18978-2841-7724-8798-27c88a82fb54",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2261422650,
+  "prompt": "A smooth pale cream fantasy creature egg for a cozy low-poly game, softly mottled shell with a faint warm golden highlight, symmetric oval, no cracks, no nest, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307715661,
+  "progress": 100,
+  "started_at": 1793307715666,
+  "finished_at": 1793307749820,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18978-2841-7724-8798-27c88a82fb54/output/model.glb?Expires=4946832000&Signature=M4izyHHj~sbCHrfa6TTJcU81GI-WedxmRRAKuKpq4tSR9lpg9hgB3LQloSRdaGjIX6yM0aPdS-qYqOtshy2YBOa~1ZGqL8tlY~8QrTm4HC0u7SiniwwRUFoaQ4WOIgkWw37xMQx3JRKjUOEOilK~Ikh5xPCKN6BCW-vU05pKUyHgsG-I-VpzprHT6lZlCeOYsJlZt6xpP8DbI81xZlqB6Cug0WKYsYpUA4cj0lLrKmaRh0dudhxHSH5slcfbR8jAICKBK-NmjL71Wg-ralG~tMb5MJewybhup24jGeamt6X40jldpJIJSBq74VT~hvogtzWB9fBM5W~XRgpBLHKcrQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18978-2841-7724-8798-27c88a82fb54/output/preview.png?Expires=4946832000&Signature=UxGN7rOaiFmuHCYT-KbhiGfmxKh7fHhWcVTgr5cS0J-06vlDMY1--wPuPLOxDULDDU3DaMy1Dy~yw7rPiPOBor9kMkGrSo9BxoD54xCk9VRdQaXB-O5aZoumVHEqfJfodAuz83jUHU9Uu1fu--Q0gDyABkxmRold9yBGnUXyu6nqE0kF4sdWEBGcW1pCoAyiR73rXuiKcwvjMcgEL7yYOi8PevEV~SKhCM9zAqhQtf~B0xxpPflITTraJBOQTS7-HUvt2UTzeq7h5FDO-XHJIE7Kej~RGCn-m7tygtbzdWTcCPTDLrQTfYZJ2TBnsWoknSnGJTKkn9rz0ZSyYaeQqA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18978-2841-7724-8798-27c88a82fb54/output/texture_0.png?Expires=4946832000&Signature=UD9euDQtKfOkbG~xHJyAjWHvOAYdKT3CZsLxrK6s57NxQM0NONhq7hK-Br8ULhOfRNC2hTDwSQI-RJTsNQCeHU9s0IKqLV3SVZN6hu2FWvuWJewlFNMcKc0ehKri3i05jvAZKOq1jVov97D4XzVbnY47p0dfOOQK9PBT4xYLfD1QZc1DVeDfMPVQPKnN40Z7ymV-wQTGZqoV48g4tTWzP-hrpnqjIj1NA2UAaT6jJ8xD5t8ds7KowGFsMd8txR2oCV3c8yg6tPtJpLMUrvmrIwR2lqoL9aYVoc0CZPAd8BTzDeAi6rLd~lRd7K0JoqfYliLly~FXwSU4YaNckL2OiA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18978-2841-7724-8798-27c88a82fb54/output/texture_0_metallic.png?Expires=4946832000&Signature=pwO8IvbU6okAmKqsrCXW0C6JibE6Ig9hN2ZkqwFlpgDGMJ3rR3s3IeElWPYBSFfOxT-bQSMnAPHlhS16tKjeV9Ik1YIpSq3G1QcRa~ScQEl4fq2Jx-W83UJ~tbobg-bbobJv8swp5YubmiGSmXIdbmnYwL20oTu3WdhkNq1wy6o-x6-8fNFpgFMbFxxrl2U5enQ~dMEUe4ieNWK-LP1mOLPe~89aLj~5LTxrIn9TE-wZiYxfQrDSwCasMPPCdDIj7mBL5yUBTuQpmLqV39x8kmDuS5krjFyPN5GCwSUucF~lRrFGSp0k4zyBQuFKgUJcaHh3i-BpCaXOsyGm88OhBQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18978-2841-7724-8798-27c88a82fb54/output/texture_0_roughness.png?Expires=4946832000&Signature=ZwtRC1kJ0OulcP00YL9ZIwo0tarU~y8GMQiHPJQrFEwfhwWfaw4-9HwsWJQOM7U4TRkTH~AMz1mzuYPvaNp-GIN7bKIMGHjYKq88cr5Okd~Ys4kcYnUr1kXDYCKeraydrQ1WW96awkbqvDKrFg~LqSss1s3mmGu58WK1ICNtBoqpRafVcTo2~5GE4PGYSeAGrG3-1~rQwis9Yv5kWIb5MJn~ngUUTnVtxWHzuouY4x1ht~29YTU-y6uvCEF3I7QmUkuST7LabNBXr6utFrx-0MC19nrGBayhNZiUqE3VVnbNSeSSPxqxXKmmLQ90g3xC0Y90P6YvM7PR3yptiL9WRQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18978-2841-7724-8798-27c88a82fb54/output/texture_0_normal.png?Expires=4946832000&Signature=bfbGhzfKAgpMiG7A5IqAOoYjAxVvzVh3RzRtGk9yLr3M3foqBrjEHr8IqFaQ2Ncl4g8jK-9cjuY-aIMZzwMiUvsBRi~Paz00nT3HwE2VvlSaap~UKVl2YS3jET7qDJAh1Y00PA88Pzwu076dqWyz4QRCcsd3XPL-K7qmh-5-VY4M8ZwNsJzPgTCxw4oAWdhe0Lu4DFJ88tWjBV7FyyZbBKJAqKO1YaQ-S6y9UiqEIRLRa05Mt20E0HWHXvczoGwjAOe7DjcDVXQSfXweUbsuP2lpPokwa8dTBDqUMhbfc2YIKvHcy2Mq3BUb6vQbrX-G6x9lR9YKTuzy1Jow5uUWXA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

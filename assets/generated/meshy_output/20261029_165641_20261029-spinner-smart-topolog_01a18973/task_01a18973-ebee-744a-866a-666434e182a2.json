@@ -1,0 +1,30 @@
+{
+  "id": "01a18973-ebee-744a-866a-666434e182a2",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 3981273238,
+  "prompt": "A charming low-poly wind-up spinner toy for a cozy fantasy habitat, small blue base, brass axle, colorful cross-shaped spinning arms and round center, clear separable shapes, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307438079,
+  "progress": 100,
+  "started_at": 1793307439608,
+  "finished_at": 1793307470511,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18973-ebee-744a-866a-666434e182a2/output/model.glb?Expires=4946832000&Signature=TqQlgRceG3QwkTLaJQ-Lbwilz3OM~wXuK6aqlE5uoUCiNPnEE8ivUTPrOF7yN-Ugtn9RDMsMk-BVQHJ40FmYcd1huKDVwY9xoWv8T0JiJN2sSj-fAJ-HNWM3q-6ixfTC4SJDyO9JAWoG0z2jIPKkF6ZNUP7-aj9Gh1cEGYxbi0Yn2kYrLOMDlWir2EnBQ63D3xAAMTUSYZGqwfoCEK-nIvxT2OoT73sn3DImqylo0ILX6b8Naodvor9B8-LK0o6JtZwX9DpHwNADnL43xqQlm0ZbDzPwNByZnpq0SHlLdCRVKBkTpexgRQStRl8JKDAQVKtm5hnpUBkLj8OKUO12Hw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18973-ebee-744a-866a-666434e182a2/output/preview.png?Expires=4946832000&Signature=QeYsjGKrqCMqjfyrnujviBihdneu8MLCvEXaoXUVW1G~-Fvi~VGBc4z8APmBg-9Lr~Ny8TiGftTO3yN4NYn5wRJ0Pv1V7uz4WtJBi~wgurHk2d95AzPEC3sGvwdKfxunjuIfbVBmanXgEAhA57QERe8rHcvTBqBQdKdGPj7TderNu9mMCyej2J-amH-WIdjKmzYkpSqBou2oz~u3j0~zCRFrTGiJ6BDdIGO8sFLcyWAFFwUquH9ZZz~d8ey8AELiqEgd5OLPvkBIlT70HEy-u7s3pBkk4kozfvciFkR~83zWwHF99V8gyF6Q-9C3Pp2OfNnBUW2lMARQmJPiqh6EkA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18973-ebee-744a-866a-666434e182a2/output/texture_0.png?Expires=4946832000&Signature=NOjYQmjVuRE5g-gHTBkJoSZF00gEC5BDztme1OJ4NJx6Ia3opwazcBHbEDkfTAMtJSumJPhfCeHfnun3vV0Tw~-SIG5eMqbP62n7n96OCEpMrq5E3fbCQ9fcL9xzjJ3issRTzWQz~ZR65sD1BHEAlcEUK1tTATtmAuSiClf~~dOBck9vdXIGxBcy7IjkeF9Q33fLN35MjhwtyFqPI0yp2iW9Eo626F2AttMkhn-~put68GPIi9lLSzMLoG~XlPnv8UJkDS6L3yaiQbYZYlK7o~FXSf7v-IX3RWd6rrqSpBTrC3BI2XVnzZHQYP9~Hz297C2uH6PARUPSPMkfXoL~AA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18973-ebee-744a-866a-666434e182a2/output/texture_0_metallic.png?Expires=4946832000&Signature=T7Of6FDZgvpBvCQKCkdkF0lLqoW6tstA5qxjtDgkOX6rUPpk8-j1oNvs2Xzl7TDScxnO5FLLT757apBRv7HhX2Wrr35lRMg8CWYU0STrtjXSVXXN1jVeS1dn2n0UNI1me4AZ6-mRpGYhiBxFAOr57I1R5APK1gOItz~Qdq8I6BtCcgQ2hSV9bgBenr41P784C1aM0vKdS8nGAGykHygZgyGj8cStrqKhYSVAuvpAyRQ3sMcyD-m6gsXsO4qGy6Oj1SoSc15EgnvqY9i30VHXk-eKo3SmFGbAA50Q0RMgHPYz8MtXns~OxhUHOqduO6lVEXk2C7OcTcTxj0vC6FDD1Q__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18973-ebee-744a-866a-666434e182a2/output/texture_0_roughness.png?Expires=4946832000&Signature=RVCAHHRaEFG7IrJ5cn1qhb3OrZ7HSHGGVRauvgiwQGM8jhXheDQwIPsRQxEd7Fe7yYUSFWymh1webAM88Hl3K5lrZYI4MYC8Ioywo-vjzFUWLsOPl9Mg7vWF9xEN0jUTt20U0wk9QzTD1wx8I23KILbzfgwjXHPeGLOHXRhv7jt291CKMEzJKMpIuEqV-YNZBuN8xbGtRvHzt2USCiMAa2lB9kTB5oZyb58zArF-SmL8zry0G-P-vBaxN~UYhrXRMNtYXi3dJjfgOUPbaMS2TlgKY2vewFleNujIqjQpO2t4fE7uD0ZWOfdwoGbVkq6bAGcoa41OqSchZBCQAYwaMg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18973-ebee-744a-866a-666434e182a2/output/texture_0_normal.png?Expires=4946832000&Signature=Y2A0DbZqJRVrmlD9B3lhgs81Hu8aM~TUCECbAu7RvS3vnwxFg5IW1nKNSrzP1zTXBDu-m6cJXuHZ5M4w~aEYUOj3rNf7Zf8XglJMCFhVY-0mFBb4Y4RYBIV6k0iucKQd3NCf-Kx148kMnJtybmRtDYTLXgUwhpPBCueM2-yp3RG2rfzXpca2Of2fXh~gCx722yTCKKTj2HgzqqncrhMinprtKagFrYG-HXCR5BqYm0~v7~LvuWjspHvIz5wKt0o86cYQoABF~bStrMArWfdqBsneIcAksU9zVdv5ioynnkPrWyPbL44-2vxv12LLrA~WA4pXmq9-f28g9LrbloNvzQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

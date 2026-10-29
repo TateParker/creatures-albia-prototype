@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A reusable stylized low-poly broadleaf tree for an original cozy fantasy habitat, warm tapered trunk and clustered green canopy with soft leaf color variation, sturdy simple silhouette, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 8000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

@@ -6,7 +6,7 @@ const MAX_WORDS := 32
 const MAX_WORD_LENGTH := 24
 const TEACH_INCREMENT := 0.38
 const UTTERANCE_THRESHOLD := 0.60
-const TARGET_IDS: Array[String] = ["fruit", "spinner", "praise", "scold"]
+const TARGET_IDS: Array[String] = ["fruit", "spinner", "berry_bush", "spring", "echo_bloom", "praise", "scold"]
 
 
 func create_state() -> Dictionary:
@@ -24,7 +24,7 @@ func teach_word(state: Dictionary, input: String, target_id: String) -> Dictiona
 	if _contains_whitespace(word):
 		return {"ok": false, "error": "Teach one word at a time; phrases are not supported."}
 	if not TARGET_IDS.has(target_id):
-		return {"ok": false, "error": "Choose fruit, spinner, Praise, or Scold as the meaning."}
+		return {"ok": false, "error": "Choose fruit, spinner, berries, spring, echo bloom, Praise, or Scold as the meaning."}
 
 	var words: Dictionary = state["words"]
 	var normalized := word.to_lower()
@@ -143,6 +143,12 @@ func _target_name(target_id: String) -> String:
 			return "honey fruit"
 		"spinner":
 			return "the wind-up spinner"
+		"berry_bush":
+			return "the berry bush"
+		"spring":
+			return "the spring"
+		"echo_bloom":
+			return "the echo bloom"
 		"praise":
 			return "Praise"
 		"scold":

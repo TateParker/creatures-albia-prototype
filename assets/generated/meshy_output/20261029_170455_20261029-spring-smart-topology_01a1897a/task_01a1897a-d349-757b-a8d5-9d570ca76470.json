@@ -1,0 +1,23 @@
+{
+  "id": "01a1897a-d349-757b-a8d5-9d570ca76470",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 2267646700,
+  "prompt": "A small clear-water spring for a low-poly fantasy habitat, shallow blue pool, pale stone rim and several translucent aqua glassy shards, compact ground prop, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307892120,
+  "progress": 100,
+  "started_at": 1793307892125,
+  "finished_at": 1793307910310,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897a-d349-757b-a8d5-9d570ca76470/output/model.glb?Expires=4946832000&Signature=iXW3F2SiyXQAvWU49~O~diZB3GSVsxn6og3C7L1vzf0XJZntqQm0-6D1P6OVGCbaBKhInw8z-CfagDICG2kpoV70ifznVIZw6wG8EW1XzaGxuFx2R3RBvKL~SiYLZQtx~yrRGYnFfaN4wu1JMTl92IfnwOTzVwBUshT2ezs7YsVnYCtT6gv07I7dwVDO7qtAUk5HPgNjCX3hl0tpOpSFuFezNEpaBWWovnEMHKePwwjD5cchWUrAJZpaWdB1Qs5H64rer8CPe0IsGJvzSQx6mcDbBvWuHQ2P-6Ix7tnKXUIHexfkhJNU4599tSiVqCjjzYVqqCCEtEFT4O0yhYQfLA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1897a-d349-757b-a8d5-9d570ca76470/output/preview.png?Expires=4946832000&Signature=lS9Sxe322mxDPyd4KSZBihSzZQvVUUPddwmhT6Alc3eG2z96kg6e9otgblP2ZdG-lNF2AKwez~eVlN5ek4dCSzlPW1wETqxY3GhpdwQBnNsapIqEQnwflS90HX5yVWWg4OBzB3GwSfHKPbCheSouQv6mizEOIE~dCBYqMc-EA6cXWylVjPoumpvmc00Y1wDPas94GQLrc~nbxuSqd6fBAlHfOymwtfARX9olJYvWwCMO9jk0dbhCLre9dwwg62hyqXLzZ6RgJxMCoT1h8yTDKeDlj4Bmxg1Wr--3VsKPzxgC3Q5YjBGQLKN230cuRgJYF2VdHOOEPPb5XCk2SjVHew__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

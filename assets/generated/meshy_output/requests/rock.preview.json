@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A reusable low-poly mossy boulder for an original cozy fantasy habitat, rounded faceted stone with subtle gray-green surface texture, simple readable silhouette, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 3000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

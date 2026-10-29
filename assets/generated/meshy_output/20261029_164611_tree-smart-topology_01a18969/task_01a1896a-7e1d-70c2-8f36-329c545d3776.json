@@ -1,0 +1,30 @@
+{
+  "id": "01a1896a-7e1d-70c2-8f36-329c545d3776",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 3035538902,
+  "prompt": "A reusable stylized low-poly broadleaf tree for an original cozy fantasy habitat, warm tapered trunk and clustered green canopy with soft leaf color variation, sturdy simple silhouette, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793306820139,
+  "progress": 100,
+  "started_at": 1793306820147,
+  "finished_at": 1793306849616,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896a-7e1d-70c2-8f36-329c545d3776/output/model.glb?Expires=4946832000&Signature=eJQVF3gfJ91vsXIBt8PJlaXCiP15ulBYDDtxJZen9GwWB~QzLImPPx4F4PJwWgRKD52cR2kf-oGYbSqLcjo4xPlFNMPU56a~LJ6rUjhvTiO5XJZFLP2VkmA0inW3G2kUwKxRTH5sIE1hMNC4aVqpaKEQ6viKQQBLj1OBuQDWXKOtDai2z-bv1Bc2z9nU8O3UtNYgvApygp-pn6qyosrWjZCyZHW2riiMrJVCu6LkIzWks0N84xk0NKnMZKLFMV20dOXSFqfqasRuZf2whijj8rlxbJB3aaTm4TSRDrFX3ojFJQaZ2WgzUq9qHPIe4mhhj8q2eQgKMwf8sM8AcWWK2Q__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896a-7e1d-70c2-8f36-329c545d3776/output/preview.png?Expires=4946832000&Signature=LnSHRBfmXiJHPVdrI8zFTQbJKNgxQmX8ksZHRWWrhWv9SWgJ-~6sy2Gs2myVbEDeCMpQcOTctTu~ah40A9zNC5LyM5Kxty4yT~O3ZvwqTAr4LuUdtN7CKMqVURTbtzwB4cf0V-McQxUNM4X-K8~iGBOzveCd~pRVIBgXN4-0lm2KW8ncA4pNUXxOU4bAzlQMC93saIFyz~SnQ0o6o3~0HN2dL-oZGWNPfnhQFoKDsm98yzbFCrm~DF35mPpVWSY3WP0eDK0gRsxkgIqaeF3H76RNJ5TbHzmEgmrtaL7qXHi~SI0pDczRa-Uxfzkj-dIgDfrCnKWdSLVF3r9MiKOXqA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896a-7e1d-70c2-8f36-329c545d3776/output/texture_0.png?Expires=4946832000&Signature=W1eqGimkWQE2kOZrAWPYppkvCa2CkJfN557Pap60rR3jgLIE0y-e5NPZERIUWWUV5r4VZJkMPH-26Q5Zy~UUG~PO1D6sk7OH4YEuRecpr9eCZEvagkyRb2fCEJP5b1IP9E1ytoxah6zj3Kkiu4C~QEqFqYIAfqBRcOac9rt5mo29iai3z9dcVk8Xh7ciOgCGk~JbdXlnLUVxjSClIDj2gzzgMeLsNxAKTG-gmJbR-hjOMcqpyQcqyhHNMdojrjSYdYQ69Qa6HSKhV4X56XZxsEB1bHngGfYw9HTdxyNxyvjIU2qlBQWKkpUIuDCFmDj6zjop63ku6jPCZBk4iQ-Irg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896a-7e1d-70c2-8f36-329c545d3776/output/texture_0_metallic.png?Expires=4946832000&Signature=HAlP9ZXq7R1REwaZAlPnDgf8EiuvXykVxER6Yp1yEXhe2y-AqVUEET-VzlkKSEPLYmkSxAYs6TWNzB-TyBx9jPvtFmZ9Q5GVl5LPtC3BUvtGp8gVkRyedmGx9gCko8L4BGJUEL54ZsJXN84EJwrkJdrYIBFsIYNbxIwji4TcrnBELrXkRPiRJ5WgKdU5eI40GKB-XWAMi-EovJtwWI-jrXHlWNvmV-5Bb1ipf54iU5OyAN10Iqhe4kgfwg9wFf6VsYd6c-W-UZSWPFYhfc7KHa~~UaiMic3JlvHBNJsDxxhgWeteUm4fTiDiASehJGzifcqvXCW~OUahgWd1KfX9dQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896a-7e1d-70c2-8f36-329c545d3776/output/texture_0_roughness.png?Expires=4946832000&Signature=e7VH6AM1U3l0CPLQP14MLUklqhSK8brYcjs5NnWcnTzjwH0VXgtwyNCBKRXP-VJryAWEjsqwM40co82RLnnyyWavZ8oJqcLagWcy7J3xMps23HrcBW78oG8xLzcjVJGwE0PgfBNSHLD-Me25wwq1Sp82yaHWcAWS9qbaxVo0EFXMhIvv-3ZGrdeTYftdxXhMurKpCW4Smo5JLa-MSrCai~bq5K7QXpqt-RgeJcDk0lBUVSQQmv5Ik81rmckGQ5NGSAjpn1I2KJfwxXtTlYQHoFC1-yRKoM-9oktP0Bf~7Ri9poBz8rGKCTwsUotRPnMOOXNhC~w3A7uP-94YxmuCGg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896a-7e1d-70c2-8f36-329c545d3776/output/texture_0_normal.png?Expires=4946832000&Signature=FIBoHwRksOqd-tWXNB6DP6uvQIBh3~T~1Sy7Emnd-xMAAvNNdx5PfuZ~h-bJrNYhxsUnvY944VoiDtFoAHJWwuVRA-0d9oph8weZYFdd7BHILudK5eun6dsWHMMP~yCLDJkNKgiusf~hxPqnxLVYCs4xxMchtfdJgHm8k-m8oj0IT5U0IjOK0O2lK9XVwUfbvkdsay4~hy6fzW3k410673KTvIBkobXxdEuwdpOhBo-ec38ws1zk77fURNn34whetXkPMYIhj22NZZVVnrooKXnv9iUCy8vRhq-YAIgpBENMTGqXscrV0LY24IPWOgKtrsONY9U9p-~diz8cL~UE3A__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

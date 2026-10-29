@@ -1,0 +1,30 @@
+{
+  "id": "01a18976-dc4f-75f0-bd7b-d3a98c430e33",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 1896613112,
+  "prompt": "A short handmade charcoal drawing stick with a simple small wooden rest, low-poly soft fantasy game prop, dark charcoal tip and warm wood, no marks or lettering, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793307630703,
+  "progress": 100,
+  "started_at": 1793307630711,
+  "finished_at": 1793307654284,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18976-dc4f-75f0-bd7b-d3a98c430e33/output/model.glb?Expires=4946832000&Signature=GwFXXiafiK9uhL-AqlQw9zT1uMt2aKdtEOtHdSAARPJB85MTwQjQE8EnaE~zJ6OCRMulxkbwEVOi7OORNE8NetIrKnHTprQYjpjxHNlhmFCeNYQ1TUuNia1hy-jZHnsAl8M1H8KV-U5jBjVjLT78-ENerRZRcSuTUYgTqzUWnrFLDrSrCEJuEEy96Exs-rcCNg7AhWuI0ppJJW3adOM3nUVmK9quFWI0YHNvnTnnW4oCgP5TJlbvl4m0gVzfSCnalDHtm6ugANLoJEja8NLcuLXBFkrSumO-8lwM2YG~F5DyCMaquuStCoA8tu7WGe-kByIsT2BCOJNMeypw37-GmQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18976-dc4f-75f0-bd7b-d3a98c430e33/output/preview.png?Expires=4946832000&Signature=ZiWG07jWUOZ6TWejTRcg8PnSJhW0nwLWDdhsTVmFtqOa0Cupkci~keJzcIohFJoeF8sOIdWRM6Uo6bFZHq22UNjlUbk6ErgBwPf1FHq6P107KWWQHnO1ZNZkrZqoLbrYNs3kM3vdt~KtDOVhw943Mht70f50K2QkiKGKoXetVJHAlZyVkP-jjnYD1K8Uxw8OPUkeT6eSCIGkTSP5ljey3gt-JL6ABmdoz0Co3wAe0zP7j8dAtwIEGCZk3X~FbKK1MY3GnTlqbKk-RjwWJd8BwTzqkvBGmivAn2CgpVg0qktBYRMqC6oyWHeRYZRoXPILraaMxMSZdqLkN~wiZNksSA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18976-dc4f-75f0-bd7b-d3a98c430e33/output/texture_0.png?Expires=4946832000&Signature=blXk4FfWmmBt~V-r~LNLBeJ3UJe0C3WiEGrc7~I0ZmZdcR8ZmdT4IIxTCejeQN4KGGJvsspFD1SKXf2CwdUoMHASeyEH42pb8H7Yr4nSHisHWu4UaleoxW19vK2RfaOlfYHyHOKsAs0i0o6qhcIANO0dpJIAK0YTWQwHX-l-zchxbUiU628Qz-RSscFKV-NXkSIuQsHkqbQ41MISaxYED5KV6CgMIWh-1GFiM9k1stRzB8NutoUEm1fRx1s4kQN6zIb6P2N8plDQ3CUn6Esgv4QiADQWjFby4hF1X-4ivXvdJNZxhWsitw5jC2BhAVJq3x7sOQeNEBwpm08cdt0oAw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18976-dc4f-75f0-bd7b-d3a98c430e33/output/texture_0_metallic.png?Expires=4946832000&Signature=p5Y1W7Riwhp815LOKbbRET14qX94cRAbAKHMYW341Jhb6FWP1Yh1GVAliFoG09Sg77v1jCkxNBQrkREBKOf6rlaX~f7sDfkyvQczCTI3lETae75iXwIEQpCQrQeHhGV2-0Vgct2VvjnQez~wkpWmFfixL8qyex5yZTo5JIC4ZWM3bdRgkkxgZdYAs-YZzuJPQGK9-joOR4VPIR99IhRyUYZcsvpOnOGHQlnWvZNRZs-VwKp8DTe9s7hVnvV0UTUyR4wuTzDq66xPkRcMX2M96fWiWcTPvdG5e3kVKZn4MXOPM44B0joQIw6YX-q9TopazHz4IB8JjjjKelcf4W09zA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18976-dc4f-75f0-bd7b-d3a98c430e33/output/texture_0_roughness.png?Expires=4946832000&Signature=pWueluYKo8P-hegI5Vl~GTzRdPoy74gALcsZcFMuErcSHnoRn6zMwBATyj2ScEN2uMeYT1~1VmPy0DAa4-ZwYcb00JbElPfVWlXSLNLqARvKU5fjlPQTd-Ts1GUhPmzjY51QNg~PUnbPnDTUBG3FXZo4iLeRvZwhY8NLWoIptT-Daf61tw1TvNFPx2cQ-2T-WHqOThVzys3ol1nORBngtTPIM4iBcGS2mhXnnwW4lDdpwNDdYhpF50jg0nifq5aW6Hy~I5K2EQiDikMj2rVzYERH6KlHGjJcAKti5PXcT6qWcx5H-GP3V9p6b7FUoyj4-I5VcdfL4YhSiyFKNhxTng__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18976-dc4f-75f0-bd7b-d3a98c430e33/output/texture_0_normal.png?Expires=4946832000&Signature=Mq04AR4xutzxCoZpRTgRvhHEUcCut8mclzAXEDIEWH3~Lm-Xt61fKlguBL2I-4SZ~EG5y1uXqmbO3LdzuhDe2v2HjCM7UWEE56hml47KOJqJNo7cyjBjMIZaBAGW--FTzyq3ZHvGBaCid9xXiqGpvFfVET-dayICPvVa~rDr3qxkv3ozjn3dpIX34i3C8iuX3O9JPdkS-4icrSs2cEG0fbz0Z9DemPYQjR4dquKWAWuxG0ggw19ZaU5V33B7uVVIa3abTGVVUZivP6OU1mdMNuOD0SmFECY4DdXLhv0EdXfkeYCshgnD~AcDH3BcasaMzawXl0suCxb68QEiYJ6GTg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

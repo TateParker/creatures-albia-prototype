@@ -1,0 +1,23 @@
+{
+  "id": "01a1895b-869a-72dc-adef-3c29f4b6f8b0",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "standard",
+  "seed": 1028759986,
+  "prompt": "A modular soft low-poly game ground tile for an original cozy fantasy habitat, rolling meadow grass with subtle clover and moss color variation, flat square surface, clean edges, no rocks or props, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793305841461,
+  "progress": 100,
+  "started_at": 1793305841469,
+  "finished_at": 1793305919396,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1895b-869a-72dc-adef-3c29f4b6f8b0/output/model.glb?Expires=4946832000&Signature=DhepT4l30i5OU-Kc3awFIM7MSl6HtC1kE46CkLacCyaqAZWfYW8jVhvU7NB7wrKHgXfB~bPcxLEzIVP0k0qFPLA6Q2rf0qLU1fcm1XZGEY5rYiZpLH2CxMBHmufFFF2UNhGMt5-XfgrJPWges6CWJv5uC54PbwnCFfwn0hY3wDHNftRptSmA88IdUICh7q0G2GpxviHvDGSmGcKVg9L1CM~F98i4pkGbgvxC6WSac0gkVXiGFROTnh9lIRELwALwj9bDnfYD7B6J1f~IgdtTdGvkFWYE9w5QabaICi3fvU-03LSSgAEdEMH168Fek8IdVpeqP~JbfVE1JTjl-jRBCA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1895b-869a-72dc-adef-3c29f4b6f8b0/output/preview.png?Expires=4946832000&Signature=mKT2-OPlugvr8poeQRhEH6BnEpmh8WVkl0Yso3VW6fGHM~Ys741wQmrOZZDHZi85l5XC812yh~hB4M6VY2vDbhxbYB2JTpbCTYumbYQSQ-z0lhvok3QMb02eYN9D9xz2nlSco~j8pST~txDHfLO3z6p7806XZz1x1wty1edo7hNouQ9OUBvxPQR70pfTSuTDGcQ1cTFeDiBLMEV8VaGazljTWF4x4yMKtJ3hOEwKB6D3kAZsJdPQVZ6ofn5U7Y6gE9vUIbA1arA5b6CkvKJfKTSlrsrGXT3AS4qqWgSi4gM6DpmaPImZ8ObgQTd98fezyIOPUL48amV6ed7i6Lb2-g__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 20
+}

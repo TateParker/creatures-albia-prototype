@@ -13,7 +13,7 @@ const DrawingSurfaceScript = preload("res://scripts/drawing_surface.gd")
 const START_SEED := 4181996
 const MOSS_SEED := 4181997
 const SAVE_PATH := "user://albia_norn_save.json"
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
 const STARTER_PROFILE_IDS: Array[String] = ["mallow", "moss"]
 const MALLOW_COLOR := Color(0.43, 0.27, 0.16)
 const MOSS_COLOR := Color(0.24, 0.42, 0.34)
@@ -67,6 +67,7 @@ var _language: RefCounted
 var _camera: Camera3D
 var _camera_target := Vector3(3.8, 0.0, 0.0)
 var _camera_offset := Vector3(0.0, 11.0, 15.5)
+var _camera_follow_enabled := true
 var _chemistry_accumulator: float = 0.0
 var _decision_accumulator: float = 0.0
 var _respawn_times: Dictionary = {}
@@ -118,6 +119,7 @@ func _process(delta: float) -> void:
 	_update_timed_state()
 	for profile: NornProfile in tick_profiles:
 		_step_lifecycle(profile, step_delta)
+	_update_camera()
 	_refresh_ui()
 
 
@@ -133,6 +135,8 @@ func guide_to(object_id: String) -> void:
 	if profile == null:
 		return
 	profile.guidance = {"objectId": object_id, "expiresAt": simulation_time + 7.0}
+	_camera_follow_enabled = true
+	_update_camera()
 	if profile.actor_id == "mallow":
 		guidance = profile.guidance
 	last_status = "You pointed toward %s for %s." % [item.display_name, profile.display_name]
@@ -151,7 +155,7 @@ func give_feedback(feedback: String) -> void:
 	if profile == null:
 		return
 	if not profile.feedback_available or simulation_time - profile.feedback_time > FEEDBACK_WINDOW:
-		last_status = "Wait for %s to eat or play, then respond within 12 seconds." % profile.display_name
+		last_status = "Wait for %s to use an item or explore, then respond within 12 seconds." % profile.display_name
 		_refresh_ui()
 		return
 	var feedback_word: Dictionary = _language.call("word_for_target", profile.language_state, feedback)
@@ -174,7 +178,7 @@ func give_feedback(feedback: String) -> void:
 	var amount := float(result.get("learningDelta", 0.0))
 	var feedback_result := "praised" if feedback == "praise" else "scolded"
 	var language_delta := 0.14 if feedback == "praise" else -0.14
-	var adjusted_words: Array = _language.call("adjust_target", profile.language_state, profile.feedback_action, language_delta)
+	var adjusted_words: Array = _language.call("adjust_target", profile.language_state, profile.feedback_target, language_delta)
 	last_status = "%s was %s. %s association %s%.2f." % [
 		profile.display_name,
 		feedback_result,
@@ -193,7 +197,7 @@ func give_feedback(feedback: String) -> void:
 func toggle_teaching_mode() -> void:
 	teaching_mode = not teaching_mode
 	if teaching_mode:
-		last_status = "Teach mode is on. Type one word, then choose fruit, spinner, Praise, or Scold."
+		last_status = "Teach mode is on. Type one word, then choose a resource, landmark, Praise, or Scold."
 	else:
 		last_status = "Teach mode cancelled."
 		if _ui != null:
@@ -205,7 +209,7 @@ func select_hud_target(target_id: String, input_word: String = "") -> void:
 	if teaching_mode:
 		teach_word(input_word, target_id)
 		return
-	if target_id == "fruit" or target_id == "spinner":
+	if objects.has(target_id):
 		guide_to(target_id)
 	elif target_id == "praise" or target_id == "scold":
 		give_feedback(target_id)
@@ -247,6 +251,12 @@ func _language_target_name(target_id: String) -> String:
 			return "honey fruit"
 		"spinner":
 			return "the wind-up spinner"
+		"berry_bush":
+			return "the berry bush"
+		"spring":
+			return "the spring"
+		"echo_bloom":
+			return "the echo bloom"
 		"praise":
 			return "Praise"
 		"scold":
@@ -344,7 +354,7 @@ func save_game() -> void:
 		"eggs": saved_eggs,
 		"drawingSurface": drawing_surface.call("serialize_state") if drawing_surface != null else DrawingSurfaceScript.new().call("serialize_state")
 	}
-	if _restore_version6_record(record, maxf(0.0, simulation_time)).is_empty():
+	if _restore_version7_record(record, maxf(0.0, simulation_time)).is_empty():
 		last_status = "The local Norn family failed validation and could not be saved."
 		_refresh_ui()
 		return
@@ -380,7 +390,7 @@ func load_game() -> void:
 		_fallback_from_invalid_save("The save format is not valid")
 		return
 	var version_value = record.get("version", null)
-	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, 4, 5, SAVE_VERSION].has(int(version_value)):
+	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, 4, 5, 6, SAVE_VERSION].has(int(version_value)):
 		_fallback_from_invalid_save("The save format is not valid")
 		return
 	var save_version := int(version_value)
@@ -391,6 +401,8 @@ func load_game() -> void:
 		return
 	var candidate: Dictionary
 	if save_version == SAVE_VERSION:
+		candidate = _restore_version7_record(record, float(simulation_value))
+	elif save_version == 6:
 		candidate = _restore_version6_record(record, float(simulation_value))
 	elif save_version == 5:
 		candidate = _restore_version5_record(record, float(simulation_value))
@@ -595,7 +607,7 @@ func _restore_version5_record(record: Dictionary, saved_simulation_time: float) 
 
 func _restore_version6_record(record: Dictionary, saved_simulation_time: float) -> Dictionary:
 	var record_version: Variant = record.get("version", null)
-	if not _is_finite_number(record_version) or not is_equal_approx(float(record_version), float(SAVE_VERSION)):
+	if not _is_finite_number(record_version) or not is_equal_approx(float(record_version), 6.0):
 		return {}
 	var candidate := _restore_version5_record(record, saved_simulation_time)
 	if candidate.is_empty():
@@ -605,6 +617,13 @@ func _restore_version6_record(record: Dictionary, saved_simulation_time: float) 
 		return {}
 	candidate["drawingSurface"] = surface_candidate.call("serialize_state")
 	return candidate
+
+
+func _restore_version7_record(record: Dictionary, saved_simulation_time: float) -> Dictionary:
+	var record_version: Variant = record.get("version", null)
+	if not _is_finite_number(record_version) or not is_equal_approx(float(record_version), float(SAVE_VERSION)):
+		return {}
+	return _restore_version6_record(record.merged({"version": 6}, true), saved_simulation_time)
 
 
 func _restore_egg_record(value: Variant, restored_profiles: Dictionary) -> Dictionary:
@@ -727,15 +746,36 @@ func _restore_feedback(value: Variant, saved_simulation_time: float) -> Dictiona
 	var time = saved.get("time", null)
 	if not (available is bool) or not (action is String) or not (target is String) or not _is_finite_number(time):
 		return {}
-	if not ["", "fruit", "spinner"].has(action) or not ["", "fruit", "spinner"].has(target):
+	if action.is_empty() != target.is_empty():
+		return {}
+	if not action.is_empty() and not _is_valid_feedback_pair(action, target):
 		return {}
 	if float(time) < -1000.0 or float(time) > saved_simulation_time:
 		return {}
-	if (action.is_empty() and not target.is_empty()) or (not action.is_empty() and (action != target or float(time) < 0.0)):
+	if not action.is_empty() and float(time) < 0.0:
 		return {}
-	if available and (not ["fruit", "spinner"].has(action) or not ["fruit", "spinner"].has(target) or action != target or float(time) < 0.0):
+	if available and (action.is_empty() or float(time) < 0.0):
 		return {}
 	return {"available": available, "action": action, "target": target, "time": float(time)}
+
+
+func _is_valid_feedback_pair(action: String, target: String) -> bool:
+	if action == "fruit":
+		return target == "fruit"
+	if action == "spinner":
+		return target == "spinner"
+	if action == "forage":
+		return target == "berry_bush"
+	if action == "drink":
+		return target == "spring"
+	if action != "explore":
+		return false
+	if target == "echo_bloom":
+		return true
+	if not target.begins_with("route_marker_"):
+		return false
+	var marker_number := target.trim_prefix("route_marker_")
+	return marker_number.is_valid_int() and int(marker_number) >= 1 and int(marker_number) <= 8
 
 
 func _restore_legacy_mallow(record: Dictionary, save_version: int) -> Dictionary:
@@ -1273,6 +1313,8 @@ func select_norn(actor_id: String) -> void:
 	if profile == null or profile.actor == null or not bool(profile.life_state.get("alive", false)):
 		return
 	focused_norn_id = profile.actor_id
+	_camera_follow_enabled = true
+	_update_camera()
 	last_status = "Focused on %s. Player actions will go to %s." % [profile.display_name, profile.display_name]
 	_refresh_ui()
 
@@ -1374,26 +1416,55 @@ func _build_habitat() -> void:
 	floor_body.collision_mask = 1
 	var floor_mesh := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	box.size = Vector3(24.0, 0.4, 18.0)
+	box.size = Vector3(72.0, 0.4, 18.0)
 	floor_mesh.mesh = box
-	floor_mesh.material_override = _material(Color(0.26, 0.39, 0.23))
-	floor_mesh.position.y = -0.2
+	floor_mesh.material_override = _material(Color(0.20, 0.28, 0.21))
+	floor_mesh.position = Vector3(24.0, -0.2, 0.0)
 	floor_body.add_child(floor_mesh)
 	var floor_collision := CollisionShape3D.new()
 	var floor_shape := BoxShape3D.new()
 	floor_shape.size = box.size
 	floor_collision.shape = floor_shape
-	floor_collision.position.y = -0.2
+	floor_collision.position = Vector3(24.0, -0.2, 0.0)
 	floor_body.add_child(floor_collision)
 	add_child(floor_body)
-	_add_path(Vector3(4.0, 0.012, 0.0), Vector3(13.0, 0.025, 4.0))
+	var regions: Array[Dictionary] = [
+		{"name": "Sunmeadow", "center": 0.0, "color": Color(0.30, 0.43, 0.24)},
+		{"name": "Softwood Grove", "center": 24.0, "color": Color(0.24, 0.37, 0.27)},
+		{"name": "Glassfall Hollow", "center": 48.0, "color": Color(0.24, 0.36, 0.39)}
+	]
+	for region: Dictionary in regions:
+		var region_mesh := MeshInstance3D.new()
+		var region_box := BoxMesh.new()
+		region_box.size = Vector3(24.0, 0.025, 18.0)
+		region_mesh.mesh = region_box
+		region_mesh.position = Vector3(float(region["center"]), 0.016, 0.0)
+		region_mesh.material_override = _material(region["color"])
+		add_child(region_mesh)
+	_add_path(Vector3(24.0, 0.065, 0.0), Vector3(72.0, 0.05, 2.7))
 	_add_tree(Vector3(-9.0, 0.0, -5.5), 1.2, Color(0.23, 0.42, 0.25))
 	_add_tree(Vector3(-8.5, 0.0, 5.5), 1.0, Color(0.3, 0.48, 0.27))
-	_add_tree(Vector3(8.5, 0.0, -5.0), 1.35, Color(0.22, 0.4, 0.23))
-	_add_tree(Vector3(9.2, 0.0, 5.8), 1.1, Color(0.34, 0.48, 0.24))
+	_add_tree(Vector3(-5.2, 0.0, -6.4), 0.92, Color(0.35, 0.48, 0.25))
+	_add_tree(Vector3(7.8, 0.0, -5.4), 1.1, Color(0.22, 0.4, 0.23))
+	_add_tree(Vector3(9.2, 0.0, 5.8), 1.0, Color(0.34, 0.48, 0.24))
+	_add_tree(Vector3(15.4, 0.0, -5.8), 1.2, Color(0.18, 0.34, 0.21))
+	_add_tree(Vector3(18.3, 0.0, 5.7), 1.4, Color(0.17, 0.31, 0.20))
+	_add_tree(Vector3(30.5, 0.0, -5.4), 1.1, Color(0.24, 0.39, 0.23))
+	_add_tree(Vector3(33.2, 0.0, 5.7), 1.25, Color(0.19, 0.34, 0.22))
+	_add_tree(Vector3(40.3, 0.0, -5.8), 1.0, Color(0.18, 0.32, 0.28))
+	_add_tree(Vector3(44.0, 0.0, 5.5), 1.3, Color(0.21, 0.36, 0.32))
+	_add_tree(Vector3(55.2, 0.0, -5.8), 1.2, Color(0.24, 0.38, 0.29))
+	_add_tree(Vector3(57.0, 0.0, 5.8), 0.95, Color(0.20, 0.34, 0.3))
 	_add_rock(Vector3(-5.7, 0.18, -5.8), Vector3(1.1, 0.4, 0.8))
 	_add_rock(Vector3(5.6, 0.16, 5.6), Vector3(1.2, 0.35, 0.7))
+	_add_rock(Vector3(12.7, 0.2, 5.9), Vector3(1.0, 0.42, 0.75))
+	_add_rock(Vector3(22.3, 0.18, -5.5), Vector3(0.9, 0.38, 0.7))
+	_add_rock(Vector3(34.0, 0.18, -5.8), Vector3(1.2, 0.45, 0.85))
+	_add_rock(Vector3(38.4, 0.18, 5.6), Vector3(1.1, 0.42, 0.78))
+	_add_rock(Vector3(59.0, 0.18, 5.6), Vector3(1.15, 0.42, 0.8))
 	_add_label("Sunmeadow", Vector3(-9.6, 0.3, -7.7), 28, Color(0.95, 0.88, 0.62))
+	_add_label("Softwood Grove", Vector3(14.0, 0.3, -7.7), 28, Color(0.85, 0.94, 0.70))
+	_add_label("Glassfall Hollow", Vector3(38.3, 0.3, -7.7), 28, Color(0.75, 0.91, 0.95))
 	var nest := Node3D.new()
 	nest.name = "FamilyNest"
 	nest.position = _nest_position
@@ -1460,7 +1531,7 @@ func _build_objects() -> void:
 	var spinner := Interactable.new()
 	spinner.name = "WindUpSpinner"
 	spinner.configure("spinner", "toy", "Wind-up spinner", ["play"])
-	spinner.position = Vector3(8.0, 0.0, -2.4)
+	spinner.position = Vector3(42.0, 0.0, -2.4)
 	spinner.collision_layer = 2
 	spinner.collision_mask = 0
 	var spinner_visuals := Node3D.new()
@@ -1548,6 +1619,123 @@ func _build_drawing_station() -> void:
 	add_child(charcoal)
 	objects[DRAWING_TOOL_ID] = charcoal
 	_add_label("Charcoal", charcoal.position + Vector3(-0.1, 0.85, 0.0), 14, Color(0.88, 0.82, 0.72))
+	_build_expanded_habitat_objects()
+
+
+func _build_expanded_habitat_objects() -> void:
+	var berry_bush := Interactable.new()
+	berry_bush.name = "BerryBush"
+	berry_bush.configure("berry_bush", "resource", "Berry bush", ["forage"])
+	berry_bush.position = Vector3(28.0, 0.0, 3.0)
+	berry_bush.collision_layer = 2
+	berry_bush.collision_mask = 0
+	var bush_visuals := Node3D.new()
+	_add_cylinder_mesh(bush_visuals, "BerryBushStem", Vector3(0.0, 0.48, 0.0), Vector3(0.22, 0.96, 0.22), _material(Color(0.28, 0.22, 0.13)))
+	_add_sphere_mesh(bush_visuals, "BerryBushCrownA", Vector3(-0.43, 0.95, 0.0), Vector3(0.62, 0.48, 0.54), _material(Color(0.22, 0.43, 0.25)))
+	_add_sphere_mesh(bush_visuals, "BerryBushCrownB", Vector3(0.38, 0.92, 0.0), Vector3(0.63, 0.51, 0.56), _material(Color(0.28, 0.49, 0.27)))
+	_add_sphere_mesh(bush_visuals, "BerryBushCrownTop", Vector3(0.0, 1.35, 0.0), Vector3(0.55, 0.49, 0.5), _material(Color(0.24, 0.45, 0.24)))
+	for berry_index: int in range(7):
+		var angle := TAU * float(berry_index) / 7.0
+		var berry_position := Vector3(cos(angle) * 0.53, 0.85 + float(berry_index % 3) * 0.22, sin(angle) * 0.44)
+		_add_sphere_mesh(bush_visuals, "Berry%d" % berry_index, berry_position, Vector3.ONE * 0.14, _material(Color(0.62, 0.16, 0.3)))
+	berry_bush.set_visual_root(bush_visuals)
+	var berry_collision := CollisionShape3D.new()
+	var berry_shape := SphereShape3D.new()
+	berry_shape.radius = 0.38
+	berry_collision.shape = berry_shape
+	berry_collision.position.y = 0.52
+	berry_bush.set_collision(berry_collision)
+	add_child(berry_bush)
+	objects["berry_bush"] = berry_bush
+	_add_label("Berry bush", berry_bush.position + Vector3(0.0, 1.95, 0.0), 19, Color(1.0, 0.77, 0.86))
+
+	var spring := Interactable.new()
+	spring.name = "GlassfallSpring"
+	spring.configure("spring", "resource", "Glassfall spring", ["drink"])
+	spring.position = Vector3(50.0, 0.0, 3.0)
+	spring.collision_layer = 2
+	spring.collision_mask = 0
+	var spring_visuals := Node3D.new()
+	var water := MeshInstance3D.new()
+	water.name = "SpringWater"
+	var water_mesh := CylinderMesh.new()
+	water_mesh.top_radius = 0.82
+	water_mesh.bottom_radius = 0.82
+	water_mesh.height = 0.12
+	water.mesh = water_mesh
+	water.position.y = 0.18
+	water.material_override = _material(Color(0.22, 0.72, 0.82, 0.88))
+	spring_visuals.add_child(water)
+	var spring_rim := MeshInstance3D.new()
+	spring_rim.name = "SpringStoneRim"
+	var rim_mesh := TorusMesh.new()
+	rim_mesh.inner_radius = 0.68
+	rim_mesh.outer_radius = 0.93
+	spring_rim.mesh = rim_mesh
+	spring_rim.position.y = 0.12
+	spring_rim.material_override = _material(Color(0.56, 0.65, 0.62))
+	spring_visuals.add_child(spring_rim)
+	for shard_index: int in range(5):
+		var angle := TAU * float(shard_index) / 5.0
+		var shard_position := Vector3(cos(angle) * 0.72, 0.18, sin(angle) * 0.72)
+		_add_sphere_mesh(spring_visuals, "SpringGlass%d" % shard_index, shard_position, Vector3(0.17, 0.2, 0.14), _material(Color(0.63, 0.87, 0.9)))
+	spring.set_visual_root(spring_visuals)
+	var spring_collision := CollisionShape3D.new()
+	var spring_shape := SphereShape3D.new()
+	spring_shape.radius = 0.36
+	spring_collision.shape = spring_shape
+	spring_collision.position.y = 0.32
+	spring.set_collision(spring_collision)
+	add_child(spring)
+	objects["spring"] = spring
+	_add_label("Glassfall spring", spring.position + Vector3(0.0, 1.25, 0.0), 19, Color(0.73, 0.92, 1.0))
+
+	var echo_bloom := Interactable.new()
+	echo_bloom.name = "EchoBloom"
+	echo_bloom.configure("echo_bloom", "landmark", "Echo bloom", ["explore"])
+	echo_bloom.position = Vector3(56.5, 0.0, -3.0)
+	echo_bloom.collision_layer = 2
+	echo_bloom.collision_mask = 0
+	var bloom_visuals := Node3D.new()
+	_add_cylinder_mesh(bloom_visuals, "EchoBloomStem", Vector3(0.0, 0.72, 0.0), Vector3(0.16, 1.44, 0.16), _material(Color(0.3, 0.51, 0.37)))
+	for petal_index: int in range(6):
+		var angle := TAU * float(petal_index) / 6.0
+		var petal_position := Vector3(cos(angle) * 0.55, 1.55 + float(petal_index % 2) * 0.14, sin(angle) * 0.55)
+		var petal := _material(Color(0.53, 0.86, 0.76) if petal_index % 2 == 0 else Color(0.85, 0.78, 0.48))
+		_add_sphere_mesh(bloom_visuals, "EchoPetal%d" % petal_index, petal_position, Vector3(0.4, 0.18, 0.25), petal)
+	_add_sphere_mesh(bloom_visuals, "EchoBloomHeart", Vector3(0.0, 1.58, 0.0), Vector3(0.34, 0.3, 0.34), _material(Color(0.98, 0.83, 0.42)))
+	echo_bloom.set_visual_root(bloom_visuals)
+	var bloom_collision := CollisionShape3D.new()
+	var bloom_shape := SphereShape3D.new()
+	bloom_shape.radius = 0.35
+	bloom_collision.shape = bloom_shape
+	bloom_collision.position.y = 0.8
+	echo_bloom.set_collision(bloom_collision)
+	add_child(echo_bloom)
+	objects["echo_bloom"] = echo_bloom
+	_add_label("Echo bloom", echo_bloom.position + Vector3(0.0, 2.2, 0.0), 19, Color(0.8, 1.0, 0.84))
+
+	var marker_positions: Array[float] = [10.0, 17.0, 24.0, 31.0, 38.0, 45.0, 52.0, 59.0]
+	for marker_index: int in range(marker_positions.size()):
+		var marker_id := "route_marker_%d" % (marker_index + 1)
+		var marker := Interactable.new()
+		marker.name = "CuriosityMarker%d" % (marker_index + 1)
+		marker.configure(marker_id, "landmark", "Curiosity marker", ["explore"])
+		marker.position = Vector3(marker_positions[marker_index], 0.0, 0.0)
+		marker.collision_layer = 2
+		marker.collision_mask = 0
+		var marker_visuals := Node3D.new()
+		_add_sphere_mesh(marker_visuals, "MarkerGlow", Vector3(0.0, 0.48, 0.0), Vector3(0.42, 0.3, 0.42), _material(Color(0.74, 0.81, 0.48)))
+		_add_sphere_mesh(marker_visuals, "MarkerCore", Vector3(0.0, 0.44, 0.0), Vector3(0.18, 0.2, 0.18), _material(Color(0.99, 0.89, 0.56)))
+		marker.set_visual_root(marker_visuals)
+		var marker_collision := CollisionShape3D.new()
+		var marker_shape := SphereShape3D.new()
+		marker_shape.radius = 0.24
+		marker_collision.shape = marker_shape
+		marker_collision.position.y = 0.42
+		marker.set_collision(marker_collision)
+		add_child(marker)
+		objects[marker_id] = marker
 
 
 func _step_profile_chemistry(profile: NornProfile) -> void:
@@ -1635,6 +1823,42 @@ func _sensed_object_exists(sensed: Array[Dictionary], object_id: String) -> bool
 	return false
 
 
+func _action_target_id(action_id: String) -> String:
+	match action_id:
+		"fruit", "spinner":
+			return action_id
+		"forage":
+			return "berry_bush"
+		"drink":
+			return "spring"
+	return ""
+
+
+func _action_for_target(target_id: String) -> String:
+	match target_id:
+		"fruit":
+			return "fruit"
+		"spinner":
+			return "spinner"
+		"berry_bush":
+			return "forage"
+		"spring":
+			return "drink"
+		"drawing_surface", "charcoal":
+			return "draw"
+		_:
+			return "explore" if target_id == "echo_bloom" or target_id.begins_with("route_marker_") else "idle"
+
+
+func _nearest_sensed_target_with_affordance(sensed: Array[Dictionary], affordance: String) -> String:
+	for entry: Dictionary in sensed:
+		var affordances: Variant = entry.get("affordances", [])
+		var object_id := str(entry.get("id", ""))
+		if affordances is Array and affordances.has(affordance) and objects.has(object_id):
+			return object_id
+	return ""
+
+
 func _run_decision(profile: NornProfile) -> void:
 	if profile == null or profile.cognition_state.is_empty() or profile.actor == null:
 		return
@@ -1671,15 +1895,30 @@ func _run_decision(profile: NornProfile) -> void:
 	var target: Node3D
 	var target_id := ""
 	if active_guidance is Dictionary and objects.has(active_guidance.get("objectId", "")):
-		effective_action = str(active_guidance["objectId"])
-		target = objects[effective_action]
-		target_id = effective_action
-		reason = "Following your guidance to %s" % target.display_name.to_lower()
-	elif ["fruit", "spinner"].has(effective_action) and objects.has(effective_action):
-		var item: Interactable = objects[effective_action]
-		if item.available and nearby_objects.any(func(entry: Dictionary) -> bool: return entry["id"] == effective_action):
-			target = item
-			target_id = effective_action
+		target_id = str(active_guidance["objectId"])
+		var guided_item: Interactable = objects[target_id]
+		if guided_item.available:
+			effective_action = _action_for_target(target_id)
+			target = guided_item
+			reason = "Following your guidance to %s" % guided_item.display_name.to_lower()
+		else:
+			effective_action = "idle"
+			target_id = ""
+	elif ["fruit", "spinner", "forage", "drink"].has(effective_action):
+		var action_target_id := _action_target_id(effective_action)
+		var item_value: Variant = objects.get(action_target_id, null)
+		if item_value is Interactable:
+			var item: Interactable = item_value
+			if item.available and nearby_objects.any(func(entry: Dictionary) -> bool: return entry["id"] == action_target_id):
+				target = item
+				target_id = action_target_id
+	elif effective_action == "explore":
+		var exploration_target_id := _nearest_sensed_target_with_affordance(nearby_objects, "explore")
+		var exploration_target: Variant = objects.get(exploration_target_id, null)
+		if exploration_target is Interactable:
+			target = exploration_target
+			target_id = exploration_target_id
+			reason = "Following a local curiosity cue"
 	elif effective_action == "draw" and objects.has(DRAWING_SURFACE_ID) and objects.has(DRAWING_TOOL_ID):
 		var surface_item: Interactable = objects[DRAWING_SURFACE_ID]
 		var charcoal_item: Interactable = objects[DRAWING_TOOL_ID]
@@ -1722,7 +1961,7 @@ func _run_decision(profile: NornProfile) -> void:
 			if profile.actor.global_position.distance_to(peer.actor.global_position) > NornActor.OBSERVATION_STOP_DISTANCE:
 				target = peer.actor
 				target_id = peer.actor_id
-	if profile.life_stage == "baby" and active_guidance == null and not ["fruit", "spinner", "rest"].has(effective_action):
+	if profile.life_stage == "baby" and active_guidance == null and not ["fruit", "spinner", "forage", "drink", "rest"].has(effective_action):
 		var parent := _nearest_living_parent(profile)
 		if parent != null:
 			effective_action = "observe_peer"
@@ -1820,16 +2059,26 @@ func _record_draw_outcome(profile: NornProfile, stroke: Dictionary) -> void:
 
 func _on_action_completed(actor_id: String, action_id: String, target_id: String) -> void:
 	var profile := profile_for(actor_id)
-	if profile == null or not objects.has(target_id) or not ["fruit", "spinner"].has(action_id):
+	if profile == null or not objects.has(target_id) or not _is_valid_feedback_pair(action_id, target_id):
 		return
 	var item: Interactable = objects[target_id]
 	if not item.available:
 		return
-	var event_type := "food" if action_id == "fruit" else "toy"
+	var event_type := str({"fruit": "food", "spinner": "toy", "forage": "forage", "drink": "drink", "explore": "explore"}.get(action_id, ""))
 	var actor_name := profile.display_name
-	var outcome_text := "%s ate honey fruit" % actor_name if event_type == "food" else "%s played with the spinner" % actor_name
+	var outcome_text := "%s ate honey fruit" % actor_name
+	match event_type:
+		"toy":
+			outcome_text = "%s played with the spinner" % actor_name
+		"forage":
+			outcome_text = "%s foraged berries" % actor_name
+		"drink":
+			outcome_text = "%s drank from the spring" % actor_name
+		"explore":
+			outcome_text = "%s explored %s" % [actor_name, item.display_name.to_lower()]
 	item.activate()
-	_respawn_times[target_id] = simulation_time + (6.0 if event_type == "food" else 4.0)
+	if not target_id.begins_with("route_marker_"):
+		_respawn_times[target_id] = simulation_time + (12.0 if event_type == "forage" else 6.0 if event_type == "drink" else 4.0 if event_type == "toy" else 6.0)
 	var spoken_word: Dictionary = _language.call("word_for_target", profile.language_state, target_id)
 	var outcome := {
 		"eventType": event_type,
@@ -1867,10 +2116,10 @@ func _offer_observation(source: NornProfile, outcome: Dictionary) -> void:
 		return
 	var source_event := str(outcome.get("eventType", ""))
 	var feedback_event := ["praise", "scold"].has(source_event)
-	if not feedback_event and not ["food", "toy"].has(source_event):
+	if not feedback_event and not ["food", "toy", "forage", "drink", "explore"].has(source_event):
 		return
 	var action_id := str(outcome.get("actionId", ""))
-	if not ["fruit", "spinner"].has(action_id):
+	if not ["fruit", "spinner", "forage", "drink", "explore"].has(action_id):
 		return
 	for observer: NornProfile in norn_profiles.values():
 		if observer == source or not _is_attending(observer, source):
@@ -2038,6 +2287,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		else:
 			return
+		_camera_follow_enabled = false
 		_update_camera()
 	elif event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -2053,6 +2303,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func _update_camera() -> void:
 	if _camera == null:
 		return
+	if _camera_follow_enabled:
+		var profile := focused_profile()
+		if profile != null and profile.actor != null and is_instance_valid(profile.actor):
+			_camera_target = profile.actor.global_position + Vector3(0.0, 0.45, 0.0)
 	_camera.global_position = _camera_target + _camera_offset
 	_camera.look_at(_camera_target, Vector3.UP)
 

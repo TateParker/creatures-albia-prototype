@@ -7,6 +7,11 @@ const WALK_SPEED := 2.8
 const ARRIVAL_DISTANCE := 1.05
 const OBSERVATION_STOP_DISTANCE := 2.1
 const SPHERE_RADIUS := 0.5
+const WORLD_MIN_X := -11.5
+const WORLD_MAX_X := 59.5
+const WORLD_MIN_Z := -8.5
+const WORLD_MAX_Z := 8.5
+const NORN_MODEL_PATH := "res://assets/generated/norns/albia-norn/model.glb"
 const HEAD_POSITION := Vector3(0.0, 1.7, -0.02)
 const HEAD_SIZE := Vector3(0.78, 0.72, 0.66)
 
@@ -190,6 +195,8 @@ func _physics_process(_delta: float) -> void:
 	is_walking = true
 	look_at(global_position + forward, Vector3.UP)
 	move_and_slide()
+	global_position.x = clampf(global_position.x, WORLD_MIN_X, WORLD_MAX_X)
+	global_position.z = clampf(global_position.z, WORLD_MIN_Z, WORLD_MAX_Z)
 
 
 func _process(delta: float) -> void:
@@ -215,6 +222,23 @@ func _build_body() -> void:
 	_visual_root = Node3D.new()
 	_visual_root.name = "LifeStageVisuals"
 	add_child(_visual_root)
+	var model_scene := load(NORN_MODEL_PATH) as PackedScene
+	var model_instance: Node3D
+	if model_scene != null:
+		model_instance = model_scene.instantiate() as Node3D
+	if model_instance != null:
+		model_instance.name = "MeshyNornModel"
+		model_instance.scale = Vector3.ONE * 2.4
+		model_instance.position = Vector3(0.0, 1.14, 0.0)
+		model_instance.rotation.y = PI
+		_visual_root.add_child(model_instance)
+	else:
+		_build_procedural_body_geometry()
+	_build_drawing_effector()
+	_apply_life_stage()
+
+
+func _build_procedural_body_geometry() -> void:
 	var warm_brown := _material(body_color)
 	var eye_socket := _material(body_color.darkened(0.18))
 	var cream := _material(Color(0.92, 0.76, 0.51))
@@ -240,8 +264,6 @@ func _build_body() -> void:
 	_add_sphere("LeftEyelid", _front_surface_point(left_eye_x, eyelid_y, 0.018), Vector3(0.18, 0.07, 0.055), warm_brown, 10, 6)
 	_add_sphere("RightEyelid", _front_surface_point(right_eye_x, eyelid_y, 0.018), Vector3(0.18, 0.07, 0.055), warm_brown, 10, 6)
 	_add_sphere("Nose", _front_surface_point(0.0, 1.52, 0.04), Vector3(0.14, 0.1, 0.07), _material(Color(0.2, 0.1, 0.08)), 8, 5)
-	_build_drawing_effector()
-	_apply_life_stage()
 
 
 func _build_drawing_effector() -> void:

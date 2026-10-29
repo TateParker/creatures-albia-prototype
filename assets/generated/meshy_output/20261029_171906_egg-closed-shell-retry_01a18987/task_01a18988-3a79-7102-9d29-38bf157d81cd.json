@@ -1,0 +1,30 @@
+{
+  "id": "01a18988-3a79-7102-9d29-38bf157d81cd",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 1791053433,
+  "prompt": "A single intact, closed, smooth fantasy creature egg for a cozy low-poly game. A complete continuous hard outer shell, fully sealed all the way around with no interior visible. Symmetrical upright oval, gently tapered at the top, softly rounded base. Uniform uninterrupted shell surface from crown to base, softly mottled pale cream with delicate warm golden speckles. No crack, no opening, no hole, no broken shell, no exposed interior, no hatching, no cutaway, no nest, no text, no background.",
+  "texture_prompt": "Pale warm cream shell with very subtle mottling and a few soft golden speckles. Keep the shell smooth, solid-looking, and completely continuous; no cracks, opening, hole, seam, exposed interior, or hatching marks.",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793308770377,
+  "progress": 100,
+  "started_at": 1793308770383,
+  "finished_at": 1793308855787,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18988-3a79-7102-9d29-38bf157d81cd/output/model.glb?Expires=4946832000&Signature=o9JGTRI1YKjuHwxmF34P6H6vtXf3be91YGYrx~cPqQMO0upEEhI-u8iUYcP8QW8olfdy9NplsATU30ORyrwmOV2RRtn2obdeyu282VYeRcQlp6GzutJl~uFMX9Y--cI4QKvr6Kd1GV-SrG1BglvZ9yQLAogt1IDlq1vAuXYzKAT4WnEYUYWHaXbJIMyUn~~A71TkXBvCl9d9wkHd5dlIPazdy6d8kOqoWUBhD2kRf65UrM-72OQlVh4sM0rC05zm1eIlP5YwikVm8dTqM6xpsl~XHes732Nm4XWsKhCrk6bk-voGIkyu-YZTU4QR6QxL4YIRsxxvnyVVOO8mdpvoMg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18988-3a79-7102-9d29-38bf157d81cd/output/preview.png?Expires=4946832000&Signature=PaiAXaiDzfSW-jd3bPL-fEsWNcKdMD106QFujplp97QsL9DLiLIy8r5r47OxBk0OVXSHDZjUz-mLJTVaJrNkAxl-baNzxLGTo-zEZcbSEo82V9jbiSd0rcHThjHavGhItea2yWgOizNqIk9IwrpnX1XkzJUDOXqMuB9rh0APAW3Da4huUl2bhd8bfXqbE-b7bJ8GS8CT2qscR3pIUklldw-0eXVi9Baeu1B2WmVyHvHFA~WuCvvicgLqLRLWPSirjsnxeucvTTtDmZ04Y2gfKUVA4iL1l60eqpMdlWa1kN3Z87pjMRM2-xrncxpHpHP9nNjvQc9O0-mxQjgl3V-j3w__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18988-3a79-7102-9d29-38bf157d81cd/output/texture_0.png?Expires=4946832000&Signature=lEcCbCpEOOzHc3E9kLWfgQdsYdWLVtAoaL3GNkYYEB1SxlpVHkrAwQgGL7lVsK~vZICRmSocDtcFgWBjKFDguouK1IMp1XOgdQiQtmwOxb0iWx-ddyKTREKigaDpjI-za3fnjOhF7owULVx7dxCy7iaFkWn7FZycLbKI-u3VE-me8e6IFii1nCJTyE6gJjxiYb0uIut3qbqYZBBqiauMX7n06BhZNM1ebySNEjK0tpilwIgwpQX9yStzVA0oEa1wEuPFVyZXxvwwg~x6ms9GcAjEkYYvKk6U~BlH9pMm1kVox9Pjsbt9QT69DLWZXEbkMqIShBXmxUPj22nNOKowMA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18988-3a79-7102-9d29-38bf157d81cd/output/texture_0_metallic.png?Expires=4946832000&Signature=iSMUnTLXh30zVikx8gTUlHqUsq0WS-N3SaVWdYpV227jsW45vOFUBuqjmC99GlIYf27UixjqXSDJGbg9gKHwY34kTv--kfZBB5F9WP01iubB2GRMl3vNyXXExtrf448HjeK-RMD4cBFI0PbdFgmGdly5anYEodGmyD1bVxQPfclagZIflwZlRxmbT5e6NSofQa3hhGSPmRHImE94fkffavui4nLFNSbjl6vah~SD5a5Gvlvact5ImegINkf5LCqnjSGD26Nv4NxijjpTrRze2RXH1oRa5cqKz8-FPCJ8kUx7ddZ16pHwf~7y1KhKZhyWT2HOsvde9bt5j1lBjcqK~w__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18988-3a79-7102-9d29-38bf157d81cd/output/texture_0_roughness.png?Expires=4946832000&Signature=qwk1zoY5jkAiMKuvl9S0waPG9BvbpusDrmoE6dKXQLZLYHghaSJY4cg2MeKMG6vnn1xVYRkAY0rJw4xPC5DeYHmoryA-nRmHONf4r76LB1LIG-zmABCx8GuPMCBFnT-xwITSlq8d-k9CLdNbEc3U4KKj2MajpXXp6yCSpc-FTqf50moREj9hybyXsxWF0MDJtYmP9cv7n9~XYB7jU9GONknG6U6VMoT-qJfi6ygjKmbhiGnjkw1b9Qy2x6GrT~~f-2gIhEIvFqyk3AnxfxzfQkMYzpu6Ai1NKOZXnOmKoKAUoIS1oKW7nZiUT~y7~iu1os1SsYk-OLMxJF7fIWWi5Q__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a18988-3a79-7102-9d29-38bf157d81cd/output/texture_0_normal.png?Expires=4946832000&Signature=bqIghVhhKMzGENFHhw5old0iY8OyHE4gXYvGLWzEFfq67nzhHAtwIzdiUJuoJlxbuSz9SMhtqyxvnBbDi55BsS2C4fSNaerHYiQtOfpMeRtQl4~FL6c7Q~L4I5KpLpyTRyjx7VkSewCGnlbyWPf7jYMHFk1O7~cmVnMCKT1u-L4R37cLfTvfqy-vXGwWn0~OGOEpNw~xWycOTtWRKfUYjH401sz2~gG7~uE8wUnfkkETuvAFGIeGXKMUUNvG-yMTZV4ifb1YtfupqCBRuiVR1G9qjY1jKwUxRhnDqaJpOlNGBS44oaS42f5Wiv4K3qCVDBHw5XdFk6kXShdqllG1Fg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

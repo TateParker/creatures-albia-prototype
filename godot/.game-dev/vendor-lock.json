@@ -1,0 +1,15 @@
+{
+  "schema": "game_dev.vendor_lock.v1",
+  "entries": [
+    {
+      "packageId": "pkg_33b71a92373ab987f79818bf",
+      "assetId": "albia_norn_species",
+      "version": "1.0.0",
+      "destination": "assets\\generated\\norns\\albia-norn",
+      "modelSha256": "3abc254102a302319be41cf914ed0f0139b23c9490f305b7f8cad04c4bd181be",
+      "manifestSha256": "a155a24923a4b150099c9e8d0504d763ce59afff22b5cd31e0eba12d47db66c7",
+      "license": "LicenseRef-Meshy-Private",
+      "admittedAt": "2026-10-29T21:27:41.327Z"
+    }
+  ]
+}

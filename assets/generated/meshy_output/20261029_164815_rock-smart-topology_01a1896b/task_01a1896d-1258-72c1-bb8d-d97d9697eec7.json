@@ -1,0 +1,30 @@
+{
+  "id": "01a1896d-1258-72c1-bb8d-d97d9697eec7",
+  "type": "text-to-3d-refine",
+  "mode": "refine",
+  "name": "",
+  "model_type": "smart-topology",
+  "seed": 52220045,
+  "prompt": "A reusable low-poly mossy boulder for an original cozy fantasy habitat, rounded faceted stone with subtle gray-green surface texture, simple readable silhouette, no text, no background.",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1793306989166,
+  "progress": 100,
+  "started_at": 1793306989173,
+  "finished_at": 1793307018737,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896d-1258-72c1-bb8d-d97d9697eec7/output/model.glb?Expires=4946832000&Signature=lf3VRUvnOVG6tsaL4rArkCodxmNwwiclLJDG~H0PDNIl0S95z0AVJPQl4oOA6qjDeO0MfTyjGLHmwOf067FE-~1hmY~fuKW-BwgXQ8jt9ydlfJIImaJSBR8Rct-1hdGvNpuQC268RPQflxVbSsgcCu0PBKic14aH3P73h06qBMLNHjY-VNp-YXYY3FnwK3QRMtQBEJrZyyL5EPA4MQk7LNVWT5vSUez740pgtgSzHWfGzJ7yyY4zoQF-HZxB9OzeYjmpbl~KATOEcd-FIPvtnUVUwkGuqgwSp-9Smei9BbkOxJBzhjkPI2-cnQFcBzqisLNWVI2M1B154nGsdZa3lg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896d-1258-72c1-bb8d-d97d9697eec7/output/preview.png?Expires=4946832000&Signature=PU9h4wbS0dMce5WCHRbQMIwrth9uOgLd~p9P7Ce8No8z7YNMv9tSFI3aDpcM3l7fQiGoSIy6mFaJfIeVSxF0IUY-5auh0NM1IqaBudEdD~RTfNJyqee79Sy0XHRkPJe1c2azkC1uASm8HNDMnqII7tqp-1fUa2iuaszzRykQbpgJC3XMNKbzETAIMVfvKdVHQvLw1r5GPQ7M-InoJhtGBHyct41f~m8dskRhTVsM4k~HbOlOANfuNuzFuHZVp0z5V3GWk8X30eT6h9z9-TcJrGu7mQvGfGAZzqpJGJASvQmqpmcR1wnAJDOWRnqLfP5ohbNs9nNJz0NeB-~MAhCgZQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [
+    {
+      "base_color": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896d-1258-72c1-bb8d-d97d9697eec7/output/texture_0.png?Expires=4946832000&Signature=Sp8cVDh4X~3BskKz6v98DzNBjhTiSARtpYU1zm5AVa27Ej4jQ48bLRgKJUM62SU-lDG1VhSYBrDlgIKLE75sQLJKqlN8xcbSDO1pLkIa90L7LTf0zXQtkakFub0WI7j3i3Zcln-aDHCcYdmm9VtMY~UjO-VdDu5NKoxdZitOjmsNs2~ic-h60WT9~0hxY2IdK5W5D1bOkrErIyoRuk0EGmvtZW2jqVon9ISkT0gxhqYqX9GF97hbVjhULnUcMvnrmh7wgyJbwSflU~PF4nSJebix51wR8Yau6b4z6aYmwCSTh5W8dk2ba-UZh1E3BPsJmlogZCT4macTUuCgH2dO4g__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "metallic": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896d-1258-72c1-bb8d-d97d9697eec7/output/texture_0_metallic.png?Expires=4946832000&Signature=UzZ8qk0~ztAOJu76alNaDUhAeJED-fbt3LVwtTIaTp2vN~pnD-HfCyhU1WLfYAqUvw40h08mbSH2AcOva7hB-VHa8sbdDcxRVYAVlzz9mD408j7F8HOMjKWWGkg-DnVth2tyDJq-bR1~~nYUKD875WV48sI3ywVyjpZAG~TT-Q6qFNkGIMVZ8Uuc2o3xuv7nUoMsnZqKBdALUdsMzUmWOtKUFPJOGjTI7CDF6IMzeTo3jbZNH8n5iOOq5HHh~MC~LpcGvAYMZAAMSWNM~lliR4dBAVhXRZfWZ5kbm3q0DD1TwwJydZb9ypX-OPA9zdCyGHl-DJoqJBjgzxEXcIAueA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "roughness": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896d-1258-72c1-bb8d-d97d9697eec7/output/texture_0_roughness.png?Expires=4946832000&Signature=lNpq8MFwb5ae74fi~RGZzZHOgN~729QPTy7B5kfw9dnksrm8HOqTXYyg52m-EcGs-OeczyNEE2dMTTn~LTyYwr5F53qfL8PFvlHPxP0CG0zxKptu1rFrVeEkBJJ872bDdcLhZr0y2yN27JPHGR9wcoT4ah4YfjIpukkqm0cgzgn1YzcwXMd7BphHd-hU2Rbk9mLlQBr7H1A-lvqTy-SyMGwgbEKlNeKYH83-aRvWMrOZAHF6z5gWDstYwYxAqg4nSg36UTXIlD1qcZ9DAJf4gekFT3XA5xnLbhdGPGxOm5naTOsLi9WwI1Qs7hv0OZOpPwGWqFnDQigqpuY6quKZ4g__&Key-Pair-Id=K1VGYTHIYLM9UM",
+      "normal": "https://assets.meshy.ai/f5f5fbef-b1ce-43fa-9ed8-43efeedcb4a8/tasks/01a1896d-1258-72c1-bb8d-d97d9697eec7/output/texture_0_normal.png?Expires=4946832000&Signature=gZnZcr93y-7vu1TJNL95NkJguM0cHG5OrQm3anBR1x~mRYHAjSl1G5fPLItS2KX7jdYlTiUIfbtOtRCDz7U6K8-qqtDgsjBbeULw6nCBY1KE55n~y~iaeTRbv1k9TcW2qPZcm79~cv9IQfQY0jS7bVwT3bgHGkv-31Flw42A~u6Fg8~qw~v-brf6pn0FpbZ8rG1qsPIM8OXqM7K83Jq9cGP-wPPLIc682I1eWiic8038nZLSc-Pk9PMC7LWscz1fEMw57ZRIofRFgffWXXBKWthy9MJXBCdezPdNRj7BfEVcJb0kBiQ~BDDxswOgkVeev0oKCIq5FCsX6Bi~-u-ENg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+    }
+  ],
+  "consumed_credits": 10
+}

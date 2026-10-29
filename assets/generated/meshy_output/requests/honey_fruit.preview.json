@@ -1,0 +1,11 @@
+{
+  "mode": "preview",
+  "prompt": "A plump golden-orange honey fruit for a cozy fantasy creature habitat, low-poly organic round body, short brown stem and one small green leaf, softly mottled edible skin texture, no text, no background.",
+  "model_type": "smart-topology",
+  "ai_model": "meshy-t2.5",
+  "target_polycount": 3000,
+  "topology": "triangle",
+  "target_formats": [
+    "glb"
+  ]
+}

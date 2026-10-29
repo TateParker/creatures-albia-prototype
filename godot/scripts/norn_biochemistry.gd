@@ -1,17 +1,17 @@
 class_name NornBiochemistry
 extends RefCounted
 
-const VERSION := 1
+const VERSION := 2
 const MAX_STEP_SECONDS := 0.5
 const MAX_REACTION_RATE := 24.0
 const COMPOUND_IDS: Array[String] = [
 	"glucose", "hunger", "curiosity", "fatigue", "reward",
 	"punishment", "stress", "socialComfort", "arousal", "satiety",
-	"starch", "glycogen", "pyruvate", "ATP", "ADP", "oxygen", "carbonDioxide", "water"
+	"starch", "glycogen", "pyruvate", "ATP", "ADP", "oxygen", "carbonDioxide", "water", "thirst"
 ]
 const SIGNAL_IDS: Array[String] = [
 	"glucose", "hunger", "curiosity", "fatigue", "reward",
-	"punishment", "stress", "socialComfort", "arousal", "satiety"
+	"punishment", "stress", "socialComfort", "arousal", "satiety", "thirst"
 ]
 const INITIAL_COMPOUNDS := {
 	"glucose": 55.0,
@@ -31,10 +31,14 @@ const INITIAL_COMPOUNDS := {
 	"ADP": 20.0,
 	"oxygen": 100.0,
 	"carbonDioxide": 0.0,
-	"water": 50.0
+	"water": 50.0,
+	"thirst": 0.0
 }
 const EVENT_DEFINITIONS := {
 	"food": {"starch": 34.0, "reward": 8.0},
+	"forage": {"starch": 30.0, "reward": 6.0},
+	"drink": {"water": 30.0, "thirst": -55.0, "reward": 2.0},
+	"explore": {"curiosity": -12.0, "reward": 7.0, "arousal": 3.0},
 	"toy": {"curiosity": -45.0, "arousal": -12.0, "reward": 8.0},
 	"praise": {"reward": 12.0, "stress": -6.0},
 	"scold": {"punishment": 12.0, "stress": 8.0},
@@ -59,7 +63,8 @@ const REACTION_DEFINITIONS: Array[Dictionary] = [
 	{"id": "social-comfort-drift", "reactants": {"socialComfort": 1.0}, "products": {}, "rate": 0.15},
 	{"id": "peer-comfort", "reactants": {"oxygen": 1.0}, "products": {"oxygen": 1.0, "socialComfort": 0.55}, "rate": 1.0, "stimulus": "nearbyPeer"},
 	{"id": "arousal-decay", "reactants": {"arousal": 1.0}, "products": {}, "rate": 0.6},
-	{"id": "satiety-decay", "reactants": {"satiety": 1.0}, "products": {}, "rate": 0.8}
+	{"id": "satiety-decay", "reactants": {"satiety": 1.0}, "products": {}, "rate": 0.8},
+	{"id": "basal-thirst", "reactants": {"water": 1.0}, "products": {"water": 1.0, "thirst": 1.0}, "rate": 0.8}
 ]
 static var _fast_reaction_cache: Array[Dictionary] = []
 
@@ -138,19 +143,31 @@ static func restore_state(record: Variant) -> Dictionary:
 	if not (record is Dictionary):
 		return {}
 	var saved: Dictionary = record
-	if int(saved.get("version", -1)) != VERSION:
+	var saved_version := int(saved.get("version", -1))
+	if not [1, VERSION].has(saved_version):
 		return {}
 	var compounds = saved.get("compounds", null)
 	var fluxes = saved.get("lastFluxes", null)
 	if not (compounds is Dictionary) or not (fluxes is Dictionary):
 		return {}
-	if not _valid_compound_map(compounds):
+	var restored_compounds: Dictionary = compounds.duplicate(true)
+	if saved_version == 1:
+		if restored_compounds.size() != COMPOUND_IDS.size() - 1:
+			return {}
+		for compound_id: String in COMPOUND_IDS:
+			if compound_id == "thirst":
+				continue
+			var value = restored_compounds.get(compound_id, null)
+			if not _is_finite_number(value) or float(value) < 0.0 or float(value) > 100.0:
+				return {}
+		restored_compounds["thirst"] = float(INITIAL_COMPOUNDS["thirst"])
+	elif not _valid_compound_map(restored_compounds):
 		return {}
 	if not _valid_flux_map(fluxes):
 		return {}
 	return {
 		"version": VERSION,
-		"compounds": compounds.duplicate(true),
+		"compounds": restored_compounds,
 		"lastFluxes": fluxes.duplicate(true)
 	}
 

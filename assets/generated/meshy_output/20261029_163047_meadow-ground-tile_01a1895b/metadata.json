@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "project_name": "Meadow Ground Tile",
+  "folder": "20261029_163047_meadow-ground-tile_01a1895b",
+  "root_task_id": "01a1895b-869a-72dc-adef-3c29f4b6f8b0",
+  "created_at": "2026-10-29T20:30:47.312Z",
+  "updated_at": "2026-10-29T20:41:15.835Z",
+  "tasks": [
+    {
+      "task_id": "01a1895b-869a-72dc-adef-3c29f4b6f8b0",
+      "task_type": "text-to-3d-preview",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "preview",
+      "parent_task_id": null,
+      "status": "SUCCEEDED",
+      "files": [
+        "preview.png"
+      ],
+      "task_json": "task_01a1895b-869a-72dc-adef-3c29f4b6f8b0.json",
+      "operation_id": null,
+      "created_at": "2026-10-29T20:32:12.854Z",
+      "updated_at": "2026-10-29T20:32:25.607Z"
+    },
+    {
+      "task_id": "01a1895d-93cc-74c6-853d-14c5dd8f1790",
+      "task_type": "text-to-3d-refine",
+      "resource": "text-to-3d",
+      "endpoint": "/openapi/v2/text-to-3d",
+      "stage": "refine",
+      "parent_task_id": "01a1895b-869a-72dc-adef-3c29f4b6f8b0",
+      "status": "SUCCEEDED",
+      "files": [
+        "model.glb",
+        "thumbnail.png",
+        "texture_0_base_color.png",
+        "texture_0_metallic.png",
+        "texture_0_roughness.png",
+        "texture_0_normal.png"
+      ],
+      "task_json": "task_01a1895d-93cc-74c6-853d-14c5dd8f1790.json",
+      "operation_id": "f2ba5ff2-33ca-4ff3-9ff0-c3f9a9da0feb",
+      "created_at": "2026-10-29T20:32:53.132Z",
+      "updated_at": "2026-10-29T20:41:15.835Z"
+    }
+  ]
+}
