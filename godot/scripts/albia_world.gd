@@ -7,11 +7,15 @@ const HabitatUi = preload("res://scripts/habitat_ui.gd")
 const NornLanguageScript = preload("res://scripts/norn_language.gd")
 const VideoRecorder = preload("res://scripts/local_video_recorder.gd")
 const NornProfile = preload("res://scripts/norn_profile.gd")
+const NornLifecycle = preload("res://scripts/norn_lifecycle.gd")
 const START_SEED := 4181996
 const MOSS_SEED := 4181997
 const SAVE_PATH := "user://albia_norn_save.json"
-const SAVE_VERSION := 4
-const PROFILE_IDS: Array[String] = ["mallow", "moss"]
+const SAVE_VERSION := 5
+const STARTER_PROFILE_IDS: Array[String] = ["mallow", "moss"]
+const MALLOW_COLOR := Color(0.43, 0.27, 0.16)
+const MOSS_COLOR := Color(0.24, 0.42, 0.34)
+const MAX_POPULATION := 4
 const CHEMISTRY_STEP := 0.1
 const DECISION_STEP := 0.2
 const FEEDBACK_WINDOW := 12.0
@@ -21,6 +25,8 @@ const OBSERVATION_RADIUS := 3.0
 var norn: NornActor
 var moss: NornActor
 var norn_profiles: Dictionary = {}
+var eggs: Array[Dictionary] = []
+var next_norn_number: int = 1
 var focused_norn_id: String = "mallow"
 var objects: Dictionary = {}
 var cognition_state: Dictionary = {}
@@ -290,7 +296,7 @@ func open_recordings_folder() -> void:
 
 func save_game() -> void:
 	var saved_norns := {}
-	for actor_id: String in PROFILE_IDS:
+	for actor_id: String in ordered_profile_ids():
 		var saved_profile := _serialize_profile(profile_for(actor_id))
 		if saved_profile.is_empty():
 			last_status = "The local %s profile failed validation and could not be saved." % actor_id.capitalize()
@@ -302,7 +308,9 @@ func save_game() -> void:
 		"seed": START_SEED,
 		"simulationTime": simulation_time,
 		"focusedNornId": focused_norn_id,
-		"norns": saved_norns
+		"nextNornNumber": next_norn_number,
+		"norns": saved_norns,
+		"eggs": eggs.duplicate(true)
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -311,7 +319,7 @@ func save_game() -> void:
 		return
 	file.store_string(JSON.stringify(record, "\t"))
 	file.close()
-	last_status = "Saved Mallow and Moss locally to %s." % SAVE_PATH
+	last_status = "Saved the Norn family locally to %s." % SAVE_PATH
 	_refresh_ui()
 
 
@@ -336,7 +344,7 @@ func load_game() -> void:
 		_fallback_from_invalid_save("The save format is not valid")
 		return
 	var version_value = record.get("version", null)
-	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, SAVE_VERSION].has(int(version_value)):
+	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, 4, SAVE_VERSION].has(int(version_value)):
 		_fallback_from_invalid_save("The save format is not valid")
 		return
 	var save_version := int(version_value)
@@ -345,106 +353,101 @@ func load_game() -> void:
 	if not _is_finite_number(saved_seed) or not is_equal_approx(float(saved_seed), float(START_SEED)) or not _is_finite_number(simulation_value) or float(simulation_value) < 0.0:
 		_fallback_from_invalid_save("The save metadata is not valid")
 		return
-	var restored_profiles: Dictionary = {}
-	var restored_focus := "mallow"
+	var candidate: Dictionary
 	if save_version == SAVE_VERSION:
-		var saved_focus = record.get("focusedNornId", null)
-		var saved_norns = record.get("norns", null)
-		if not (saved_focus is String) or not PROFILE_IDS.has(saved_focus) or not (saved_norns is Dictionary) or saved_norns.size() != PROFILE_IDS.size():
-			_fallback_from_invalid_save("The saved Norn profile map failed validation")
-			return
-		for key: Variant in saved_norns:
-			if not (key is String) or not PROFILE_IDS.has(key):
-				_fallback_from_invalid_save("The saved Norn profile IDs failed validation")
-				return
-		for actor_id: String in PROFILE_IDS:
-			var restored_profile := _restore_profile(saved_norns.get(actor_id, null), actor_id, float(simulation_value))
-			if restored_profile.is_empty():
-				_fallback_from_invalid_save("The saved %s profile failed validation" % actor_id.capitalize())
-				return
-			restored_profiles[actor_id] = restored_profile
-		restored_focus = str(saved_focus)
+		candidate = _restore_version5_record(record, float(simulation_value))
+	elif save_version == 4:
+		candidate = _restore_version4_record(record, float(simulation_value))
 	else:
-		var legacy_profile := _restore_legacy_mallow(record, save_version)
-		if legacy_profile.is_empty():
-			return
-		restored_profiles["mallow"] = legacy_profile
-		restored_profiles["moss"] = _make_clean_profile_state("moss")
-	for actor_id: String in PROFILE_IDS:
-		var profile := profile_for(actor_id)
-		if profile == null:
-			_fallback_from_invalid_save("The %s profile is missing" % actor_id.capitalize())
-			return
-		var restored_profile: Dictionary = restored_profiles[actor_id]
-		profile.cognition_state = restored_profile["cognition"]
-		profile.biochemistry_state = restored_profile["biochemistry"]
-		profile.language_state = restored_profile["language"]
-		profile.feedback_available = bool(restored_profile["feedback"]["available"])
-		profile.feedback_action = str(restored_profile["feedback"]["action"])
-		profile.feedback_target = str(restored_profile["feedback"]["target"])
-		profile.feedback_time = float(restored_profile["feedback"]["time"])
-		profile.guidance.clear()
-		profile.current_decision.clear()
-		profile.recalled_moments.clear()
+		candidate = _restore_legacy_record(record, save_version, float(simulation_value))
+	if candidate.is_empty():
+		_fallback_from_invalid_save("The saved Norn family failed validation")
+		return
+	_apply_restored_world(candidate, float(simulation_value))
 	teaching_mode = false
 	if _ui != null:
 		_ui.clear_teaching_input()
-	simulation_time = float(simulation_value)
-	focused_norn_id = restored_focus
 	_chemistry_accumulator = 0.0
 	_decision_accumulator = 0.0
-	norn.reset_position(Vector3(3.0, 0.0, 2.0))
-	moss.reset_position(Vector3(6.2, 0.0, 1.6))
 	_respawn_times.clear()
 	for item: Interactable in objects.values():
 		item.set_available(true)
 	_sync_mallow_compatibility()
-	last_status = "Loaded Mallow and Moss's local learning and memories." if save_version == SAVE_VERSION else "Loaded Mallow's local learning; Moss began from the deterministic seed."
+	last_status = "Loaded the local Norn family and its memories." if save_version == SAVE_VERSION else "Migrated the local Norn family and its memories."
 	_refresh_ui()
 
 
 func _serialize_profile(profile: NornProfile) -> Dictionary:
-	if profile == null or not PROFILE_IDS.has(profile.actor_id):
+	if profile == null or not _is_valid_profile_id(profile.actor_id):
 		return {}
 	var saved_cognition: Dictionary = Cognition.serialize_state(profile.cognition_state)
 	var saved_biochemistry: Dictionary = Biochemistry.serialize_state(profile.biochemistry_state)
 	var saved_language: Dictionary = _language.call("serialize_state", profile.language_state)
+	var saved_life_state: Dictionary = NornLifecycle.serialize_state(profile.life_state)
+	var saved_parent_ids: Array[String] = profile.parent_ids.duplicate()
+	var saved_color: Array[float] = [profile.body_color.r, profile.body_color.g, profile.body_color.b, profile.body_color.a]
 	var saved_feedback := {
 		"available": profile.feedback_available,
 		"action": profile.feedback_action,
 		"target": profile.feedback_target,
 		"time": profile.feedback_time
 	}
-	if saved_cognition.is_empty() or saved_biochemistry.is_empty() or saved_language.is_empty() or _restore_profile({
+	var serialized := {
 		"actorId": profile.actor_id,
-		"cognition": saved_cognition,
-		"biochemistry": saved_biochemistry,
-		"language": saved_language,
-		"feedback": saved_feedback
-	}, profile.actor_id, maxf(0.0, simulation_time)).is_empty():
-		return {}
-	return {
-		"actorId": profile.actor_id,
+		"displayName": profile.display_name,
+		"generation": profile.generation,
+		"parentIds": saved_parent_ids,
+		"bodyColor": saved_color,
+		"lifeState": saved_life_state,
 		"cognition": saved_cognition,
 		"biochemistry": saved_biochemistry,
 		"language": saved_language,
 		"feedback": saved_feedback
 	}
+	if saved_cognition.is_empty() or saved_biochemistry.is_empty() or saved_language.is_empty() or saved_life_state.is_empty() or _restore_profile(serialized, profile.actor_id, maxf(0.0, simulation_time)).is_empty():
+		return {}
+	return serialized
 
 
 func _restore_profile(value: Variant, actor_id: String, saved_simulation_time: float) -> Dictionary:
-	if not (value is Dictionary) or not PROFILE_IDS.has(actor_id):
+	if not (value is Dictionary) or not _is_valid_profile_id(actor_id):
 		return {}
 	var saved: Dictionary = value
 	if saved.get("actorId", null) != actor_id:
 		return {}
-	var seed := START_SEED if actor_id == "mallow" else MOSS_SEED
+	var display_name = saved.get("displayName", null)
+	var generation_value = saved.get("generation", null)
+	var raw_parent_ids = saved.get("parentIds", null)
+	var raw_body_color = saved.get("bodyColor", null)
+	var body_color := _restore_body_color(saved.get("bodyColor", null))
+	var life_state: Dictionary = NornLifecycle.restore_state(saved.get("lifeState", null))
+	if not (display_name is String) or display_name.strip_edges().is_empty() or display_name.length() > 40:
+		return {}
+	if not _is_finite_number(generation_value) or not is_equal_approx(float(generation_value), roundf(float(generation_value))) or int(generation_value) < 0:
+		return {}
+	if not (raw_parent_ids is Array) or not (raw_body_color is Array) or body_color == Color.TRANSPARENT or body_color.a <= 0.0 or life_state.is_empty():
+		return {}
+	var parent_ids: Array[String] = []
+	for parent_value: Variant in raw_parent_ids:
+		if not (parent_value is String) or not _is_valid_profile_id(parent_value):
+			return {}
+		parent_ids.append(parent_value)
 	var saved_cognition = saved.get("cognition", null)
 	if not (saved_cognition is Dictionary):
 		return {}
 	var restored_cognition: Dictionary = Cognition.restore_state(saved_cognition)
 	var restored_seed = restored_cognition.get("seed", null)
-	if restored_cognition.is_empty() or not _is_finite_number(restored_seed) or not is_equal_approx(float(restored_seed), float(seed)):
+	if restored_cognition.is_empty() or not _is_finite_number(restored_seed):
+		return {}
+	if actor_id == "mallow" and not is_equal_approx(float(restored_seed), float(START_SEED)):
+		return {}
+	if actor_id == "moss" and not is_equal_approx(float(restored_seed), float(MOSS_SEED)):
+		return {}
+	var expected_life: Dictionary = NornLifecycle.create_state(int(restored_seed), 0.0)
+	if expected_life.is_empty() or not is_equal_approx(float(expected_life["lifespanSeconds"]), float(life_state["lifespanSeconds"])):
+		return {}
+	var death: Dictionary = life_state["death"]
+	if not death.is_empty() and float(death["simulationTime"]) > saved_simulation_time:
 		return {}
 	var restored_biochemistry: Dictionary = Biochemistry.restore_state(saved.get("biochemistry", null))
 	if restored_biochemistry.is_empty():
@@ -458,11 +461,130 @@ func _restore_profile(value: Variant, actor_id: String, saved_simulation_time: f
 	if not Cognition.sync_chemistry(restored_cognition, Biochemistry.read_signals(restored_biochemistry)):
 		return {}
 	return {
+		"actorId": actor_id,
+		"displayName": display_name,
+		"generation": int(generation_value),
+		"parentIds": parent_ids,
+		"bodyColor": body_color,
+		"lifeState": life_state,
 		"cognition": restored_cognition,
 		"biochemistry": restored_biochemistry,
 		"language": restored_language,
 		"feedback": restored_feedback
 	}
+
+
+func _restore_version5_record(record: Dictionary, saved_simulation_time: float) -> Dictionary:
+	var saved_norns = record.get("norns", null)
+	var saved_focus = record.get("focusedNornId", null)
+	var saved_next_number = record.get("nextNornNumber", null)
+	var saved_eggs = record.get("eggs", null)
+	if not (saved_norns is Dictionary) or saved_norns.size() < STARTER_PROFILE_IDS.size() or not (saved_focus is String):
+		return {}
+	if not _is_finite_number(saved_next_number) or not is_equal_approx(float(saved_next_number), roundf(float(saved_next_number))) or int(saved_next_number) < 1:
+		return {}
+	if not (saved_eggs is Array) or not saved_eggs.is_empty():
+		return {}
+	var restored_profiles: Dictionary = {}
+	var names: Dictionary = {}
+	var highest_child_number := 0
+	var living_count := 0
+	for key: Variant in saved_norns:
+		if not (key is String) or not _is_valid_profile_id(key):
+			return {}
+		var restored_profile := _restore_profile(saved_norns.get(key, null), key, saved_simulation_time)
+		if restored_profile.is_empty() or names.has(restored_profile["displayName"]):
+			return {}
+		names[restored_profile["displayName"]] = true
+		restored_profiles[key] = restored_profile
+		if bool(restored_profile["lifeState"]["alive"]):
+			living_count += 1
+		if str(key).begins_with("norn-"):
+			highest_child_number = maxi(highest_child_number, _profile_number(str(key)))
+	if not restored_profiles.has("mallow") or not restored_profiles.has("moss"):
+		return {}
+	for actor_id: String in restored_profiles:
+		var profile: Dictionary = restored_profiles[actor_id]
+		var parents: Array[String] = profile["parentIds"]
+		if STARTER_PROFILE_IDS.has(actor_id):
+			if int(profile["generation"]) != 0 or not parents.is_empty():
+				return {}
+		elif parents.size() != 2 or parents[0] == parents[1] or parents.has(actor_id):
+			return {}
+		else:
+			if not restored_profiles.has(parents[0]) or not restored_profiles.has(parents[1]):
+				return {}
+			var first_parent: Dictionary = restored_profiles[parents[0]]
+			var second_parent: Dictionary = restored_profiles[parents[1]]
+			var expected_generation := maxi(int(first_parent["generation"]), int(second_parent["generation"])) + 1
+			if int(profile["generation"]) != expected_generation:
+				return {}
+	if int(saved_next_number) <= highest_child_number:
+		return {}
+	if living_count + saved_eggs.size() > MAX_POPULATION:
+		return {}
+	if living_count == 0:
+		if not saved_focus.is_empty():
+			return {}
+	elif not restored_profiles.has(saved_focus) or not bool(restored_profiles[saved_focus]["lifeState"]["alive"]):
+		return {}
+	return {
+		"profiles": restored_profiles,
+		"focusedNornId": saved_focus,
+		"nextNornNumber": int(saved_next_number),
+		"eggs": []
+	}
+
+
+func _restore_version4_record(record: Dictionary, saved_simulation_time: float) -> Dictionary:
+	var saved_norns = record.get("norns", null)
+	var saved_focus = record.get("focusedNornId", null)
+	if not (saved_norns is Dictionary) or saved_norns.size() != STARTER_PROFILE_IDS.size() or not (saved_focus is String) or not STARTER_PROFILE_IDS.has(saved_focus):
+		return {}
+	for key: Variant in saved_norns:
+		if not (key is String) or not STARTER_PROFILE_IDS.has(key):
+			return {}
+	var restored_profiles: Dictionary = {}
+	for actor_id: String in STARTER_PROFILE_IDS:
+		var learning := _restore_profile_learning(saved_norns.get(actor_id, null), actor_id, saved_simulation_time)
+		if learning.is_empty():
+			return {}
+		restored_profiles[actor_id] = _with_founder_defaults(actor_id, learning)
+	return {"profiles": restored_profiles, "focusedNornId": saved_focus, "nextNornNumber": 1, "eggs": []}
+
+
+func _restore_legacy_record(record: Dictionary, save_version: int, saved_simulation_time: float) -> Dictionary:
+	var mallow_learning := _restore_legacy_mallow(record, save_version)
+	if mallow_learning.is_empty():
+		return {}
+	var restored_profiles := {
+		"mallow": _with_founder_defaults("mallow", mallow_learning),
+		"moss": _with_founder_defaults("moss", _make_clean_profile_state("moss"))
+	}
+	return {"profiles": restored_profiles, "focusedNornId": "mallow", "nextNornNumber": 1, "eggs": []}
+
+
+func _restore_profile_learning(value: Variant, actor_id: String, saved_simulation_time: float) -> Dictionary:
+	if not (value is Dictionary):
+		return {}
+	var saved: Dictionary = value
+	if saved.get("actorId", null) != actor_id:
+		return {}
+	var saved_cognition = saved.get("cognition", null)
+	if not (saved_cognition is Dictionary):
+		return {}
+	var cognition: Dictionary = Cognition.restore_state(saved_cognition)
+	var expected_seed := START_SEED if actor_id == "mallow" else MOSS_SEED
+	if cognition.is_empty() or not _is_finite_number(cognition.get("seed", null)) or not is_equal_approx(float(cognition["seed"]), float(expected_seed)):
+		return {}
+	var biochemistry: Dictionary = Biochemistry.restore_state(saved.get("biochemistry", null))
+	var language: Dictionary = _language.call("restore_state", saved.get("language", null))
+	var feedback := _restore_feedback(saved.get("feedback", null), saved_simulation_time)
+	if biochemistry.is_empty() or language.is_empty() or feedback.is_empty():
+		return {}
+	if not Cognition.sync_chemistry(cognition, Biochemistry.read_signals(biochemistry)):
+		return {}
+	return {"cognition": cognition, "biochemistry": biochemistry, "language": language, "feedback": feedback}
 
 
 func _restore_feedback(value: Variant, saved_simulation_time: float) -> Dictionary:
@@ -489,31 +611,25 @@ func _restore_feedback(value: Variant, saved_simulation_time: float) -> Dictiona
 func _restore_legacy_mallow(record: Dictionary, save_version: int) -> Dictionary:
 	var saved_cognition = record.get("cognition", null)
 	if not (saved_cognition is Dictionary):
-		_fallback_from_invalid_save("The saved Mallow state is missing")
 		return {}
 	var restored_cognition: Dictionary = Cognition.restore_state(saved_cognition)
 	if restored_cognition.is_empty() or int(restored_cognition.get("seed", -1)) != START_SEED:
-		_fallback_from_invalid_save("The saved Mallow state failed validation")
 		return {}
 	var restored_biochemistry: Dictionary
 	if save_version >= 3:
 		restored_biochemistry = Biochemistry.restore_state(record.get("biochemistry", null))
 		if restored_biochemistry.is_empty():
-			_fallback_from_invalid_save("The saved biochemical state failed validation")
 			return {}
 	else:
 		restored_biochemistry = Biochemistry.migrate_from_legacy_signals(restored_cognition["chemistry"])
 		if restored_biochemistry.is_empty():
-			_fallback_from_invalid_save("The legacy biochemical state failed migration")
 			return {}
 	var restored_language: Dictionary = _language.call("create_state")
 	if save_version >= 2:
 		restored_language = _language.call("restore_state", record.get("language", null))
 		if restored_language.is_empty():
-			_fallback_from_invalid_save("The saved vocabulary failed validation")
 			return {}
 	if not Cognition.sync_chemistry(restored_cognition, Biochemistry.read_signals(restored_biochemistry)):
-		_fallback_from_invalid_save("The biochemical cognition signals failed validation")
 		return {}
 	return {
 		"cognition": restored_cognition,
@@ -521,6 +637,128 @@ func _restore_legacy_mallow(record: Dictionary, save_version: int) -> Dictionary
 		"language": restored_language,
 		"feedback": {"available": false, "action": "", "target": "", "time": -1000.0}
 	}
+
+
+func _with_founder_defaults(actor_id: String, learning: Dictionary) -> Dictionary:
+	var founder := learning.duplicate(true)
+	var seed := START_SEED if actor_id == "mallow" else MOSS_SEED
+	founder["actorId"] = actor_id
+	founder["displayName"] = "Mallow" if actor_id == "mallow" else "Moss"
+	founder["generation"] = 0
+	founder["parentIds"] = []
+	founder["bodyColor"] = MALLOW_COLOR if actor_id == "mallow" else MOSS_COLOR
+	founder["lifeState"] = NornLifecycle.create_state(seed, 600.0)
+	return founder
+
+
+func _restore_body_color(value: Variant) -> Color:
+	if not (value is Array) or value.size() != 4:
+		return Color.TRANSPARENT
+	var channels: Array[float] = []
+	for channel: Variant in value:
+		if not _is_finite_number(channel) or float(channel) < 0.0 or float(channel) > 1.0:
+			return Color.TRANSPARENT
+		channels.append(float(channel))
+	return Color(channels[0], channels[1], channels[2], channels[3])
+
+
+func _is_valid_profile_id(actor_id: String) -> bool:
+	if STARTER_PROFILE_IDS.has(actor_id):
+		return true
+	if not actor_id.begins_with("norn-"):
+		return false
+	var suffix := actor_id.trim_prefix("norn-")
+	return suffix.is_valid_int() and int(suffix) > 0 and suffix == str(int(suffix))
+
+
+func _profile_number(actor_id: String) -> int:
+	return int(actor_id.trim_prefix("norn-")) if actor_id.begins_with("norn-") else 0
+
+
+func ordered_profile_ids() -> Array[String]:
+	var ordered: Array[String] = []
+	for actor_id: String in STARTER_PROFILE_IDS:
+		if norn_profiles.has(actor_id):
+			ordered.append(actor_id)
+	var child_ids: Array[String] = []
+	for actor_id: Variant in norn_profiles.keys():
+		if actor_id is String and str(actor_id).begins_with("norn-"):
+			child_ids.append(str(actor_id))
+	child_ids.sort_custom(func(left: String, right: String) -> bool: return _profile_number(left) < _profile_number(right))
+	ordered.append_array(child_ids)
+	return ordered
+
+
+func _apply_restored_world(candidate: Dictionary, saved_simulation_time: float) -> void:
+	_clear_profile_actors()
+	norn_profiles.clear()
+	var restored_profiles: Dictionary = candidate["profiles"]
+	var ids: Array[String] = []
+	for actor_id: Variant in restored_profiles.keys():
+		ids.append(str(actor_id))
+	ids.sort_custom(func(left: String, right: String) -> bool:
+		var left_starter_index := STARTER_PROFILE_IDS.find(left)
+		var right_starter_index := STARTER_PROFILE_IDS.find(right)
+		if left_starter_index >= 0 and right_starter_index >= 0:
+			return left_starter_index < right_starter_index
+		if left_starter_index >= 0:
+			return true
+		if right_starter_index >= 0:
+			return false
+		return _profile_number(left) < _profile_number(right)
+	)
+	for actor_id: String in ids:
+		var restored: Dictionary = restored_profiles[actor_id]
+		var actor: NornActor
+		if bool(restored["lifeState"]["alive"]):
+			actor = _spawn_actor(actor_id, str(restored["displayName"]), restored["bodyColor"])
+		var profile := NornProfile.new()
+		profile.initialize(actor_id, str(restored["displayName"]), actor, restored["cognition"], restored["biochemistry"], restored["language"])
+		profile.generation = int(restored["generation"])
+		profile.parent_ids.clear()
+		for parent_id: String in restored["parentIds"]:
+			profile.parent_ids.append(parent_id)
+		profile.body_color = restored["bodyColor"]
+		profile.life_state = restored["lifeState"].duplicate(true)
+		profile.feedback_available = bool(restored["feedback"]["available"])
+		profile.feedback_action = str(restored["feedback"]["action"])
+		profile.feedback_target = str(restored["feedback"]["target"])
+		profile.feedback_time = float(restored["feedback"]["time"])
+		norn_profiles[actor_id] = profile
+	simulation_time = saved_simulation_time
+	focused_norn_id = str(candidate["focusedNornId"])
+	next_norn_number = int(candidate["nextNornNumber"])
+	eggs.clear()
+	for egg: Variant in candidate["eggs"]:
+		eggs.append(egg)
+	_sync_mallow_compatibility()
+
+
+func _clear_profile_actors() -> void:
+	for value: Variant in norn_profiles.values():
+		if value is NornProfile:
+			var profile: NornProfile = value
+			if profile.actor != null and is_instance_valid(profile.actor):
+				profile.actor.free()
+	norn = null
+	moss = null
+
+
+func _spawn_actor(actor_id: String, display_name: String, color: Color) -> NornActor:
+	var actor := NornActor.new()
+	actor.configure_identity(actor_id, display_name, color)
+	if actor_id == "mallow":
+		actor.position = Vector3(3.0, 0.0, 2.0)
+		norn = actor
+	elif actor_id == "moss":
+		actor.position = Vector3(6.2, 0.0, 1.6)
+		moss = actor
+	else:
+		var number := _profile_number(actor_id)
+		actor.position = Vector3(2.8 + float((number - 1) % 3) * 1.25, 0.0, -2.4 - float((number - 1) / 3) * 1.2)
+	actor.action_completed.connect(_on_action_completed)
+	add_child(actor)
+	return actor
 
 
 func _make_clean_profile_state(actor_id: String) -> Dictionary:
@@ -563,8 +801,7 @@ func profile_for(actor_id: String) -> NornProfile:
 
 
 func focused_profile() -> NornProfile:
-	var profile := profile_for(focused_norn_id)
-	return profile if profile != null else profile_for("mallow")
+	return profile_for(focused_norn_id)
 
 
 func select_norn(actor_id: String) -> void:
@@ -577,11 +814,13 @@ func select_norn(actor_id: String) -> void:
 
 
 func _create_profiles() -> void:
+	_clear_profile_actors()
 	norn_profiles.clear()
+	eggs.clear()
+	next_norn_number = 1
 	focused_norn_id = "mallow"
-	var mallow_profile := _create_profile("mallow", "Mallow", norn, _new_cognition_state())
-	var moss_profile := _create_profile("moss", "Moss", moss, _new_moss_cognition_state())
-	moss_profile.actor.global_position = Vector3(6.2, 0.0, 1.6)
+	var mallow_profile := _create_profile("mallow", "Mallow", _spawn_actor("mallow", "Mallow", MALLOW_COLOR), _new_cognition_state())
+	var moss_profile := _create_profile("moss", "Moss", _spawn_actor("moss", "Moss", MOSS_COLOR), _new_moss_cognition_state())
 	norn_profiles["mallow"] = mallow_profile
 	norn_profiles["moss"] = moss_profile
 	_sync_mallow_compatibility()
@@ -595,6 +834,10 @@ func _create_profile(actor_id: String, display_name: String, actor: NornActor, c
 	var language: Dictionary = _language.call("create_state")
 	var profile := NornProfile.new()
 	profile.initialize(actor_id, display_name, actor, cognition, biochemistry, language)
+	profile.generation = 0
+	profile.parent_ids.clear()
+	profile.body_color = MALLOW_COLOR if actor_id == "mallow" else MOSS_COLOR
+	profile.life_state = NornLifecycle.create_state(int(cognition["seed"]), 600.0)
 	return profile
 
 
@@ -697,16 +940,8 @@ func _build_camera() -> void:
 
 
 func _build_creature() -> void:
-	norn = NornActor.new()
-	norn.configure_identity("mallow", "Mallow", Color(0.43, 0.27, 0.16))
-	norn.position = Vector3(3.0, 0.0, 2.0)
-	norn.action_completed.connect(_on_action_completed)
-	add_child(norn)
-	moss = NornActor.new()
-	moss.configure_identity("moss", "Moss", Color(0.24, 0.42, 0.34))
-	moss.position = Vector3(6.2, 0.0, 1.6)
-	moss.action_completed.connect(_on_action_completed)
-	add_child(moss)
+	norn = null
+	moss = null
 
 
 func _build_objects() -> void:
@@ -975,8 +1210,6 @@ func _fallback_from_invalid_save(reason: String) -> void:
 
 
 func _reset_state(write_save: bool) -> void:
-	norn.reset_position(Vector3(3.0, 0.0, 2.0))
-	moss.reset_position(Vector3(6.2, 0.0, 1.6))
 	teaching_mode = false
 	if _ui != null:
 		_ui.clear_teaching_input()

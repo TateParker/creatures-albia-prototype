@@ -1,5 +1,8 @@
 extends SceneTree
 
+const HabitatScene = preload("res://scenes/main.tscn")
+const Lifecycle = preload("res://scripts/norn_lifecycle.gd")
+
 var _failures: Array[String] = []
 var _lifecycle_script: Script
 
@@ -23,6 +26,7 @@ func _run_checks() -> void:
 		test_age_advances_and_reports_stage_change()
 		test_death_is_recorded_once()
 		test_lifecycle_restore_rejects_malformed_state()
+		test_founder_save_metadata()
 	_finish()
 
 
@@ -101,9 +105,64 @@ func test_lifecycle_restore_rejects_malformed_state() -> void:
 	_expect(_lifecycle_script.call("restore_state", inconsistent_living).is_empty(), "restore rejects death data on a living state")
 
 
+func test_founder_save_metadata() -> void:
+	const save_path := "user://albia_norn_save.json"
+	var previous_exists := FileAccess.file_exists(save_path)
+	var previous_text := ""
+	if previous_exists:
+		var previous_file := FileAccess.open(save_path, FileAccess.READ)
+		if previous_file != null:
+			previous_text = previous_file.get_as_text()
+			previous_file.close()
+	var world: AlbiaWorld = HabitatScene.instantiate()
+	root.add_child(world)
+	world.save_game()
+	var saved_file := FileAccess.open(save_path, FileAccess.READ)
+	var saved: Variant = JSON.parse_string(saved_file.get_as_text()) if saved_file != null else null
+	if saved_file != null:
+		saved_file.close()
+	_expect(saved is Dictionary and int((saved as Dictionary).get("version", -1)) == 5, "founder save uses version 5")
+	if saved is Dictionary:
+		var record: Dictionary = saved
+		var profiles: Dictionary = record.get("norns", {})
+		_expect(profiles.size() == 2 and profiles.has("mallow") and profiles.has("moss"), "version-5 save contains stable starter IDs")
+		for actor_id: String in ["mallow", "moss"]:
+			var profile: Dictionary = profiles.get(actor_id, {})
+			var expected_name := "Mallow" if actor_id == "mallow" else "Moss"
+			var expected_color := [0.43, 0.27, 0.16, 1.0] if actor_id == "mallow" else [0.24, 0.42, 0.34, 1.0]
+			var expected_seed := 4181996 if actor_id == "mallow" else 4181997
+			var expected_life: Dictionary = Lifecycle.create_state(expected_seed, 600.0)
+			_expect(profile.get("displayName", "") == expected_name, "%s retains its stable display name" % actor_id)
+			_expect(int(profile.get("generation", -1)) == 0 and profile.get("parentIds", []) == [], "%s starts with no ancestry" % actor_id)
+			_expect(_color_arrays_equal(profile.get("bodyColor", []), expected_color), "%s retains its established coat color" % actor_id)
+			var life: Dictionary = profile.get("lifeState", {})
+			_expect(is_equal_approx(float(life.get("ageSeconds", -1.0)), 600.0), "%s starts as a 600-second adult" % actor_id)
+			_expect(is_equal_approx(float(life.get("lifespanSeconds", -1.0)), float(expected_life.get("lifespanSeconds", -2.0))), "%s receives deterministic lifespan from its cognition seed" % actor_id)
+			_expect(profile.has("cognition") and profile.has("biochemistry") and profile.has("language"), "%s keeps existing learning and biochemical state" % actor_id)
+		_expect(record.get("eggs", null) is Array and (record.get("eggs", []) as Array).is_empty(), "version-5 founder save starts with an empty egg list")
+		_expect(int(record.get("nextNornNumber", 0)) == 1, "version-5 founder save starts child numbering at one")
+	world.queue_free()
+	if previous_exists and not previous_text.is_empty():
+		var restore_file := FileAccess.open(save_path, FileAccess.WRITE)
+		if restore_file != null:
+			restore_file.store_string(previous_text)
+			restore_file.close()
+	elif not previous_exists:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
+
+
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _color_arrays_equal(actual: Variant, expected: Array) -> bool:
+	if not (actual is Array) or actual.size() != expected.size():
+		return false
+	for index in range(expected.size()):
+		if not is_equal_approx(float(actual[index]), float(expected[index])):
+			return false
+	return true
 
 
 func _fail(message: String) -> void:

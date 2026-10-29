@@ -3,6 +3,10 @@ extends RefCounted
 
 var actor_id: String = ""
 var display_name: String = ""
+var generation: int = 0
+var parent_ids: Array[String] = []
+var body_color: Color = Color(0.43, 0.27, 0.16)
+var life_state: Dictionary = {}
 var actor: NornActor
 var cognition_state: Dictionary = {}
 var biochemistry_state: Dictionary = {}
