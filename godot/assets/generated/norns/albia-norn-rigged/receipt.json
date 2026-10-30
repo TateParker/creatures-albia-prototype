@@ -1,0 +1,23 @@
+{
+  "completedAt": "2026-10-30T00:33:57.468Z",
+  "destination": {
+    "assetId": "albia_norn_rigged",
+    "version": "1.0.0"
+  },
+  "evidence": {
+    "blenderNormalizationPerformed": false,
+    "gpuImportTestPerformed": false,
+    "humanVisualReviewPerformed": false,
+    "modelBytesCopiedAndHashed": true,
+    "policyValidationCompleted": true,
+    "staticInspectionCompleted": true
+  },
+  "manifestSha256": "e2e3b4a852380894c39f9aedc86c99dee600fd534756e6655b3d6b1dd08db362",
+  "packageId": "pkg_9ce82befbb3a2ca19f1cf0af",
+  "schema": "game_dev.package_receipt.v1",
+  "source": {
+    "bytes": 6456284,
+    "fileName": "model.glb",
+    "sha256": "299155fbe431c2e6191b3dbf40700de2c5ea2706b07e35785e88dd5324518b53"
+  }
+}

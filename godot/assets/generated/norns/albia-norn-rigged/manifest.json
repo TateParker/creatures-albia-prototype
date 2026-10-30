@@ -1,0 +1,46 @@
+{
+  "assetId": "albia_norn_rigged",
+  "category": "creature",
+  "description": "Blender-rigged Norn species model with a 25-bone skin and idle, walk, curious, praised, and scolded clips. Godot uses CharacterBody3D for root locomotion.",
+  "displayName": "Albia Norn Rigged",
+  "files": [
+    {
+      "bytes": 6456284,
+      "kind": "model",
+      "path": "model.glb",
+      "sha256": "299155fbe431c2e6191b3dbf40700de2c5ea2706b07e35785e88dd5324518b53"
+    },
+    {
+      "bytes": 1956,
+      "kind": "metadata",
+      "path": "metadata.json",
+      "sha256": "b1f078e481447c20e6650ffc900abd83ca080c6fc7247465092c6e6a9eb0f94f"
+    },
+    {
+      "bytes": 749,
+      "kind": "provenance",
+      "path": "provenance.json",
+      "sha256": "638dc77b704cb445634048b1f496164221456d7ed39ff7ae6c33881c80e4f433"
+    },
+    {
+      "bytes": 3579,
+      "kind": "validation",
+      "path": "validation.json",
+      "sha256": "ea22623256f4d5a2350afd331aacfa218cdda4d64b4f164b9838331318fe8654"
+    }
+  ],
+  "license": "LicenseRef-Meshy-Private",
+  "model": "model.glb",
+  "packageId": "pkg_9ce82befbb3a2ca19f1cf0af",
+  "provenance": {
+    "origin": "generated",
+    "provider": "Meshy"
+  },
+  "schema": "game_dev.asset_package.v1",
+  "validation": {
+    "errorCount": 0,
+    "passed": true,
+    "warningCount": 0
+  },
+  "version": "1.0.0"
+}

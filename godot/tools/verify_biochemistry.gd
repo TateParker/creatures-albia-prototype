@@ -5,11 +5,11 @@ const Cognition = preload("res://scripts/norn_cognition.gd")
 const COMPOUND_IDS: Array[String] = [
 	"glucose", "hunger", "curiosity", "fatigue", "reward", "punishment", "stress",
 	"socialComfort", "arousal", "satiety", "starch", "glycogen", "pyruvate", "ATP",
-	"ADP", "oxygen", "carbonDioxide", "water"
+	"ADP", "oxygen", "carbonDioxide", "water", "thirst"
 ]
 const SIGNAL_IDS: Array[String] = [
 	"glucose", "hunger", "curiosity", "fatigue", "reward",
-	"punishment", "stress", "socialComfort", "arousal", "satiety"
+	"punishment", "stress", "socialComfort", "arousal", "satiety", "thirst"
 ]
 
 var _failures: Array[String] = []
@@ -53,12 +53,14 @@ func _verify_registry_and_legacy_signals() -> void:
 	var expected_ids: Array = COMPOUND_IDS.duplicate()
 	actual_ids.sort()
 	expected_ids.sort()
-	_expect(actual_ids == expected_ids, "compound registry contains exactly the 18 named compounds")
-	_expect(state.get("version", -1) == 1, "new state uses biochemical version 1")
-	_expect(Biochemistry.read_signals(state) == legacy, "legacy ten-key signals seed the matching compounds")
+	_expect(actual_ids == expected_ids and actual_ids.size() == 19, "compound registry contains the 19 named compounds")
+	_expect(state.get("version", -1) == 2, "new state uses biochemical version 2")
+	var expected_signals: Dictionary = legacy.duplicate(true)
+	expected_signals["thirst"] = 0.0
+	_expect(Biochemistry.read_signals(state) == expected_signals, "legacy signals seed matching compounds and default thirst to zero")
 	_expect(compounds["starch"] == 0.0 and compounds["glycogen"] == 25.0, "nutrient compounds use the authored defaults")
 	_expect(compounds["ATP"] == 55.0 and compounds["oxygen"] == 100.0, "energy and oxygen compounds use the authored defaults")
-	_expect(Biochemistry.read_signals(state).size() == SIGNAL_IDS.size(), "cognition readout has exactly ten keys")
+	_expect(Biochemistry.read_signals(state).size() == SIGNAL_IDS.size() and SIGNAL_IDS.size() == 11, "cognition readout has the 11 named signals")
 
 
 func _verify_events() -> void:
@@ -170,7 +172,7 @@ func _verify_signal_optimized_step_matches_snapshot_step() -> void:
 		if Biochemistry.read_compounds(generic_state) != Biochemistry.read_compounds(optimized_state) or Biochemistry.read_fluxes(generic_state) != Biochemistry.read_fluxes(optimized_state):
 			matches_generic_engine = false
 			break
-	_expect(matches_generic_engine, "optimized 18-reaction path matches the generic evaluator during activity, rest, and social input")
+	_expect(matches_generic_engine, "optimized 19-reaction path matches the generic evaluator during activity, rest, and social input")
 
 
 func _verify_bounds_and_invalid_inputs() -> void:
@@ -238,7 +240,7 @@ func _verify_serialization_and_migration() -> void:
 	Biochemistry.advance(state, {"active": 0.4}, 0.1)
 	var record: Dictionary = Biochemistry.serialize_state(state)
 	var restored: Dictionary = Biochemistry.restore_state(record)
-	_expect(not restored.is_empty(), "version-1 biochemical state restores")
+	_expect(not restored.is_empty() and int(restored.get("version", -1)) == Biochemistry.VERSION, "version-2 biochemical state restores")
 	_expect(Biochemistry.read_compounds(restored) == Biochemistry.read_compounds(state), "serialization round-trips every compound")
 	_expect(Biochemistry.read_fluxes(restored) == Biochemistry.read_fluxes(state), "serialization round-trips latest reaction fluxes")
 
@@ -254,7 +256,7 @@ func _verify_cognition_bridge() -> void:
 	var biochemistry: Dictionary = Biochemistry.create_state(initial)
 	var signals: Dictionary = Biochemistry.read_signals(biochemistry)
 	var cognition: Dictionary = Cognition.create_state(4181996, {}, initial)
-	_expect(Cognition.sync_chemistry(cognition, signals), "cognition accepts the ten biochemical signals")
+	_expect(Cognition.sync_chemistry(cognition, signals), "cognition accepts the eleven biochemical signals")
 	_expect(cognition["chemistry"] == signals, "cognition stores the synchronized signal readout")
 	var invalid_signals: Dictionary = signals.duplicate(true)
 	invalid_signals.erase("hunger")

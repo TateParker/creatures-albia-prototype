@@ -1,0 +1,15 @@
+{
+  "schema": "game_dev.vendor_lock.v1",
+  "entries": [
+    {
+      "packageId": "pkg_9ce82befbb3a2ca19f1cf0af",
+      "assetId": "albia_norn_rigged",
+      "version": "1.0.0",
+      "destination": "godot\\assets\\generated\\norns\\albia-norn-rigged",
+      "modelSha256": "299155fbe431c2e6191b3dbf40700de2c5ea2706b07e35785e88dd5324518b53",
+      "manifestSha256": "e2e3b4a852380894c39f9aedc86c99dee600fd534756e6655b3d6b1dd08db362",
+      "license": "LicenseRef-Meshy-Private",
+      "admittedAt": "2026-10-30T00:34:29.438Z"
+    }
+  ]
+}

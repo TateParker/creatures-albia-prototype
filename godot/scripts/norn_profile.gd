@@ -13,6 +13,7 @@ var actor: NornActor
 var cognition_state: Dictionary = {}
 var biochemistry_state: Dictionary = {}
 var language_state: Dictionary = {}
+var explored_landmarks: Dictionary = {}
 var guidance: Dictionary = {}
 var current_decision: Dictionary = {}
 var recalled_moments: Array[Dictionary] = []
@@ -33,6 +34,7 @@ func initialize(profile_actor_id: String, profile_display_name: String, actor_no
 	cognition_state = cognition
 	biochemistry_state = biochemistry
 	language_state = language
+	explored_landmarks.clear()
 	guidance.clear()
 	current_decision.clear()
 	recalled_moments.clear()

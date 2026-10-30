@@ -1,0 +1,72 @@
+{
+  "schema": "albia.norn_rig_provenance.v1",
+  "createdAt": "2026-10-30T00:07:24.547062+00:00",
+  "assetId": "albia_norn_species",
+  "origin": "derived",
+  "license": "LicenseRef-Meshy-Private",
+  "source": {
+    "path": "C:/Users/Quad/Documents/GitHub/creatures-albia-prototype/assets/generated/meshy_output/review-candidates/norn/20261029_170840_norn-review-candidate-20261029_01a1897e/model.glb",
+    "sha256": "f3a1403c7f70f1d536d825d44378867d14d6145cf7191fa62702c803439ae6e8",
+    "provider": "Meshy",
+    "providerTaskId": "01a1897e-3f2a-77e0-a6a1-5ff5fa44f12a"
+  },
+  "tool": {
+    "name": "Blender",
+    "version": "5.2.2 LTS"
+  },
+  "transformations": [
+    "Imported the preserved static Norn GLB.",
+    "Added a custom 25-bone deform rig with proximity-based weights for the disconnected mesh islands.",
+    "Added five Blender actions for idle, walk, curiosity, praise, and scold response.",
+    "Exported a separate glTF 2.0 binary candidate with the PBR materials and textures."
+  ],
+  "rig": {
+    "armature": "NornSkeleton",
+    "deformBoneCount": 25,
+    "weighting": "four nearest bone-segment influences per vertex"
+  },
+  "animations": [
+    {
+      "name": "idle",
+      "loop": true,
+      "frameEnd": 61
+    },
+    {
+      "name": "walk",
+      "loop": true,
+      "frameEnd": 31
+    },
+    {
+      "name": "curious",
+      "loop": true,
+      "frameEnd": 46
+    },
+    {
+      "name": "praised",
+      "loop": false,
+      "frameEnd": 40
+    },
+    {
+      "name": "scolded",
+      "loop": false,
+      "frameEnd": 40
+    }
+  ],
+  "exportValidation": {
+    "skinCount": 1,
+    "skinnedNodes": [
+      "Mesh_0"
+    ],
+    "animationNames": [
+      "curious",
+      "idle",
+      "praised",
+      "scolded",
+      "walk"
+    ],
+    "materialCount": 1,
+    "textureCount": 3,
+    "imageCount": 3
+  },
+  "validationReport": "validation.json is produced by the local game-dev asset validator after export."
+}

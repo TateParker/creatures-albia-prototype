@@ -1,6 +1,7 @@
 extends SceneTree
 
 const HabitatScene = preload("res://scenes/main.tscn")
+const HabitatWorldScript = preload("res://scripts/albia_world.gd")
 const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
 const Cognition = preload("res://scripts/norn_cognition.gd")
 const NornLifecycle = preload("res://scripts/norn_lifecycle.gd")
@@ -10,6 +11,7 @@ var _world: Node
 var _previous_save_exists := false
 var _previous_save_text := ""
 var _save_backup_ready := false
+var _captured_gaze_head_transform := Transform3D.IDENTITY
 
 
 func _initialize() -> void:
@@ -28,6 +30,7 @@ func _record_preview() -> void:
 	if not _verify_starting_layout(_world):
 		return
 	var moss_actor: NornActor = _world.get("moss")
+	var mallow_actor: NornActor = _world.get("norn")
 	if moss_actor != null:
 		moss_actor.set_physics_process(false)
 	if not _world.has_method("toggle_recording") or not _world.has_method("is_recording"):
@@ -58,6 +61,10 @@ func _record_preview() -> void:
 		return
 	if moss_actor != null:
 		moss_actor.set_physics_process(false)
+	if not await _run_foot_planting_walkthrough():
+		return
+	if not await _run_action_pose_gaze_walkthrough():
+		return
 	for frame in range(12):
 		await process_frame
 	if not _press_hud_button("Guide to fruit"):
@@ -65,6 +72,9 @@ func _record_preview() -> void:
 	var reached_fruit: bool = await _wait_for_status("ate honey fruit", 360)
 	if not reached_fruit:
 		_fail("Mallow did not reach the guided fruit during the recording: %s" % str(_world.get("last_status")))
+		return
+	if not _interaction_pose_is_active(mallow_actor, "eat"):
+		_fail("The completed fruit action did not start its eating pose through the world action hook.")
 		return
 	for frame in range(3):
 		await process_frame
@@ -91,9 +101,12 @@ func _record_preview() -> void:
 
 	if not _press_hud_button("Guide to spinner"):
 		return
-	var reached_spinner: bool = await _wait_for_status("played with the spinner", 600)
+	var reached_spinner: bool = await _wait_for_status("played with the spinner", 1800)
 	if not reached_spinner:
 		_fail("Mallow did not reach the guided spinner during the recording.")
+		return
+	if not _interaction_pose_is_active(mallow_actor, "play"):
+		_fail("The completed spinner action did not start its play pose through the world action hook.")
 		return
 	for frame in range(3):
 		await process_frame
@@ -244,7 +257,7 @@ func _record_preview() -> void:
 	if not _verify_legacy_save_migration():
 		return
 	_restore_user_save()
-	print("VIDEO_CAPTURE_OK frames=%d path=%s flow=teach-fruit-food-spinner-activity-praise-scold-rest-action-utility-social-observation-family-egg-hatch-stage-death-archive-save-load-migrations" % [frame_count, video_path])
+	print("VIDEO_CAPTURE_OK frames=%d path=%s flow=teach-fruit-food-spinner-activity-praise-scold-rest-action-utility-social-observation-family-egg-hatch-stage-death-archive-save-load-migrations-action-poses-gaze" % [frame_count, video_path])
 	quit()
 
 
@@ -252,39 +265,38 @@ func _run_face_closeup_demo() -> bool:
 	var mallow = _world.call("profile_for", "mallow")
 	var actor: NornActor = mallow.get("actor") if mallow != null else null
 	var camera := _world.get("_camera") as Camera3D
-	var head := actor.find_child("Head", true, false) as MeshInstance3D if actor != null else null
-	var left_ear := actor.find_child("LeftEar", true, false) as MeshInstance3D if actor != null else null
-	var right_ear := actor.find_child("RightEar", true, false) as MeshInstance3D if actor != null else null
-	if actor == null or camera == null or head == null or left_ear == null or right_ear == null:
-		_fail("The face close-up could not find Mallow, its head and ear meshes, or the habitat camera.")
+	var model := actor.get_node_or_null("LifeStageVisuals/MeshyNornModel") as Node3D if actor != null else null
+	if actor == null or camera == null or model == null or _count_model_meshes(model) == 0:
+		_fail("The Norn close-up could not find Mallow's active model or the habitat camera.")
 		return false
 	var previous_rotation := actor.rotation
 	var previous_physics_enabled := actor.is_physics_processing()
 	var previous_camera_target: Vector3 = _world.get("_camera_target")
 	var previous_camera_offset: Vector3 = _world.get("_camera_offset")
+	var previous_camera_follow_enabled := bool(_world.get("_camera_follow_enabled"))
 	actor.set_physics_process(false)
 	actor.rotation.y = 0.0
-	_world.set("_camera_target", actor.global_position + Vector3(0.0, 1.72, 0.0))
-	_world.set("_camera_offset", Vector3(0.0, 0.08, -2.2))
+	_world.set("_camera_target", actor.global_position + Vector3(0.0, 1.78, 0.0))
+	_world.set("_camera_offset", Vector3(0.0, 0.08, -2.6))
+	_world.set("_camera_follow_enabled", false)
 	_world.call("_update_camera")
-	var projected_head := camera.unproject_position(head.global_position)
-	var head_visible := not camera.is_position_behind(head.global_position) and projected_head.x >= 400.0 and projected_head.x <= 880.0 and projected_head.y >= 100.0 and projected_head.y <= 620.0
-	var frontal_roots_visible := _closeup_point_is_visible(camera, left_ear.global_position) and _closeup_point_is_visible(camera, right_ear.global_position)
+	var model_focus := actor.global_position + Vector3(0.0, 1.78, 0.0)
+	var model_top := actor.global_position + Vector3(0.0, 2.25, 0.0)
+	var projected_focus := camera.unproject_position(model_focus)
+	var focus_visible := _closeup_point_is_visible(camera, model_focus) and _closeup_point_is_visible(camera, model_top)
 	var capture_failure := ""
-	var projected_left_ear := Vector2.ZERO
-	var projected_right_ear := Vector2.ZERO
-	if not head_visible or not frontal_roots_visible:
-		capture_failure = "Mallow's face or ear roots did not project into the clear frontal close-up view."
+	var projected_quarter_focus := Vector2.ZERO
+	if not focus_visible:
+		capture_failure = "Mallow's active Norn model did not project into the clear frontal close-up view."
 	else:
 		for frame in range(24):
 			await process_frame
 		actor.rotation.y = 0.32
 		_world.call("_update_camera")
-		projected_left_ear = camera.unproject_position(left_ear.global_position)
-		projected_right_ear = camera.unproject_position(right_ear.global_position)
-		var quarter_roots_visible := _closeup_point_is_visible(camera, left_ear.global_position) and _closeup_point_is_visible(camera, right_ear.global_position)
-		if not quarter_roots_visible:
-			capture_failure = "Mallow's ear roots did not project into the clear three-quarter close-up view."
+		projected_quarter_focus = camera.unproject_position(model_focus)
+		var quarter_model_visible := _closeup_point_is_visible(camera, model_focus) and _closeup_point_is_visible(camera, model_top)
+		if not quarter_model_visible:
+			capture_failure = "Mallow's active Norn model did not project into the clear three-quarter close-up view."
 		else:
 			for frame in range(24):
 				await process_frame
@@ -292,6 +304,7 @@ func _run_face_closeup_demo() -> bool:
 	actor.set_physics_process(previous_physics_enabled)
 	_world.set("_camera_target", previous_camera_target)
 	_world.set("_camera_offset", previous_camera_offset)
+	_world.set("_camera_follow_enabled", previous_camera_follow_enabled)
 	_world.call("_update_camera")
 	if not actor.rotation.is_equal_approx(previous_rotation) or actor.is_physics_processing() != previous_physics_enabled or not camera.global_position.is_equal_approx(previous_camera_target + previous_camera_offset):
 		_fail("The face close-up did not restore Mallow's rotation, physics state, and habitat camera.")
@@ -299,9 +312,27 @@ func _run_face_closeup_demo() -> bool:
 	if not capture_failure.is_empty():
 		_fail(capture_failure)
 		return false
-	print("FACE_CLOSEUP_CAPTURE_OK actor=%s headScreen=(%.1f,%.1f) frontalFrames=24" % [actor.display_name, projected_head.x, projected_head.y])
-	print("EAR_ATTACHMENT_CAPTURE_OK actor=%s leftRootScreen=(%.1f,%.1f) rightRootScreen=(%.1f,%.1f) yaw=0.32 frames=24" % [actor.display_name, projected_left_ear.x, projected_left_ear.y, projected_right_ear.x, projected_right_ear.y])
+	print("NORN_MODEL_CLOSEUP_CAPTURE_OK actor=%s frontalFocus=(%.1f,%.1f) threeQuarterFocus=(%.1f,%.1f) meshCount=%d frames=48" % [actor.display_name, projected_focus.x, projected_focus.y, projected_quarter_focus.x, projected_quarter_focus.y, _count_model_meshes(model)])
 	return true
+
+
+func _count_model_meshes(node: Node) -> int:
+	var mesh_count := 1 if node is MeshInstance3D else 0
+	for child: Node in node.get_children():
+		mesh_count += _count_model_meshes(child)
+	return mesh_count
+
+
+func _find_first_node_of_type(node: Node, type_name: String) -> Node:
+	if node == null:
+		return null
+	if node.is_class(type_name):
+		return node
+	for child: Node in node.get_children():
+		var found := _find_first_node_of_type(child, type_name)
+		if found != null:
+			return found
+	return null
 
 
 func _closeup_point_is_visible(camera: Camera3D, point: Vector3) -> bool:
@@ -309,6 +340,286 @@ func _closeup_point_is_visible(camera: Camera3D, point: Vector3) -> bool:
 		return false
 	var projected := camera.unproject_position(point)
 	return projected.x >= 400.0 and projected.x <= 880.0 and projected.y >= 100.0 and projected.y <= 620.0
+
+
+func _run_foot_planting_walkthrough() -> bool:
+	var profile = _world.call("profile_for", "mallow")
+	var actor: NornActor = profile.get("actor") if profile != null else null
+	var moss_profile = _world.call("profile_for", "moss")
+	var moss_actor: NornActor = moss_profile.get("actor") if moss_profile != null else null
+	var camera := _world.get("_camera") as Camera3D
+	var model := actor.get_node_or_null("LifeStageVisuals/MeshyNornModel") as Node3D if actor != null else null
+	var skeleton := _find_first_node_of_type(model, "Skeleton3D") as Skeleton3D if model != null else null
+	if actor == null or camera == null or skeleton == null or skeleton.get_node_or_null("LeftFootIK") == null or skeleton.get_node_or_null("RightFootIK") == null:
+		_fail("The foot-planting walkthrough could not find Mallow's runtime leg IK.")
+		return false
+
+	var previous_position := actor.global_position
+	var previous_rotation := actor.rotation
+	var previous_target: Node3D = actor.target
+	var previous_action := actor.current_action
+	var previous_reason := actor.action_reason
+	var previous_target_id := actor.target_id
+	var moss_visuals := moss_actor.get_node_or_null("LifeStageVisuals") as Node3D if moss_actor != null else null
+	var previous_moss_visuals_visible := moss_visuals.visible if moss_visuals != null else true
+	var previous_camera_target: Vector3 = _world.get("_camera_target")
+	var previous_camera_offset: Vector3 = _world.get("_camera_offset")
+	var previous_camera_follow_enabled := bool(_world.get("_camera_follow_enabled"))
+	var previous_status := str(_world.get("last_status"))
+	var had_straight_walk := false
+	var had_turn := false
+	var had_response := false
+	var resumed_walking := false
+	var success := true
+
+	actor.reset_position(previous_position)
+	actor.rotation = previous_rotation
+	if moss_visuals != null:
+		moss_visuals.visible = false
+	_world.set("_camera_follow_enabled", false)
+	_world.set("last_status", "Foot planting review: straight walk, turn, response, and resumed walk.")
+	_world.call("_refresh_ui")
+	var forward := -actor.global_transform.basis.z.normalized()
+	var side := Vector3.ZERO
+	var first_destination := actor.global_position + forward * 5.5
+	if await _record_foot_plant_segment(actor, first_destination, 240):
+		had_straight_walk = true
+	else:
+		_fail("Mallow did not complete the straight foot-planting walk segment.")
+		success = false
+
+	if success:
+		side = actor.global_transform.basis.x.normalized()
+		var second_destination := actor.global_position + side * 5.5
+		if await _record_foot_plant_segment(actor, second_destination, 240):
+			had_turn = true
+		else:
+			_fail("Mallow did not complete the turning foot-planting walk segment.")
+			success = false
+
+	if success:
+		var animation_player := _find_first_node_of_type(model, "AnimationPlayer") as AnimationPlayer
+		actor.play_response_animation("praise")
+		had_response = animation_player != null and animation_player.current_animation == "praised"
+		var response_length: float = animation_player.get_animation("praised").length if animation_player != null else 1.0
+		for frame in range(ceili(response_length * 60.0) + 6):
+			_update_foot_planting_camera(actor)
+			await process_frame
+		var resumed_destination := actor.global_position - side * 3.0 + forward * 2.0
+		if await _record_foot_plant_segment(actor, resumed_destination, 240):
+			resumed_walking = true
+		else:
+			_fail("Mallow did not resume walking after the response animation.")
+			success = false
+
+	actor.reset_position(previous_position)
+	actor.rotation = previous_rotation
+	if moss_visuals != null:
+		moss_visuals.visible = previous_moss_visuals_visible
+	if previous_target != null and is_instance_valid(previous_target):
+		actor.set_action_target(previous_target, previous_action, previous_reason, previous_target_id)
+	else:
+		actor.current_action = previous_action
+		actor.action_reason = previous_reason
+	_world.set("_camera_target", previous_camera_target)
+	_world.set("_camera_offset", previous_camera_offset)
+	_world.set("_camera_follow_enabled", previous_camera_follow_enabled)
+	_world.set("last_status", previous_status)
+	_world.call("_update_camera")
+	_world.call("_refresh_ui")
+	if not had_straight_walk or not had_turn or not had_response or not resumed_walking:
+		if success:
+			_fail("The foot-planting capture did not cover every gait segment.")
+		return false
+	print("FOOT_PLANTING_CAPTURE_OK straight=true turn=true stopped=true response=true resumed=true ik=%d" % [2])
+	return success
+
+
+func _run_action_pose_gaze_walkthrough() -> bool:
+	var profile = _world.call("profile_for", "mallow")
+	var actor: NornActor = profile.get("actor") if profile != null else null
+	var peer_profile = _world.call("profile_for", "moss")
+	var peer: NornActor = peer_profile.get("actor") if peer_profile != null else null
+	var camera := _world.get("_camera") as Camera3D
+	var model := actor.get_node_or_null("LifeStageVisuals/MeshyNornModel") as Node3D if actor != null else null
+	var skeleton := _find_first_node_of_type(model, "Skeleton3D") as Skeleton3D if model != null else null
+	var pose_modifier := skeleton.get_node_or_null("ActionPoseModifier") as SkeletonModifier3D if skeleton != null else null
+	var gaze_modifier := skeleton.get_node_or_null("HeadLookAt") as LookAtModifier3D if skeleton != null else null
+	var gaze_target := actor.get_node_or_null("GazeTarget") as Node3D if actor != null else null
+	if actor == null or peer == null or camera == null or skeleton == null or pose_modifier == null or gaze_modifier == null or gaze_target == null:
+		_fail("The action-pose and gaze recording could not find both actors and their runtime skeleton modifiers.")
+		return false
+	var capture_gaze_pose := Callable(self, "_capture_gaze_head_pose").bind(skeleton)
+	gaze_modifier.modification_processed.connect(capture_gaze_pose)
+
+	var previous_actor_position := actor.global_position
+	var previous_actor_rotation := actor.rotation
+	var previous_actor_target: Node3D = actor.target
+	var previous_actor_target_id := actor.target_id
+	var previous_actor_action := actor.current_action
+	var previous_actor_reason := actor.action_reason
+	var previous_actor_physics := actor.is_physics_processing()
+	var previous_peer_position := peer.global_position
+	var previous_peer_rotation := peer.rotation
+	var previous_peer_target: Node3D = peer.target
+	var previous_peer_target_id := peer.target_id
+	var previous_peer_action := peer.current_action
+	var previous_peer_reason := peer.action_reason
+	var previous_peer_physics := peer.is_physics_processing()
+	var previous_paused := bool(_world.get("paused"))
+	var previous_camera_target: Vector3 = _world.get("_camera_target")
+	var previous_camera_offset: Vector3 = _world.get("_camera_offset")
+	var previous_camera_follow := bool(_world.get("_camera_follow_enabled"))
+	var previous_status := str(_world.get("last_status"))
+	var preview_origin := Vector3(6.0, 0.0, 0.0)
+	var capture_frame_start := int(_world.get("recorded_frame_count"))
+	var failure := ""
+	var gaze_alignment := -1.0
+
+	_world.set("paused", true)
+	actor.set_physics_process(true)
+	peer.set_physics_process(false)
+	actor.reset_position(preview_origin)
+	actor.rotation.y = 0.0
+	peer.reset_position(preview_origin + Vector3(1.55, 0.0, 0.0))
+	peer.rotation.y = 0.15
+	_world.set("_camera_target", preview_origin + Vector3(0.0, 1.32, 0.0))
+	_world.set("_camera_offset", Vector3(0.0, 0.0, -5.2))
+	_world.set("_camera_follow_enabled", false)
+	camera.make_current()
+	_world.call("_update_camera")
+	if camera.global_position.distance_to(preview_origin + Vector3(0.0, 1.32, -5.2)) > 0.001 or not _closeup_point_is_visible(camera, actor.global_position + Vector3(0.0, 1.78, 0.0)):
+		failure = "The action-pose camera did not frame Mallow's upper body."
+	var action_pairs := [["fruit", "eat"], ["forage", "forage"], ["drink", "drink"], ["spinner", "play"]]
+	for pair: Array in action_pairs:
+		if not failure.is_empty():
+			break
+		var action_id := str(pair[0])
+		var expected_pose := str(pair[1])
+		var focus_position := actor.global_position + Vector3(0.0, 0.30, -0.72)
+		_world.set("last_status", "Action-pose preview: Mallow %s." % expected_pose)
+		_world.call("_refresh_ui")
+		if not actor.play_interaction_animation(action_id, focus_position):
+			failure = "The %s preview gesture could not be started." % action_id
+			break
+		for frame in range(12):
+			await process_frame
+		if str(pose_modifier.call("get_active_action_id")) != expected_pose or float(pose_modifier.get("influence")) <= 0.0:
+			failure = "The live %s pose did not produce a visible runtime gesture." % action_id
+			break
+		if action_id == "fruit":
+			await RenderingServer.frame_post_draw
+			var preview_image := root.get_texture().get_image()
+			var preview_path := OS.get_environment("TEMP").path_join("albia-action-pose-gaze-preview.png")
+			var preview_error := preview_image.save_png(preview_path)
+			if preview_error != OK:
+				failure = "Could not save the temporary rendered action-pose inspection frame."
+				break
+		for frame in range(22):
+			await process_frame
+
+	if failure.is_empty():
+		for frame in range(60):
+			await physics_frame
+			await process_frame
+		var head_forward_before_gaze := _captured_gaze_head_transform.basis.z.normalized()
+		actor.set_action_target(peer, "observe_peer", "Looking toward Moss", peer.actor_id)
+		actor.set_action_target(null, "observe_peer", "Watching a nearby peer", peer.actor_id)
+		var expected_gaze: Vector3 = actor.call("_bounded_gaze_position", peer.global_position + Vector3.UP * 1.5)
+		_world.set("_camera_target", preview_origin + Vector3(0.78, 1.48, 0.0))
+		_world.set("_camera_offset", Vector3(0.0, 0.18, -5.4))
+		_world.set("last_status", "Gaze preview: Mallow turns to look at Moss.")
+		_world.call("_refresh_ui")
+		_world.call("_update_camera")
+		for frame in range(90):
+			await physics_frame
+			await process_frame
+		var head_global_after := _captured_gaze_head_transform
+		var target_direction := (gaze_target.global_position - head_global_after.origin).normalized()
+		var head_forward_after_gaze := head_global_after.basis.z.normalized()
+		gaze_alignment = head_forward_after_gaze.dot(target_direction)
+		if gaze_target.global_position.distance_to(expected_gaze) > 0.02:
+			failure = "The live peer-gaze target did not stay within its bounded range."
+		elif head_forward_before_gaze.angle_to(head_forward_after_gaze) < deg_to_rad(10.0):
+			failure = "The live head-look modifier did not visibly turn toward Moss."
+		elif gaze_alignment < 0.9:
+			failure = "The live Norn head forward axis did not turn toward the peer target (alignment=%.2f)." % gaze_alignment
+		elif not _closeup_point_is_visible(camera, actor.global_position + Vector3(0.0, 1.4, 0.0)) or not _closeup_point_is_visible(camera, peer.global_position + Vector3(0.0, 1.4, 0.0)):
+			failure = "The peer-gaze recording camera did not frame both Norns."
+		else:
+			await RenderingServer.frame_post_draw
+			var peer_image := root.get_texture().get_image()
+			var peer_image_path := OS.get_environment("TEMP").path_join("albia-peer-gaze-preview.png")
+			if peer_image.save_png(peer_image_path) != OK:
+				failure = "Could not save the temporary rendered peer-gaze inspection frame."
+	if gaze_modifier.modification_processed.is_connected(capture_gaze_pose):
+		gaze_modifier.modification_processed.disconnect(capture_gaze_pose)
+
+	actor.reset_position(previous_actor_position)
+	actor.rotation = previous_actor_rotation
+	if previous_actor_target != null and is_instance_valid(previous_actor_target):
+		actor.set_action_target(previous_actor_target, previous_actor_action, previous_actor_reason, previous_actor_target_id)
+	else:
+		actor.set_action_target(null, previous_actor_action, previous_actor_reason, previous_actor_target_id)
+	peer.reset_position(previous_peer_position)
+	peer.rotation = previous_peer_rotation
+	if previous_peer_target != null and is_instance_valid(previous_peer_target):
+		peer.set_action_target(previous_peer_target, previous_peer_action, previous_peer_reason, previous_peer_target_id)
+	else:
+		peer.set_action_target(null, previous_peer_action, previous_peer_reason, previous_peer_target_id)
+	actor.set_physics_process(previous_actor_physics)
+	peer.set_physics_process(previous_peer_physics)
+	_world.set("paused", previous_paused)
+	_world.set("_camera_target", previous_camera_target)
+	_world.set("_camera_offset", previous_camera_offset)
+	_world.set("_camera_follow_enabled", previous_camera_follow)
+	_world.set("last_status", previous_status)
+	_world.call("_update_camera")
+	_world.call("_refresh_ui")
+	if not failure.is_empty():
+		_fail(failure)
+		return false
+	print("ACTION_POSES_AND_GAZE_CAPTURE_OK actions=fruit,eat;forage,forage;drink,drink;spinner,play peer_gaze=true alignment=%.2f recordingFrames=%d-%d" % [gaze_alignment, capture_frame_start, int(_world.get("recorded_frame_count"))])
+	return true
+
+
+func _interaction_pose_is_active(actor: NornActor, expected_pose: String) -> bool:
+	if actor == null:
+		return false
+	var model := actor.get_node_or_null("LifeStageVisuals/MeshyNornModel") as Node3D
+	var skeleton := _find_first_node_of_type(model, "Skeleton3D") as Skeleton3D if model != null else null
+	var modifier := skeleton.get_node_or_null("ActionPoseModifier") as SkeletonModifier3D if skeleton != null else null
+	return modifier != null and str(modifier.call("get_active_action_id")) == expected_pose
+
+
+func _capture_gaze_head_pose(skeleton: Skeleton3D) -> void:
+	var head_index := skeleton.find_bone("head")
+	if head_index >= 0:
+		_captured_gaze_head_transform = skeleton.get_global_transform_interpolated() * skeleton.get_bone_global_pose(head_index)
+
+
+func _record_foot_plant_segment(actor: NornActor, destination: Vector3, max_frames: int) -> bool:
+	var waypoint := Node3D.new()
+	waypoint.name = "FootPlantingWaypoint"
+	_world.add_child(waypoint)
+	waypoint.global_position = destination
+	actor.set_action_target(waypoint, "foot_planting_preview", "Walking through the foot-planting preview", "foot_planting_preview")
+	var reached := false
+	for frame in range(max_frames):
+		_update_foot_planting_camera(actor)
+		await physics_frame
+		await process_frame
+		if actor.target == null and not actor.is_walking:
+			reached = true
+			break
+	waypoint.queue_free()
+	return reached
+
+
+func _update_foot_planting_camera(actor: NornActor) -> void:
+	_world.set("_camera_target", actor.global_position + Vector3.UP * 0.9)
+	_world.set("_camera_offset", Vector3(6.0, 2.2, 0.0))
+	_world.call("_update_camera")
 
 
 func _run_family_lifespan_walkthrough() -> bool:
@@ -467,8 +778,8 @@ func _run_family_lifespan_walkthrough() -> bool:
 	var saved_mallow: Dictionary = saved_norns.get("mallow", {})
 	var saved_child: Dictionary = saved_norns.get("norn-1", {})
 	var saved_death: Dictionary = saved_mallow.get("lifeState", {}).get("death", {})
-	if int(saved_record.get("version", -1)) != 6:
-		_fail("The rendered family sequence did not save version-6 lineage state.")
+	if int(saved_record.get("version", -1)) != HabitatWorldScript.SAVE_VERSION:
+		_fail("The rendered family sequence did not save version-8 lineage state.")
 		return false
 	if saved_death.get("cause", "") != "old-age" or saved_child.get("parentIds", []) != ["mallow", "moss"] or str(saved_record.get("focusedNornId", "")) != "moss":
 		_fail("The saved family did not retain Mallow's death, the child's parents, and focus fallback.")
@@ -820,16 +1131,19 @@ func _run_action_utility_walkthrough() -> bool:
 	var objects: Dictionary = _world.get("objects")
 	var fruit: Interactable = objects.get("fruit")
 	var spinner: Interactable = objects.get("spinner")
+	var curiosity_marker: Interactable = objects.get("route_marker_1")
 	var ui_value: Variant = _world.get("_ui")
 	var action_label: Label = ui_value.get("_action_label") as Label if ui_value is Object else null
-	if actor == null or fruit == null or spinner == null or action_label == null:
-		_fail("The action-utility walkthrough could not find Mallow, both interactables, or the action HUD label.")
+	if actor == null or fruit == null or spinner == null or curiosity_marker == null or action_label == null:
+		_fail("The action-utility walkthrough could not find Mallow, the target objects, or the action HUD label.")
 		return false
 
 	var previous_cognition: Dictionary = (mallow.get("cognition_state") as Dictionary).duplicate(true)
 	var previous_decision: Dictionary = (mallow.get("current_decision") as Dictionary).duplicate(true)
 	var previous_recalled: Array = (mallow.get("recalled_moments") as Array).duplicate(true)
 	var previous_position := actor.global_position
+	var previous_spinner_position := spinner.global_position
+	var previous_curiosity_marker_position := curiosity_marker.global_position
 	var previous_rotation := actor.rotation
 	var previous_velocity := actor.velocity
 	var previous_target: Node3D = actor.target
@@ -851,6 +1165,8 @@ func _run_action_utility_walkthrough() -> bool:
 	_world.set("paused", true)
 	actor.set_physics_process(false)
 	actor.reset_position(Vector3(4.4, 0.0, -0.3))
+	spinner.global_position = Vector3(6.0, 0.0, -0.3)
+	curiosity_marker.global_position = Vector3(-10.0, 0.0, -8.0)
 	fruit.set_available(true)
 	spinner.set_available(true)
 	respawn_times.clear()
@@ -879,7 +1195,7 @@ func _run_action_utility_walkthrough() -> bool:
 		var initial_decision: Dictionary = mallow.get("current_decision")
 		var initial_commitment := float(mallow.get("cognition_state").get("commitmentUntil", 0.0))
 		if str(initial_decision.get("actionId", "")) != "spinner" or actor.target != spinner or initial_commitment <= start_time:
-			capture_failure = "The controlled high-curiosity state did not establish a visible spinner commitment."
+			capture_failure = "The controlled high-curiosity state did not establish a visible spinner commitment (action=%s target=%s commitment=%.2f reason=%s scores=%s)." % [str(initial_decision.get("actionId", "")), actor.target_id, initial_commitment, str(initial_decision.get("reason", "")), str(initial_decision.get("actionScores", {}))]
 		else:
 			for frame in range(30):
 				await process_frame
@@ -907,6 +1223,8 @@ func _run_action_utility_walkthrough() -> bool:
 	mallow.set("current_decision", previous_decision)
 	mallow.set("recalled_moments", previous_recalled)
 	actor.global_position = previous_position
+	spinner.global_position = previous_spinner_position
+	curiosity_marker.global_position = previous_curiosity_marker_position
 	actor.rotation = previous_rotation
 	actor.velocity = previous_velocity
 	actor.set_action_target(previous_target, previous_action, previous_reason, previous_target_id)
@@ -1064,12 +1382,15 @@ func _verify_starting_layout(world: Node) -> bool:
 	var camera := world.get("_camera") as Camera3D
 	var objects: Dictionary = world.get("objects")
 	var visible_rect := world.get_viewport().get_visible_rect()
-	for object_id: String in ["fruit", "spinner"]:
+	for object_id: String in ["fruit"]:
 		var item := objects.get(object_id) as Node3D
 		var screen_position := camera.unproject_position(item.global_position + Vector3.UP)
 		if screen_position.x < panel_right + 32.0 or screen_position.x > visible_rect.size.x - 32.0:
 			_fail("The %s is too close to the HUD or screen edge (x=%d, panel=%d)." % [object_id, int(screen_position.x), int(panel_right)])
 			return false
+	if not objects.has("spinner"):
+		_fail("The guided spinner destination is missing from the expanded habitat.")
+		return false
 	return true
 
 
@@ -1215,31 +1536,31 @@ func _verify_legacy_save_migration() -> bool:
 	var parse_error := parser.parse(file.get_as_text())
 	file.close()
 	if parse_error != OK or not (parser.data is Dictionary):
-		_fail("The saved version-6 family record was not valid JSON.")
+		_fail("The saved version-8 family record was not valid JSON.")
 		return false
-	var version6_record: Dictionary = parser.data
-	var version6_norns: Variant = version6_record.get("norns", null)
-	if int(version6_record.get("version", -1)) != 6 or not (version6_norns is Dictionary):
-		_fail("The rendered family sequence did not leave a version-6 family save.")
+	var version8_record: Dictionary = parser.data
+	var version8_norns: Variant = version8_record.get("norns", null)
+	if int(version8_record.get("version", -1)) != HabitatWorldScript.SAVE_VERSION or not (version8_norns is Dictionary):
+		_fail("The rendered family sequence did not leave a version-8 family save.")
 		return false
 	var legacy_norns: Dictionary = {}
 	for founder_id: String in ["mallow", "moss"]:
-		var founder_value: Variant = (version6_norns as Dictionary).get(founder_id, null)
+		var founder_value: Variant = (version8_norns as Dictionary).get(founder_id, null)
 		if not (founder_value is Dictionary):
-			_fail("The version-6 family save is missing founder %s." % founder_id)
+			_fail("The version-8 family save is missing founder %s." % founder_id)
 			return false
 		var founder_record: Dictionary = (founder_value as Dictionary).duplicate(true)
-		for metadata_key: String in ["displayName", "generation", "parentIds", "bodyColor", "lifeState"]:
+		for metadata_key: String in ["displayName", "generation", "parentIds", "bodyColor", "lifeState", "position", "exploredLandmarks"]:
 			founder_record.erase(metadata_key)
 		legacy_norns[founder_id] = founder_record
-	var record: Dictionary = version6_record.duplicate(true)
+	var record: Dictionary = version8_record.duplicate(true)
 	record["version"] = 4
 	record["norns"] = legacy_norns
 	record.erase("nextNornNumber")
 	record.erase("eggs")
 	var norns = record.get("norns", null)
 	if int(record.get("version", -1)) != 4 or not (norns is Dictionary) or norns.size() != 2 or not norns.has("mallow") or not norns.has("moss") or str(record.get("focusedNornId", "")) != "moss":
-		_fail("The version-6 family save could not be reduced to a version-4 founder migration fixture.")
+		_fail("The version-8 family save could not be reduced to a version-4 founder migration fixture.")
 		return false
 	var saved_mallow: Dictionary = norns["mallow"]
 	var saved_moss: Dictionary = norns["moss"]
@@ -1247,7 +1568,7 @@ func _verify_legacy_save_migration() -> bool:
 	var saved_compounds: Dictionary = saved_biochemistry.get("compounds", {})
 	var expected_compounds: Dictionary = Biochemistry.read_compounds(Biochemistry.restore_state(saved_biochemistry))
 	if not _number_maps_match(saved_compounds, expected_compounds, Biochemistry.COMPOUND_IDS):
-		_fail("The version-4 migration fixture did not contain all 18 Mallow compound concentrations.")
+		_fail("The version-4 migration fixture did not contain all 19 Mallow compound concentrations.")
 		return false
 	var expected_signals: Dictionary = Biochemistry.read_signals(Biochemistry.restore_state(saved_biochemistry))
 	var saved_cognition: Dictionary = saved_mallow.get("cognition", {})

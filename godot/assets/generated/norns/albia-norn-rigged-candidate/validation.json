@@ -1,0 +1,29 @@
+{
+  "schema": "game_dev.result.v1",
+  "operation": "asset.validate",
+  "ok": true,
+  "data": {
+    "schema": "org.gamedebug.asset_validation.v1",
+    "modelPath": "C:\\Users\\Quad\\Documents\\GitHub\\creatures-albia-prototype\\godot\\assets\\generated\\norns\\albia-norn-rigged-candidate\\model.glb",
+    "passed": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "summary": {
+      "triangles": 10532,
+      "materials": 1,
+      "textures": 3,
+      "hasUVs": true,
+      "hasNormals": true,
+      "hasTangents": true,
+      "sizeMeters": [
+        0.6977539956569672,
+        0.9511719942092896,
+        0.7778319716453552
+      ]
+    },
+    "failures": [],
+    "checksRun": 11,
+    "inspectorWarnings": [],
+    "nextStep": "Passes cleanly."
+  }
+}

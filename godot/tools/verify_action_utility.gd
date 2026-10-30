@@ -63,9 +63,13 @@ func test_legacy_uncentered_associations_migrate_to_neutral_baseline() -> void:
 	_expect(not restored.is_empty(), "an existing cognition version-1 state remains restorable")
 	if restored.is_empty():
 		return
-	var expected := {"fruit": 0.5, "spinner": 0.625, "rest": 0.75, "observe_peer": 0.875, "idle": 1.0, "draw": 0.5}
+	var expected := {
+		"fruit": 0.5, "spinner": 0.625, "rest": 0.75, "observe_peer": 0.875,
+		"idle": 1.0, "draw": 0.5, "forage": 0.5, "drink": 0.5, "explore": 0.5
+	}
 	for action_id: String in Cognition.get_action_ids():
-		_expect(is_equal_approx(float(restored["actionAssociations"][action_id]), float(expected[action_id])), "legacy %s association maps from a zero baseline" % action_id)
+		_expect(expected.has(action_id), "legacy %s action has an explicit migration expectation" % action_id)
+		_expect(is_equal_approx(float(restored["actionAssociations"][action_id]), float(expected.get(action_id, -1.0))), "legacy %s association maps from a zero baseline" % action_id)
 
 
 func test_centered_learned_preference_can_redirect_a_close_choice() -> void:

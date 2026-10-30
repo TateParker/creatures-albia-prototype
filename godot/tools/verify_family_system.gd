@@ -124,11 +124,11 @@ func test_founder_save_metadata() -> void:
 	var saved: Variant = JSON.parse_string(saved_file.get_as_text()) if saved_file != null else null
 	if saved_file != null:
 		saved_file.close()
-	_expect(saved is Dictionary and int((saved as Dictionary).get("version", -1)) == 6, "founder save uses version 6")
+	_expect(saved is Dictionary and int((saved as Dictionary).get("version", -1)) == 8, "founder save uses version 8")
 	if saved is Dictionary:
 		var record: Dictionary = saved
 		var profiles: Dictionary = record.get("norns", {})
-		_expect(profiles.size() == 2 and profiles.has("mallow") and profiles.has("moss"), "version-6 save contains stable starter IDs")
+		_expect(profiles.size() == 2 and profiles.has("mallow") and profiles.has("moss"), "version-8 save contains stable starter IDs")
 		for actor_id: String in ["mallow", "moss"]:
 			var profile: Dictionary = profiles.get(actor_id, {})
 			var expected_name := "Mallow" if actor_id == "mallow" else "Moss"
@@ -142,8 +142,10 @@ func test_founder_save_metadata() -> void:
 			_expect(is_equal_approx(float(life.get("ageSeconds", -1.0)), 600.0), "%s starts as a 600-second adult" % actor_id)
 			_expect(is_equal_approx(float(life.get("lifespanSeconds", -1.0)), float(expected_life.get("lifespanSeconds", -2.0))), "%s receives deterministic lifespan from its cognition seed" % actor_id)
 			_expect(profile.has("cognition") and profile.has("biochemistry") and profile.has("language"), "%s keeps existing learning and biochemical state" % actor_id)
-		_expect(record.get("eggs", null) is Array and (record.get("eggs", []) as Array).is_empty(), "version-6 founder save starts with an empty egg list")
-		_expect(int(record.get("nextNornNumber", 0)) == 1, "version-6 founder save starts child numbering at one")
+			_expect(profile.get("position", null) is Array and (profile.get("position", []) as Array).size() == 3, "%s save retains its live world position" % actor_id)
+			_expect(profile.get("exploredLandmarks", null) is Array, "%s save includes its per-Norn landmark history" % actor_id)
+		_expect(record.get("eggs", null) is Array and (record.get("eggs", []) as Array).is_empty(), "version-8 founder save starts with an empty egg list")
+		_expect(int(record.get("nextNornNumber", 0)) == 1, "version-8 founder save starts child numbering at one")
 	world.queue_free()
 	if previous_exists and not previous_text.is_empty():
 		var restore_file := FileAccess.open(save_path, FileAccess.WRITE)
@@ -240,9 +242,9 @@ func test_inheritance_is_reproducible() -> void:
 			var saved: Variant = JSON.parse_string(saved_file.get_as_text()) if saved_file != null else null
 			if saved_file != null:
 				saved_file.close()
-			var candidate: Dictionary = first_world.call("_restore_version6_record", saved, float(first_world.simulation_time)) if saved is Dictionary else {}
+			var candidate: Dictionary = first_world.call("_restore_version8_record", saved, float(first_world.simulation_time)) if saved is Dictionary else {}
 			var restored_eggs: Array = candidate.get("eggs", [])
-			_expect(not candidate.is_empty() and restored_eggs.size() == 1 and _egg_records_equivalent(restored_eggs[0], first_world.eggs[0]), "version-6 restore preserves realized egg inheritance without rerolling")
+			_expect(not candidate.is_empty() and restored_eggs.size() == 1 and _egg_records_equivalent(restored_eggs[0], first_world.eggs[0]), "version-8 restore preserves realized egg inheritance without rerolling")
 	first_world.free()
 	second_world.free()
 
@@ -254,7 +256,7 @@ func test_malformed_egg_records_rejected() -> void:
 		var saved: Variant = JSON.parse_string(save_file.get_as_text()) if save_file != null else null
 		if save_file != null:
 			save_file.close()
-		_expect(saved is Dictionary, "a valid egg can be loaded as a version-6 candidate")
+		_expect(saved is Dictionary, "a valid egg can be loaded as a version-8 candidate")
 		if saved is Dictionary:
 			var valid_record: Dictionary = saved
 			var malformed: Array[Dictionary] = []
@@ -290,7 +292,7 @@ func test_malformed_egg_records_rejected() -> void:
 			malformed.append(candidate)
 			var rejected_count := 0
 			for malformed_record: Dictionary in malformed:
-				if world.call("_restore_version6_record", malformed_record, float(world.simulation_time)).is_empty():
+				if world.call("_restore_version8_record", malformed_record, float(world.simulation_time)).is_empty():
 					rejected_count += 1
 			_expect(rejected_count == malformed.size(), "malformed egg IDs, lineage, traits, colors, seeds, timers, and duplicates are rejected")
 	world.free()
@@ -359,7 +361,10 @@ func test_hatch_creates_fresh_independent_profile() -> void:
 		_expect(child != null and child.actor != null and child.generation == 1 and child.parent_ids == ["mallow", "moss"], "hatch creates a visible child with both parents")
 		_expect(child != null and child.display_name == "Sprout 1", "living-name collision adds the child number")
 		_expect(child != null and child.language_state.get("words", {}).is_empty(), "hatched Norn begins without inherited vocabulary")
-		_expect(child != null and child.cognition_state["actionAssociations"] == {"fruit": 0.5, "spinner": 0.5, "rest": 0.5, "observe_peer": 0.5, "idle": 0.5, "draw": 0.5}, "hatched Norn begins with neutral, untrained action associations")
+		var expected_associations := {}
+		for action_id: String in Cognition.get_action_ids():
+			expected_associations[action_id] = 0.5
+		_expect(child != null and child.cognition_state["actionAssociations"] == expected_associations, "hatched Norn begins with neutral, untrained action associations")
 		if child != null and not child.cognition_state["episodes"].is_empty():
 			var birth_episode: Dictionary = child.cognition_state["episodes"][-1]
 			_expect(birth_episode.get("eventType", "") == "birth" and birth_episode.get("relatedNornIds", []) == ["mallow", "moss"], "hatching records a birth memory linked to both parents")
@@ -520,11 +525,13 @@ func test_actor_stage_changes_visuals_only() -> void:
 	_expect(actor.has_method("set_life_stage"), "NornActor exposes a life-stage visual update")
 	if actor.has_method("set_life_stage"):
 		var visuals := actor.find_child("LifeStageVisuals", true, false) as Node3D
-		var body := actor.find_child("Body", true, false) as MeshInstance3D
+		var imported_model := actor.find_child("MeshyNornModel", true, false) as Node3D
+		var fallback_body := actor.find_child("Body", true, false) as MeshInstance3D
+		var visual_geometry: Node3D = imported_model if imported_model != null else fallback_body
 		var collision := actor.find_child("BodyCollision", true, false) as CollisionShape3D
 		var sensor := actor.find_child("LocalSensor", true, false) as Area3D
 		var stage_label := actor.find_child("LifeStageLabel", true, false) as Label3D
-		_expect(visuals != null and body != null and body.get_parent() == visuals, "all life-stage-scaled body meshes share a visual-only parent")
+		_expect(visuals != null and visual_geometry != null and visual_geometry.get_parent() == visuals, "the active imported model or fallback body shares the life-stage visual parent")
 		var actor_scale := actor.scale
 		var collision_scale := collision.scale if collision != null else Vector3.ZERO
 		var collision_height := ((collision.shape as CapsuleShape3D).height if collision != null and collision.shape is CapsuleShape3D else -1.0)

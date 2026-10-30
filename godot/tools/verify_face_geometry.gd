@@ -2,6 +2,7 @@ extends SceneTree
 
 const NornActorScript = preload("res://scripts/norn_actor.gd")
 const TEST_BODY_COLOR := Color(0.56, 0.31, 0.19)
+const NORN_MODEL_PATH := "res://assets/generated/norns/albia-norn/model.glb"
 
 var _failures: Array[String] = []
 var _actor: Node
@@ -16,6 +17,11 @@ func _run_checks() -> void:
 	_actor.configure_identity("face-check", "Face Check", TEST_BODY_COLOR)
 	root.add_child(_actor)
 	await process_frame
+	test_runtime_model_is_attached_to_life_stage_root()
+	var imported_model := _actor.get_node_or_null("LifeStageVisuals/MeshyNornModel") as Node3D
+	if imported_model != null:
+		imported_model.free()
+		_actor.call("_build_procedural_body_geometry")
 	test_face_features_follow_head_surface()
 	test_eye_pairs_are_symmetric_and_aligned()
 	test_face_parts_follow_life_stage_visual_root()
@@ -33,6 +39,23 @@ func _run_checks() -> void:
 	for failure: String in _failures:
 		push_error("- " + failure)
 	quit(1)
+
+
+func test_runtime_model_is_attached_to_life_stage_root() -> void:
+	var visuals := _actor.get_node_or_null("LifeStageVisuals") as Node3D
+	var model := _actor.get_node_or_null("LifeStageVisuals/MeshyNornModel") as Node3D
+	_expect(ResourceLoader.exists(NORN_MODEL_PATH), "the approved Norn GLB asset is present in the project")
+	_expect(visuals != null and model != null and model.get_parent() == visuals, "the runtime GLB is mounted under LifeStageVisuals")
+	if visuals == null or model == null:
+		return
+	_expect(_count_meshes(model) > 0, "the imported model contains visible mesh geometry")
+	_expect(model.scale.is_equal_approx(Vector3.ONE * 2.4), "the runtime model uses its configured scale")
+	_expect(model.position.is_equal_approx(Vector3(0.0, 1.14, 0.0)), "the runtime model is anchored to the actor body")
+	var model_transform := model.transform
+	_actor.set_life_stage("child")
+	_expect(visuals.scale.is_equal_approx(Vector3.ONE * 0.70), "child stage scales the imported model's visual root")
+	_expect(model.transform.is_equal_approx(model_transform), "life-stage scaling does not detach or offset the imported model")
+	_actor.set_life_stage("adult")
 
 
 func test_face_features_follow_head_surface() -> void:
@@ -160,6 +183,13 @@ func test_ear_tip_height_preserved() -> void:
 
 func _mesh(node_name: String) -> MeshInstance3D:
 	return _actor.find_child(node_name, true, false) as MeshInstance3D
+
+
+func _count_meshes(node: Node) -> int:
+	var count := 1 if node is MeshInstance3D else 0
+	for child: Node in node.get_children():
+		count += _count_meshes(child)
+	return count
 
 
 func _head_front_z(head: MeshInstance3D, x: float, y: float) -> float:

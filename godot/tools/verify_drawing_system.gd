@@ -46,7 +46,7 @@ func _run_checks() -> void:
 	await test_world_executes_incremental_marks_and_records_stroke_outcome()
 	test_legacy_world_saves_clear_the_drawing_surface()
 	test_reset_and_invalid_save_fallback_clear_surface()
-	test_version_6_save_restores_surface_atomically()
+	test_version_8_save_restores_surface_atomically()
 	test_maximum_surface_save_size_is_measured()
 	test_seeded_mark_making_baseline()
 	_finish()
@@ -229,11 +229,11 @@ func test_mark_input_is_appended_and_visibility_gated() -> void:
 	var blank: Array[float] = Cognition._get_input_vector(state, {"nearbyObjects": visible_objects, "surfaceMarks": marks, "drawTargetDelta": Vector2(0.4, -0.6)})
 	var changed: Array[float] = Cognition._get_input_vector(state, {"nearbyObjects": visible_objects, "surfaceMarks": changed_marks})
 	var hidden: Array[float] = Cognition._get_input_vector(state, {"nearbyObjects": [], "surfaceMarks": changed_marks, "drawTargetDelta": Vector2(0.4, -0.6)})
-	_expect(blank.size() == 278 and changed.size() == 278 and hidden.size() == 278, "cognition input contains 20 named signals, 256 visual marks, and 2 reach cues")
+	_expect(blank.size() == 282 and changed.size() == 282 and hidden.size() == 282, "cognition input contains 20 named signals, 256 visual marks, 2 reach cues, and 4 appended cues")
 	if blank.size() >= 276 and changed.size() >= 276 and hidden.size() >= 276:
 		_expect(is_zero_approx(blank[20 + 73]) and is_equal_approx(changed[20 + 73], 0.8), "surface mark changes its matching visual input")
 		_expect(is_zero_approx(hidden[20 + 73]), "marks are hidden when the surface is not in the visible observation")
-	if blank.size() == 278:
+	if blank.size() == 282:
 		_expect(is_zero_approx(blank[276]) and is_zero_approx(blank[277]), "target cues stay zero unless both the surface and charcoal are visible")
 
 
@@ -489,7 +489,7 @@ func test_reset_and_invalid_save_fallback_clear_surface() -> void:
 	world.free()
 
 
-func test_version_6_save_restores_surface_atomically() -> void:
+func test_version_8_save_restores_surface_atomically() -> void:
 	var world_script := load(WORLD_SCRIPT_PATH) as Script
 	if world_script == null:
 		return
@@ -501,22 +501,22 @@ func test_version_6_save_restores_surface_atomically() -> void:
 	drawing_surface.call("append_point", "mallow", Vector2(0.7, 0.65), 0.8, true)
 	drawing_surface.call("append_point", "mallow", Vector2(0.7, 0.65), 0.8, false)
 	var expected_state: Dictionary = drawing_surface.call("serialize_state")
-	var record := _current_family_record(world, 6)
+	var record := _current_family_record(world, 8)
 	record["drawingSurface"] = expected_state
-	_expect(world.has_method("_restore_version6_record"), "world provides a version-6 restore validator")
-	if not world.has_method("_restore_version6_record"):
+	_expect(world.has_method("_restore_version8_record"), "world provides a version-8 restore validator")
+	if not world.has_method("_restore_version8_record"):
 		world.free()
 		return
-	var candidate: Dictionary = world.call("_restore_version6_record", record, 0.0)
-	_expect(not candidate.is_empty(), "valid version-6 save validates with surface data")
+	var candidate: Dictionary = world.call("_restore_version8_record", record, 0.0)
+	_expect(not candidate.is_empty(), "valid version-8 save validates with surface data")
 	var before_invalid: PackedByteArray = drawing_surface.get("image").get_data()
 	var malformed := record.duplicate(true)
 	malformed["drawingSurface"] = {"version": 1, "strokes": "invalid"}
-	_expect((world.call("_restore_version6_record", malformed, 0.0) as Dictionary).is_empty(), "malformed version-6 surface data rejects the full save")
-	_expect(drawing_surface.get("image").get_data() == before_invalid, "failed version-6 validation leaves the active surface unchanged")
+	_expect((world.call("_restore_version8_record", malformed, 0.0) as Dictionary).is_empty(), "malformed version-8 surface data rejects the full save")
+	_expect(drawing_surface.get("image").get_data() == before_invalid, "failed version-8 validation leaves the active surface unchanged")
 	if not candidate.is_empty():
 		world.call("_apply_restored_world", candidate, 0.0)
-		_expect(drawing_surface.call("serialize_state") == expected_state, "version-6 apply restores exact stroke and cursor data")
+		_expect(drawing_surface.call("serialize_state") == expected_state, "version-8 apply restores exact stroke and cursor data")
 	world.free()
 
 
@@ -530,11 +530,11 @@ func test_maximum_surface_save_size_is_measured() -> void:
 	var maximum_surface := _maximum_surface_state()
 	var surface: Variant = _new_surface()
 	_expect(surface.restore_state(maximum_surface), "maximum retained surface state is valid")
-	var record := _current_family_record(world, 6)
+	var record := _current_family_record(world, 8)
 	record["drawingSurface"] = maximum_surface
 	var bytes := JSON.stringify(record).to_utf8_buffer().size()
 	print("DRAWING_SAVE_JSON_BYTES_AT_CAP=%d" % bytes)
-	_expect(bytes > 0, "full version-6 JSON save size is measured at surface caps")
+	_expect(bytes > 0, "full version-8 JSON save size is measured at surface caps")
 	world.free()
 
 
@@ -548,7 +548,7 @@ func test_seeded_mark_making_baseline() -> void:
 	_expect(single.get("strokes", 0) > 1 and paired.get("strokes", 0) > 1, "both session sizes retain multiple exploratory strokes")
 	_expect(single.get("meanEndpointQuantizationError", 1.0) <= sqrt(2.0) / 510.0 + 0.00001, "single-Norn saved endpoints stay within half-pixel quantization error")
 	_expect(paired.get("meanEndpointQuantizationError", 1.0) <= sqrt(2.0) / 510.0 + 0.00001, "two-Norn saved endpoints stay within half-pixel quantization error")
-	_expect(single.get("saveGrowthBytes", -1) > 0 and paired.get("saveGrowthBytes", -1) > 0, "full version-6 save growth is measured for both sessions")
+	_expect(single.get("saveGrowthBytes", -1) > 0 and paired.get("saveGrowthBytes", -1) > 0, "full version-8 save growth is measured for both sessions")
 	print("DRAWING_BASELINE norns=1 matched_seed=%d duration_sim_s=%.1f decisions=%d motor_steps=%d strokes=%d closure_rate=%.3f endpoint_quantization_mean=%.6f motif_recurrence=%.3f shuffled_point_order_mean=%.3f save_growth_bytes=%d" % [
 		int(single["seed"]), float(single["durationSeconds"]), int(single["actions"]), int(single["motorSteps"]), int(single["strokes"]), float(single["closureRate"]), float(single["meanEndpointQuantizationError"]), float(single["motifRecurrence"]), float(single["shuffledRecurrence"]), int(single["saveGrowthBytes"])
 	])
@@ -657,7 +657,7 @@ func _run_seeded_mark_session(norn_count: int) -> Dictionary:
 		var world: Node3D = world_script.new() as Node3D
 		root.add_child(world)
 		world.set("paused", true)
-		var save_record := _current_family_record(world, 6)
+		var save_record := _current_family_record(world, 8)
 		var saved_profiles: Dictionary = save_record["norns"]
 		for actor_id: String in actor_ids:
 			if saved_profiles.has(actor_id):

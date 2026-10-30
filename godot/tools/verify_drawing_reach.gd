@@ -1,7 +1,7 @@
 extends SceneTree
 
 const Cognition := preload("res://scripts/norn_cognition.gd")
-const INPUT_COUNT := 278
+const INPUT_COUNT := 282
 const MARK_INPUT_START := 20
 const MARK_INPUT_COUNT := 256
 const TARGET_INPUT_START := 276
@@ -65,7 +65,7 @@ func test_target_delta_appends_after_mark_input() -> void:
 		"surfaceMarks": marks,
 		"drawTargetDelta": Vector2(0.375, -0.625)
 	})
-	_expect(input.size() == INPUT_COUNT, "cognition input contains 20 named signals, 256 marks, and 2 reach cues")
+	_expect(input.size() == INPUT_COUNT, "cognition input contains 20 named signals, 256 marks, 2 reach cues, and 4 appended cues")
 	if input.size() == INPUT_COUNT:
 		_expect(is_equal_approx(input[MARK_INPUT_START], marks[0]), "first mark remains at input 20")
 		_expect(is_equal_approx(input[MARK_INPUT_START + MARK_INPUT_COUNT - 1], marks[MARK_INPUT_COUNT - 1]), "last mark remains at input 275")
@@ -88,7 +88,7 @@ func test_missing_or_hidden_target_delta_defaults_to_zero() -> void:
 	]
 	for observation: Dictionary in observations:
 		var input: Array[float] = Cognition._get_input_vector(state, observation)
-		_expect(input.size() == INPUT_COUNT, "every observation yields 278 cognition inputs")
+		_expect(input.size() == INPUT_COUNT, "every observation yields 282 cognition inputs")
 		if input.size() == INPUT_COUNT:
 			_expect(is_zero_approx(input[TARGET_INPUT_START]) and is_zero_approx(input[TARGET_INPUT_START + 1]), "missing, malformed, non-finite, or hidden target cues append zeros")
 
@@ -103,7 +103,7 @@ func test_target_delta_is_bounded() -> void:
 		"nearbyObjects": visible_objects,
 		"drawTargetDelta": Vector2(1.25, -1.75)
 	})
-	_expect(input.size() == INPUT_COUNT, "bounded target input keeps the 278-value width")
+	_expect(input.size() == INPUT_COUNT, "bounded target input keeps the 282-value width")
 	if input.size() == INPUT_COUNT:
 		_expect(is_equal_approx(input[TARGET_INPUT_START], 1.0) and is_equal_approx(input[TARGET_INPUT_START + 1], -1.0), "finite target cue components clamp to the normalized range")
 
@@ -183,7 +183,7 @@ func test_cognition_versions_1_through_3_migrate_to_4() -> void:
 		_expect(not restored.is_empty(), "cognition version %d restores" % source_version)
 		if restored.is_empty():
 			continue
-		_expect(int(restored["version"]) == 4, "cognition version %d migrates to version 4" % source_version)
+		_expect(int(restored["version"]) == Cognition.VERSION, "cognition version %d migrates to version %d" % [source_version, Cognition.VERSION])
 		var expected_fruit := 0.865 if source_version == 1 else 0.73
 		_expect(is_equal_approx(float(restored["actionAssociations"]["fruit"]), expected_fruit), "cognition version %d preserves or maps action associations" % source_version)
 		_expect(is_equal_approx(float(restored["chemistry"]["hunger"]), 37.0), "cognition version %d preserves chemistry" % source_version)

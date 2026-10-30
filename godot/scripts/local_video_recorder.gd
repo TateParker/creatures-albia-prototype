@@ -13,6 +13,7 @@ var recording_active: bool = false
 var recording_elapsed: float = 0.0
 var recorded_frame_count: int = 0
 var recordings_directory: String = RECORDINGS_DIRECTORY
+var recordings_root: String = RECORDINGS_DIRECTORY
 var current_recording_path: String = ""
 var last_recording_path: String = ""
 var last_error: String = ""
@@ -106,26 +107,66 @@ func open_recordings_folder() -> Error:
 
 
 func prune_recordings() -> Error:
-	var absolute_directory := ProjectSettings.globalize_path(recordings_directory)
-	var directory := DirAccess.open(absolute_directory)
-	if directory == null:
-		last_error = "Could not scan the local recordings folder (error %d)." % DirAccess.get_open_error()
-		return DirAccess.get_open_error()
-	var clips: PackedStringArray = []
-	for file_name in directory.get_files():
-		if file_name.get_extension().to_lower() == "avi":
-			clips.append(file_name)
-	clips.sort()
+	var absolute_root := ProjectSettings.globalize_path(recordings_root)
+	if not DirAccess.dir_exists_absolute(absolute_root):
+		last_pruned_clip_count = 0
+		return OK
+	var clips: Array[Dictionary] = []
+	var active_path := ProjectSettings.globalize_path(current_recording_path) if recording_active and not current_recording_path.is_empty() else ""
+	_collect_recordings(absolute_root, active_path, clips)
+	clips.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		var left_time := int(left["timestamp"])
+		var right_time := int(right["timestamp"])
+		if left_time != right_time:
+			return left_time < right_time
+		return str(left["path"]) < str(right["path"])
+	)
 	last_pruned_clip_count = 0
 	var excess_count := clips.size() - MAX_SAVED_CLIPS
 	for index in range(maxi(0, excess_count)):
-		var old_clip_path := absolute_directory.path_join(clips[index])
+		var old_clip_path := str(clips[index]["path"])
 		var remove_error := DirAccess.remove_absolute(old_clip_path)
 		if remove_error != OK:
 			last_error = "Could not remove an old clip to enforce the %d clip limit (error %d)." % [MAX_SAVED_CLIPS, remove_error]
 			return remove_error
 		last_pruned_clip_count += 1
 	return OK
+
+
+func _collect_recordings(directory_path: String, active_path: String, clips: Array[Dictionary]) -> void:
+	var directory := DirAccess.open(directory_path)
+	if directory == null:
+		return
+	for file_name: String in directory.get_files():
+		if file_name.get_extension().to_lower() != "avi":
+			continue
+		var absolute_file_path := directory_path.path_join(file_name)
+		if not active_path.is_empty() and absolute_file_path.to_lower() == active_path.to_lower():
+			continue
+		clips.append({"path": absolute_file_path, "timestamp": _recording_sort_timestamp(absolute_file_path)})
+	for child_directory: String in directory.get_directories():
+		_collect_recordings(directory_path.path_join(child_directory), active_path, clips)
+
+
+func _recording_sort_timestamp(file_path: String) -> int:
+	var stem := file_path.get_file().get_basename()
+	var prefix_end := stem.find("-")
+	if prefix_end >= 0:
+		var stamp := stem.substr(prefix_end + 1)
+		if stamp.length() >= 15 and stamp[8] == "-":
+			var date := stamp.substr(0, 8)
+			var clock := stamp.substr(9, 6)
+			if date.is_valid_int() and clock.is_valid_int():
+				var date_time := {
+					"year": int(date.substr(0, 4)),
+					"month": int(date.substr(4, 2)),
+					"day": int(date.substr(6, 2)),
+					"hour": int(clock.substr(0, 2)),
+					"minute": int(clock.substr(2, 2)),
+					"second": int(clock.substr(4, 2))
+				}
+				return int(Time.get_unix_time_from_datetime_dict(date_time))
+	return int(FileAccess.get_modified_time(file_path))
 
 
 func _capture_frame_after_draw() -> void:

@@ -13,7 +13,7 @@ const DrawingSurfaceScript = preload("res://scripts/drawing_surface.gd")
 const START_SEED := 4181996
 const MOSS_SEED := 4181997
 const SAVE_PATH := "user://albia_norn_save.json"
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8
 const STARTER_PROFILE_IDS: Array[String] = ["mallow", "moss"]
 const MALLOW_COLOR := Color(0.43, 0.27, 0.16)
 const MOSS_COLOR := Color(0.24, 0.42, 0.34)
@@ -134,7 +134,7 @@ func guide_to(object_id: String) -> void:
 	var profile := focused_profile()
 	if profile == null:
 		return
-	profile.guidance = {"objectId": object_id, "expiresAt": simulation_time + 7.0}
+	profile.guidance = {"objectId": object_id}
 	_camera_follow_enabled = true
 	_update_camera()
 	if profile.actor_id == "mallow":
@@ -173,6 +173,7 @@ func give_feedback(feedback: String) -> void:
 	var result: Dictionary = _apply_profile_biochemistry_event(profile, feedback, outcome)
 	outcome["eventId"] = int(result.get("episodeId", 0))
 	profile.feedback_available = false
+	profile.actor.play_response_animation(feedback)
 	_offer_observation(profile, outcome)
 	_sync_mallow_compatibility()
 	var amount := float(result.get("learningDelta", 0.0))
@@ -354,7 +355,7 @@ func save_game() -> void:
 		"eggs": saved_eggs,
 		"drawingSurface": drawing_surface.call("serialize_state") if drawing_surface != null else DrawingSurfaceScript.new().call("serialize_state")
 	}
-	if _restore_version7_record(record, maxf(0.0, simulation_time)).is_empty():
+	if _restore_version8_record(record, maxf(0.0, simulation_time)).is_empty():
 		last_status = "The local Norn family failed validation and could not be saved."
 		_refresh_ui()
 		return
@@ -390,7 +391,7 @@ func load_game() -> void:
 		_fallback_from_invalid_save("The save format is not valid")
 		return
 	var version_value = record.get("version", null)
-	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, 4, 5, 6, SAVE_VERSION].has(int(version_value)):
+	if not _is_finite_number(version_value) or not is_equal_approx(float(version_value), roundf(float(version_value))) or not [1, 2, 3, 4, 5, 6, 7, SAVE_VERSION].has(int(version_value)):
 		_fallback_from_invalid_save("The save format is not valid")
 		return
 	var save_version := int(version_value)
@@ -401,6 +402,8 @@ func load_game() -> void:
 		return
 	var candidate: Dictionary
 	if save_version == SAVE_VERSION:
+		candidate = _restore_version8_record(record, float(simulation_value))
+	elif save_version == 7:
 		candidate = _restore_version7_record(record, float(simulation_value))
 	elif save_version == 6:
 		candidate = _restore_version6_record(record, float(simulation_value))
@@ -452,8 +455,14 @@ func _serialize_profile(profile: NornProfile) -> Dictionary:
 		"cognition": saved_cognition,
 		"biochemistry": saved_biochemistry,
 		"language": saved_language,
-		"feedback": saved_feedback
+		"feedback": saved_feedback,
+		"exploredLandmarks": _serialized_exploration_targets(profile.explored_landmarks)
 	}
+	if profile.actor != null and is_instance_valid(profile.actor):
+		var actor_position := profile.actor.global_position
+		if not _is_valid_world_position(actor_position):
+			return {}
+		serialized["position"] = [actor_position.x, actor_position.y, actor_position.z]
 	if saved_cognition.is_empty() or saved_biochemistry.is_empty() or saved_language.is_empty() or saved_life_state.is_empty() or _restore_profile(serialized, profile.actor_id, maxf(0.0, simulation_time)).is_empty():
 		return {}
 	return serialized
@@ -470,6 +479,19 @@ func _restore_profile(value: Variant, actor_id: String, saved_simulation_time: f
 	var raw_parent_ids = saved.get("parentIds", null)
 	var raw_body_color = saved.get("bodyColor", null)
 	var body_color := _restore_body_color(saved.get("bodyColor", null))
+	var restored_position: Variant = null
+	if saved.has("position"):
+		restored_position = _restore_world_position(saved.get("position", null))
+		if not (restored_position is Vector3):
+			return {}
+	var raw_explored: Variant = saved.get("exploredLandmarks", [])
+	if not (raw_explored is Array) or raw_explored.size() > 9:
+		return {}
+	var explored_landmarks: Dictionary = {}
+	for target_value: Variant in raw_explored:
+		if not (target_value is String) or not _is_exploration_landmark_id(target_value) or explored_landmarks.has(target_value):
+			return {}
+		explored_landmarks[target_value] = true
 	var life_state: Dictionary = NornLifecycle.restore_state(saved.get("lifeState", null))
 	if not (display_name is String) or display_name.strip_edges().is_empty() or display_name.length() > 40:
 		return {}
@@ -516,11 +538,13 @@ func _restore_profile(value: Variant, actor_id: String, saved_simulation_time: f
 		"generation": int(generation_value),
 		"parentIds": parent_ids,
 		"bodyColor": body_color,
+		"position": restored_position,
 		"lifeState": life_state,
 		"cognition": restored_cognition,
 		"biochemistry": restored_biochemistry,
 		"language": restored_language,
-		"feedback": restored_feedback
+		"feedback": restored_feedback,
+		"exploredLandmarks": explored_landmarks
 	}
 
 
@@ -621,9 +645,67 @@ func _restore_version6_record(record: Dictionary, saved_simulation_time: float) 
 
 func _restore_version7_record(record: Dictionary, saved_simulation_time: float) -> Dictionary:
 	var record_version: Variant = record.get("version", null)
-	if not _is_finite_number(record_version) or not is_equal_approx(float(record_version), float(SAVE_VERSION)):
+	if not _is_finite_number(record_version) or not is_equal_approx(float(record_version), 7.0):
 		return {}
-	return _restore_version6_record(record.merged({"version": 6}, true), saved_simulation_time)
+	var candidate := _restore_version6_record(record.merged({"version": 6}, true), saved_simulation_time)
+	if candidate.is_empty():
+		return {}
+	return candidate
+
+
+func _restore_version8_record(record: Dictionary, saved_simulation_time: float) -> Dictionary:
+	var record_version: Variant = record.get("version", null)
+	if not _is_finite_number(record_version) or not is_equal_approx(float(record_version), 8.0):
+		return {}
+	var candidate := _restore_version7_record(record.merged({"version": 7}, true), saved_simulation_time)
+	if candidate.is_empty():
+		return {}
+	var restored_profiles: Dictionary = candidate.get("profiles", {})
+	var saved_norns: Dictionary = record.get("norns", {})
+	for actor_id: String in restored_profiles:
+		var profile: Dictionary = restored_profiles[actor_id]
+		var saved_profile: Dictionary = saved_norns.get(actor_id, {})
+		if not saved_profile.has("exploredLandmarks"):
+			return {}
+		if bool(profile["lifeState"]["alive"]) and not (profile.get("position", null) is Vector3):
+			return {}
+	return candidate
+
+
+func _restore_world_position(value: Variant) -> Variant:
+	if not (value is Array) or value.size() != 3:
+		return null
+	for coordinate: Variant in value:
+		if not _is_finite_number(coordinate):
+			return null
+	var position := Vector3(float(value[0]), float(value[1]), float(value[2]))
+	return position if _is_valid_world_position(position) else null
+
+
+func _is_valid_world_position(position: Vector3) -> bool:
+	return (
+		position.x >= NornActor.WORLD_MIN_X and position.x <= NornActor.WORLD_MAX_X
+		and position.y >= -1.0 and position.y <= 2.0
+		and position.z >= NornActor.WORLD_MIN_Z and position.z <= NornActor.WORLD_MAX_Z
+	)
+
+
+func _is_exploration_landmark_id(target_id: String) -> bool:
+	if target_id == "echo_bloom":
+		return true
+	if not target_id.begins_with("route_marker_"):
+		return false
+	var marker_number := target_id.trim_prefix("route_marker_")
+	return marker_number.is_valid_int() and int(marker_number) >= 1 and int(marker_number) <= 8 and marker_number == str(int(marker_number))
+
+
+func _serialized_exploration_targets(targets: Dictionary) -> Array[String]:
+	var target_ids: Array[String] = []
+	for target_id: Variant in targets.keys():
+		if target_id is String and _is_exploration_landmark_id(target_id):
+			target_ids.append(target_id)
+	target_ids.sort()
+	return target_ids
 
 
 func _restore_egg_record(value: Variant, restored_profiles: Dictionary) -> Dictionary:
@@ -883,6 +965,8 @@ func _apply_restored_world(candidate: Dictionary, saved_simulation_time: float) 
 		var actor: NornActor
 		if bool(restored["lifeState"]["alive"]):
 			actor = _spawn_actor(actor_id, str(restored["displayName"]), restored["bodyColor"])
+			if restored.get("position", null) is Vector3:
+				actor.global_position = restored["position"]
 		var profile := NornProfile.new()
 		profile.initialize(actor_id, str(restored["displayName"]), actor, restored["cognition"], restored["biochemistry"], restored["language"])
 		profile.generation = int(restored["generation"])
@@ -896,6 +980,7 @@ func _apply_restored_world(candidate: Dictionary, saved_simulation_time: float) 
 		profile.feedback_action = str(restored["feedback"]["action"])
 		profile.feedback_target = str(restored["feedback"]["target"])
 		profile.feedback_time = float(restored["feedback"]["time"])
+		profile.explored_landmarks = restored.get("exploredLandmarks", {}).duplicate(true)
 		norn_profiles[actor_id] = profile
 	simulation_time = saved_simulation_time
 	focused_norn_id = str(candidate["focusedNornId"])
@@ -1802,6 +1887,8 @@ func _sense_objects(profile: NornProfile) -> Array[Dictionary]:
 	for item: Interactable in objects.values():
 		if not item.available:
 			continue
+		if _is_exploration_landmark_id(item.object_id) and profile.explored_landmarks.has(item.object_id):
+			continue
 		var distance := profile.actor.global_position.distance_to(item.global_position)
 		if distance > SENSE_RADIUS or not profile.actor.can_see_interactable(item):
 			continue
@@ -1868,7 +1955,13 @@ func _run_decision(profile: NornProfile) -> void:
 	if drawing_surface != null and _sensed_object_exists(nearby_objects, DRAWING_SURFACE_ID):
 		var cursor_uv: Vector2 = drawing_surface.call("get_last_uv", profile.actor_id)
 		surface_marks = drawing_surface.call("sample_mark_grid", cursor_uv, 16)
-	var active_guidance: Variant = profile.guidance if not profile.guidance.is_empty() and simulation_time <= float(profile.guidance.get("expiresAt", 0.0)) else null
+	var active_guidance: Variant = null
+	if not profile.guidance.is_empty():
+		var guided_target_id := str(profile.guidance.get("objectId", ""))
+		if objects.has(guided_target_id) and (objects[guided_target_id] as Interactable).available:
+			active_guidance = profile.guidance
+		else:
+			profile.guidance.clear()
 	var observation := {
 		"time": simulation_time,
 		"chemistry": profile.cognition_state["chemistry"],
@@ -2064,6 +2157,13 @@ func _on_action_completed(actor_id: String, action_id: String, target_id: String
 	var item: Interactable = objects[target_id]
 	if not item.available:
 		return
+	if profile.actor != null:
+		profile.actor.play_interaction_animation(action_id, item.global_position)
+	var single_use_landmark := action_id == "explore" and _is_exploration_landmark_id(target_id)
+	if str(profile.guidance.get("objectId", "")) == target_id:
+		profile.guidance.clear()
+	if single_use_landmark and profile.explored_landmarks.has(target_id):
+		return
 	var event_type := str({"fruit": "food", "spinner": "toy", "forage": "forage", "drink": "drink", "explore": "explore"}.get(action_id, ""))
 	var actor_name := profile.display_name
 	var outcome_text := "%s ate honey fruit" % actor_name
@@ -2076,8 +2176,10 @@ func _on_action_completed(actor_id: String, action_id: String, target_id: String
 			outcome_text = "%s drank from the spring" % actor_name
 		"explore":
 			outcome_text = "%s explored %s" % [actor_name, item.display_name.to_lower()]
-	item.activate()
-	if not target_id.begins_with("route_marker_"):
+	if single_use_landmark:
+		profile.explored_landmarks[target_id] = true
+	else:
+		item.activate()
 		_respawn_times[target_id] = simulation_time + (12.0 if event_type == "forage" else 6.0 if event_type == "drink" else 4.0 if event_type == "toy" else 6.0)
 	var spoken_word: Dictionary = _language.call("word_for_target", profile.language_state, target_id)
 	var outcome := {
@@ -2165,8 +2267,10 @@ func _is_attending(observer: NornProfile, source: NornProfile) -> bool:
 
 func _update_timed_state() -> void:
 	for profile: NornProfile in norn_profiles.values():
-		if not profile.guidance.is_empty() and simulation_time > float(profile.guidance.get("expiresAt", 0.0)):
-			profile.guidance.clear()
+		if not profile.guidance.is_empty():
+			var target_id := str(profile.guidance.get("objectId", ""))
+			if not objects.has(target_id) or not (objects[target_id] as Interactable).available:
+				profile.guidance.clear()
 		if profile.feedback_available and simulation_time - profile.feedback_time > FEEDBACK_WINDOW:
 			profile.feedback_available = false
 	for object_id: String in _respawn_times.keys():

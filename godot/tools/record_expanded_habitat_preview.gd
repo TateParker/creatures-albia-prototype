@@ -5,7 +5,6 @@ const Biochemistry = preload("res://scripts/norn_biochemistry.gd")
 const Cognition = preload("res://scripts/norn_cognition.gd")
 const SAVE_PATH := "user://albia_norn_save.json"
 const REVIEW_RECORDINGS_DIRECTORY := "user://recordings/expanded-habitat-review"
-const MAX_REVIEW_CLIPS := 10
 
 var _world: Node
 var _previous_save_exists := false
@@ -21,9 +20,6 @@ func _initialize() -> void:
 func _record_expanded_habitat() -> void:
 	if not _backup_user_save():
 		_fail("The existing local save could not be backed up safely.")
-		return
-	if not _review_folder_has_room():
-		_fail("The expanded-habitat review folder already has the ten-clip limit; no clips were removed.")
 		return
 	_world = HabitatScene.instantiate()
 	root.add_child(_world)
@@ -102,28 +98,15 @@ func _record_expanded_habitat() -> void:
 
 
 func _guide_until(object_id: String, completion_text: String, max_frames: int) -> bool:
+	var guided := false
 	for frame_index in range(max_frames):
 		if str(_world.get("last_status")).to_lower().contains(completion_text.to_lower()):
 			return true
-		if frame_index % 90 == 0:
+		if not guided:
 			_world.call("guide_to", object_id)
+			guided = true
 		await process_frame
 	return str(_world.get("last_status")).to_lower().contains(completion_text.to_lower())
-
-
-func _review_folder_has_room() -> bool:
-	var folder_path := ProjectSettings.globalize_path(REVIEW_RECORDINGS_DIRECTORY)
-	var directory_error := DirAccess.make_dir_recursive_absolute(folder_path)
-	if directory_error != OK and not DirAccess.dir_exists_absolute(folder_path):
-		return false
-	var directory := DirAccess.open(folder_path)
-	if directory == null:
-		return false
-	var count := 0
-	for file_name: String in directory.get_files():
-		if file_name.get_extension().to_lower() == "avi":
-			count += 1
-	return count < MAX_REVIEW_CLIPS
 
 
 func _backup_user_save() -> bool:

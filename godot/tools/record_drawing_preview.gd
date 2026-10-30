@@ -97,11 +97,11 @@ func _record_drawing_preview() -> void:
 	_world.call("toggle_pause")
 	_world.call("save_game")
 	var saved_record := _read_save()
-	if saved_record.is_empty() or saved_record.get("version", -1) != 7:
-		_fail("The rendered walkthrough did not write a version-7 save.")
+	if saved_record.is_empty() or saved_record.get("version", -1) != 8:
+		_fail("The rendered walkthrough did not write a version-8 save.")
 		return
 	if not _deep_values_match(saved_record.get("drawingSurface", {}), surface_record):
-		_fail("The version-7 save omitted or changed the visible board data.")
+		_fail("The version-8 save omitted or changed the visible board data.")
 		return
 	for frame in range(12):
 		await process_frame

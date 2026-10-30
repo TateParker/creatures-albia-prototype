@@ -45,7 +45,7 @@ func _run_checks() -> void:
 	await test_invalid_focus_id_is_ignored()
 	await test_unfocused_norn_keeps_simulating()
 	if _save_backup_ok:
-		await test_version6_round_trip_preserves_both_profiles()
+		await test_version8_round_trip_preserves_both_profiles()
 		await test_v1_migration_preserves_mallow_and_seeds_moss()
 		await test_v2_migration_preserves_mallow_and_seeds_moss()
 		await test_v3_migration_preserves_mallow_and_seeds_moss()
@@ -254,13 +254,16 @@ func test_shared_object_sensing_filters_distance_and_occlusion() -> void:
 	moss_actor.set_physics_process(false)
 	mallow_actor.global_position = Vector3.ZERO
 	moss_actor.global_position = Vector3(4.0, 0.0, -1.2)
+	var spinner: Interactable = world.get("objects")["spinner"]
+	spinner.global_position = Vector3(6.0, 0.0, 0.0)
+	await physics_frame
 	mallow_actor.get_node("LocalSensor").monitoring = false
 	var visible_objects: Array = world.call("_sense_objects", mallow)
 	_expect(visible_objects.any(func(entry: Dictionary) -> bool: return entry.get("id", "") == "fruit"), "available fruit inside the sense radius is perceived")
 	_expect(visible_objects.any(func(entry: Dictionary) -> bool: return entry.get("id", "") == "spinner"), "available spinner inside the sense radius is perceived without the Area cache")
 	_expect(mallow_actor.can_see_interactable(world.get("objects")["spinner"]), "a peer standing in front of an object does not block object perception")
-	var spinner: Interactable = world.get("objects")["spinner"]
 	spinner.global_position = Vector3(11.0, 0.0, 0.0)
+	await physics_frame
 	visible_objects = world.call("_sense_objects", mallow)
 	_expect(not visible_objects.any(func(entry: Dictionary) -> bool: return entry.get("id", "") == "spinner"), "object outside the ten-unit sense radius is excluded")
 	spinner.global_position = Vector3(6.0, 0.0, 0.0)
@@ -465,6 +468,9 @@ func test_adolescent_peer_preference_only_applies_to_observe_peer() -> void:
 	var moss = world.call("profile_for", "moss")
 	var mallow_actor: NornActor = mallow.get("actor")
 	var moss_actor: NornActor = moss.get("actor")
+	var spinner: Interactable = world.get("objects")["spinner"]
+	spinner.global_position = Vector3(6.0, 0.0, 0.0)
+	await physics_frame
 	mallow_actor.set_physics_process(false)
 	moss_actor.set_physics_process(false)
 	mallow_actor.reset_position(Vector3(3.0, 0.0, 0.0))
@@ -891,7 +897,7 @@ func test_unfocused_norn_keeps_simulating() -> void:
 	await _destroy_social_world(world)
 
 
-func test_version6_round_trip_preserves_both_profiles() -> void:
+func test_version8_round_trip_preserves_both_profiles() -> void:
 	var world = await _create_social_world()
 	world.set_process(false)
 	var mallow = world.call("profile_for", "mallow")
@@ -936,15 +942,15 @@ func test_version6_round_trip_preserves_both_profiles() -> void:
 	world.call("save_game")
 	var saved := _read_save_record()
 	var saved_norns: Dictionary = saved.get("norns", {})
-	_expect(int(saved.get("version", -1)) == 6, "saving both profiles writes version 6")
-	_expect(saved_norns.has("mallow") and saved_norns.has("moss"), "version-6 save contains both stable profile IDs")
+	_expect(int(saved.get("version", -1)) == 8, "saving both profiles writes version 8")
+	_expect(saved_norns.has("mallow") and saved_norns.has("moss"), "version-8 save contains both stable profile IDs")
 	if saved_norns.has("mallow") and saved_norns.has("moss"):
 		for actor_id: String in ["mallow", "moss"]:
 			var saved_profile: Dictionary = saved_norns[actor_id]
 			_expect(saved_profile.has("cognition") and saved_profile.has("biochemistry") and saved_profile.has("language") and saved_profile.has("feedback"), "%s save contains cognition, biochemistry, language, and feedback" % actor_id.capitalize())
-	_expect(str(saved.get("focusedNornId", "")) == "moss", "version-6 save retains the focused Norn")
-	_expect(saved.get("seed", -1) == 4181996 and is_equal_approx(float(saved.get("simulationTime", -1.0)), 10.0), "version-6 save retains top-level seed and simulation time")
-	_expect(_deep_values_match(saved.get("drawingSurface", {}), expected_drawing_surface), "version-6 top-level save contains the validated shared drawing record")
+	_expect(str(saved.get("focusedNornId", "")) == "moss", "version-8 save retains the focused Norn")
+	_expect(saved.get("seed", -1) == 4181996 and is_equal_approx(float(saved.get("simulationTime", -1.0)), 10.0), "version-8 save retains top-level seed and simulation time")
+	_expect(_deep_values_match(saved.get("drawingSurface", {}), expected_drawing_surface), "version-8 top-level save contains the validated shared drawing record")
 	(mallow_cognition["episodes"] as Array).clear()
 	(moss_cognition["episodes"] as Array).clear()
 	(mallow.get("language_state")["words"] as Dictionary).clear()
@@ -959,13 +965,13 @@ func test_version6_round_trip_preserves_both_profiles() -> void:
 	moss = world.call("profile_for", "moss")
 	mallow_cognition = mallow.get("cognition_state")
 	moss_cognition = moss.get("cognition_state")
-	_expect(_deep_values_match(world.get("drawing_surface").call("serialize_state"), expected_drawing_surface), "version-6 file round trip restores marks and the pen-up cursor")
-	_expect(_deep_values_match(mallow_cognition["episodes"], expected_mallow_episodes) and _deep_values_match(moss_cognition["episodes"], expected_moss_episodes), "version-6 round trip preserves both Norns' episodes")
-	_expect(_number_maps_match(Biochemistry.read_compounds(mallow.get("biochemistry_state")), expected_mallow_compounds, Biochemistry.COMPOUND_IDS) and _number_maps_match(Biochemistry.read_compounds(moss.get("biochemistry_state")), expected_moss_compounds, Biochemistry.COMPOUND_IDS), "version-6 round trip preserves both Norns' compounds")
-	_expect(mallow.get("language_state")["words"] == expected_mallow_words and moss.get("language_state")["words"] == expected_moss_words, "version-6 round trip preserves both vocabularies")
-	_expect(world.get("focused_norn_id") == "moss", "version-6 round trip restores focus")
-	_expect(mallow.get("feedback_available") and mallow.get("feedback_action") == "fruit" and is_equal_approx(float(mallow.get("feedback_time")), 7.25), "version-6 round trip preserves Mallow's independent feedback window")
-	_expect(moss.get("feedback_available") and moss.get("feedback_action") == "spinner" and is_equal_approx(float(moss.get("feedback_time")), 9.5), "version-6 round trip preserves Moss's independent feedback window")
+	_expect(_deep_values_match(world.get("drawing_surface").call("serialize_state"), expected_drawing_surface), "version-8 file round trip restores marks and the pen-up cursor")
+	_expect(_deep_values_match(mallow_cognition["episodes"], expected_mallow_episodes) and _deep_values_match(moss_cognition["episodes"], expected_moss_episodes), "version-8 round trip preserves both Norns' episodes")
+	_expect(_number_maps_match(Biochemistry.read_compounds(mallow.get("biochemistry_state")), expected_mallow_compounds, Biochemistry.COMPOUND_IDS) and _number_maps_match(Biochemistry.read_compounds(moss.get("biochemistry_state")), expected_moss_compounds, Biochemistry.COMPOUND_IDS), "version-8 round trip preserves both Norns' compounds")
+	_expect(mallow.get("language_state")["words"] == expected_mallow_words and moss.get("language_state")["words"] == expected_moss_words, "version-8 round trip preserves both vocabularies")
+	_expect(world.get("focused_norn_id") == "moss", "version-8 round trip restores focus")
+	_expect(mallow.get("feedback_available") and mallow.get("feedback_action") == "fruit" and is_equal_approx(float(mallow.get("feedback_time")), 7.25), "version-8 round trip preserves Mallow's independent feedback window")
+	_expect(moss.get("feedback_available") and moss.get("feedback_action") == "spinner" and is_equal_approx(float(moss.get("feedback_time")), 9.5), "version-8 round trip preserves Moss's independent feedback window")
 	_expect(mallow.get("actor").target == null and moss.get("actor").target == null, "loading clears transient movement targets")
 	await _destroy_social_world(world)
 

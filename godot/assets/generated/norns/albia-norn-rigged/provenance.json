@@ -1,0 +1,13 @@
+{
+  "model": "Blender 5.2.2 LTS, custom 25-bone rig",
+  "notes": "Derived from assets/generated/meshy_output/review-candidates/norn/20261029_170840_norn-review-candidate-20261029_01a1897e/model.glb with source SHA-256 f3a1403c7f70f1d536d825d44378867d14d6145cf7191fa62702c803439ae6e8. The resulting candidate has one 25-joint skin, five authored clips, and preserves source geometry and PBR material channels. LicenseRef-Meshy-Private applies.",
+  "origin": "generated",
+  "provider": "Meshy",
+  "providerTaskId": "01a1897e-3f2a-77e0-a6a1-5ff5fa44f12a",
+  "schema": "game_dev.asset_provenance.v1",
+  "source": {
+    "bytes": 6456284,
+    "fileName": "model.glb",
+    "sha256": "299155fbe431c2e6191b3dbf40700de2c5ea2706b07e35785e88dd5324518b53"
+  }
+}

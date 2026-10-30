@@ -15,7 +15,8 @@ const INITIAL_SIGNALS := {
 	"stress": 5.0,
 	"socialComfort": 50.0,
 	"arousal": 15.75,
-	"satiety": 55.0
+	"satiety": 55.0,
+	"thirst": 0.0
 }
 const STIMULI := {"active": 1.0, "resting": 0.0, "nearbyPeer": 0.0}
 
